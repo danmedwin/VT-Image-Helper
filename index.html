@@ -319,12 +319,9 @@
     color: var(--navy);
   }
   .prayer-theme {
-    font-size: 12px;
+    font-size: 14px;
     color: var(--teal);
-    font-weight: 500;
-    background: var(--teal-light);
-    padding: 3px 10px;
-    border-radius: 20px;
+    font-weight: 400;
   }
 
   /* IMAGE GRID */
@@ -395,36 +392,62 @@
     text-align: center;
   }
 
-  /* REFINE BAR */
-  .refine-bar {
-    padding: 12px 20px 14px;
-    border-top: 1px solid var(--border);
+  /* CONTROLS BAR (above grid) */
+  .controls-bar {
+    padding: 10px 20px 12px;
+    border-bottom: 1px solid var(--border);
     background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .search-terms-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .search-term-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--navy-light);
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 6px 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+  .chip-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--text-muted);
+    padding: 0 2px;
+    opacity: 0.55;
+  }
+  .chip-remove:hover { opacity: 1; color: #c0392b; }
+  .refine-row {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
   }
-  .refine-bar label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .refine-bar input[type="text"] {
+  .refine-row input[type="text"] {
     flex: 1;
-    min-width: 160px;
+    min-width: 140px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 7px 11px;
+    padding: 6px 11px;
     font-size: 13px;
     font-family: inherit;
     color: var(--text);
     background: var(--white);
     transition: border-color 0.15s;
   }
-  .refine-bar input[type="text"]:focus {
+  .refine-row input[type="text"]:focus {
     outline: none;
     border-color: var(--navy-mid);
   }
@@ -466,16 +489,6 @@
   .btn-refine-pexels:hover { background: var(--teal-light); }
   .btn-refine-pexels svg { width: 12px; height: 12px; fill: none; stroke: var(--teal); stroke-width: 2; }
 
-  /* ACTION BAR */
-  .action-bar {
-    padding: 12px 20px 16px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    background: #fafcff;
-  }
   .btn-download {
     display: inline-flex;
     align-items: center;
@@ -856,7 +869,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.9</span>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.0</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1770,71 +1783,76 @@ function photoCardHtml(prayerId, photo, isLive) {
     </div>`;
 }
 
-function prayerSectionHtml(prayer, context, photos, isLive, customTerms) {
-  const searchTerms = customTerms || buildSearchQuery(prayer, context);
-  const searchUrl = 'https://www.pexels.com/search/' + encodeURIComponent(searchTerms) + '/';
+function prayerSectionHtml(prayer, context, photos, isLive) {
+  const baseTerms = prayer.searchTerms.trim().split(/\s+/).filter(Boolean);
+  const keywords = getKeywordFilters();
+  const extraTerms = [keywords, context ? context.trim().slice(0, 60) : ''].filter(Boolean).join(' ');
+  const fullQuery = [prayer.searchTerms, extraTerms].filter(Boolean).join(' ');
+  const searchUrl = 'https://www.pexels.com/search/' + encodeURIComponent(fullQuery) + '/';
   const title = prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1);
-  const cards = photos.map(ph => photoCardHtml(prayer.id, ph, isLive)).join('');
-  const sourceLabel = isLive
-    ? '<span style="font-size:11px;color:var(--teal);font-weight:600;">&#9679; Live results</span>'
-    : '<span style="font-size:11px;color:var(--text-muted);">Curated</span>';
+  const cards = photos && photos.length
+    ? photos.map(ph => photoCardHtml(prayer.id, ph, isLive)).join('')
+    : loadingGridHtml(prayer.id);
   const apiKey = getKey();
-  const refineSearchBtn = apiKey
-    ? `<button class="btn-refine" onclick="refinePrayer('${prayer.id}', '${prayer.id}-refine-input', '${context.replace(/'/g,"\\'")}')">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+  const safeCtx = (context || '').replace(/'/g, "\\'");
+
+  const chipsHtml = baseTerms.map(term =>
+    `<span class="search-term-chip" data-prayer="${prayer.id}" data-term="${term.replace(/"/g, '&quot;')}">${term}<button class="chip-remove" onclick="removeTermChip(this,'${prayer.id}')" title="Remove">&#215;</button></span>`
+  ).join('');
+
+  const refreshBtn = apiKey
+    ? `<button class="btn-refine" onclick="refinePrayer('${prayer.id}','${prayer.id}-refine-input','${safeCtx}')">
+        <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
         Refresh
       </button>`
     : '';
+
   return `
     <div class="prayer-section" id="section-${prayer.id}">
       <div class="prayer-header">
-        <span class="prayer-title">${title} ${sourceLabel}</span>
-        <span class="prayer-theme">${prayer.theme}</span>
+        <span class="prayer-title">${title}<span class="prayer-theme"> — ${prayer.theme}</span></span>
+      </div>
+      <div class="controls-bar">
+        <div class="search-terms-bar" id="terms-chips-${prayer.id}">${chipsHtml}</div>
+        <div class="refine-row">
+          <input type="text" id="${prayer.id}-refine-input" value="${extraTerms.replace(/"/g, '&quot;')}"
+                 placeholder="Additional keywords&hellip;"
+                 onkeydown="if(event.key==='Enter'&&'${apiKey}')refinePrayer('${prayer.id}','${prayer.id}-refine-input','${safeCtx}')">
+          ${refreshBtn}
+          <a class="btn-refine-pexels" id="pexels-link-${prayer.id}" href="${searchUrl}" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Browse
+          </a>
+          <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Select a photo below&hellip;
+          </a>
+        </div>
       </div>
       <div class="img-grid" id="grid-${prayer.id}">${cards}</div>
-      <div class="refine-bar">
-        <label for="${prayer.id}-refine-input">Refine search:</label>
-        <input type="text" id="${prayer.id}-refine-input" value="${searchTerms}"
-               placeholder="e.g. nature sunrise peaceful&hellip;"
-               onkeydown="if(event.key==='Enter' && '${apiKey}') refinePrayer('${prayer.id}', '${prayer.id}-refine-input', '${context.replace(/'/g,"\\'")}')">
-        ${refineSearchBtn}
-        <a class="btn-refine-pexels" id="pexels-link-${prayer.id}" href="${searchUrl}" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          Browse on Pexels
-        </a>
-      </div>
-      <div class="action-bar">
-        <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Select a photo above&hellip;
-        </a>
-      </div>
     </div>`;
 }
 
 async function refinePrayer(prayerId, inputId, context) {
   const apiKey = getKey();
   if (!apiKey) return;
-  const input = document.getElementById(inputId);
-  const terms = input ? input.value.trim() : '';
+  const terms = getActiveTerms(prayerId, inputId);
   if (!terms) return;
 
   const grid = document.getElementById('grid-' + prayerId);
   if (!grid) return;
 
-  // Update Pexels browse link to match new terms
   const pexelsLink = document.getElementById('pexels-link-' + prayerId);
   if (pexelsLink) {
     pexelsLink.href = 'https://www.pexels.com/search/' + encodeURIComponent(terms) + '/';
   }
 
-  // Reset download button
   const dl = document.getElementById('dl-' + prayerId);
   if (dl) {
     dl.className = 'btn-download disabled';
     dl.removeAttribute('href');
     dl.removeAttribute('download');
-    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Select a photo above&hellip;`;
+    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Select a photo below&hellip;`;
   }
 
   grid.innerHTML = loadingGridHtml(prayerId);
@@ -1858,15 +1876,22 @@ async function refinePrayer(prayerId, inputId, context) {
     } else {
       grid.innerHTML = photos.map(ph => photoCardHtml(prayerId, ph, true)).join('');
       renderAllFavoriteCounts();
-      // Update source badge
-      const titleEl = document.querySelector(`#section-${prayerId} .prayer-title`);
-      if (titleEl) {
-        titleEl.innerHTML = titleEl.innerHTML.replace(/<span[^>]*>.*?<\/span>/, '<span style="font-size:11px;color:var(--teal);font-weight:600;">&#9679; Live results</span>');
-      }
     }
   } catch (err) {
     grid.innerHTML = '<div class="img-loading" style="color:#c0392b;">Search failed. Check your API key or try again.</div>';
   }
+}
+
+function getActiveTerms(prayerId, inputId) {
+  const chips = [...document.querySelectorAll(`.search-term-chip[data-prayer="${prayerId}"]`)]
+    .map(el => el.dataset.term).filter(Boolean).join(' ');
+  const refineInput = document.getElementById(inputId || (prayerId + '-refine-input'));
+  const extra = refineInput ? refineInput.value.trim() : '';
+  return [chips, extra].filter(Boolean).join(' ');
+}
+
+function removeTermChip(btn, prayerId) {
+  btn.closest('.search-term-chip').remove();
 }
 
 function loadingGridHtml(prayerId) {
@@ -1911,37 +1936,7 @@ async function findImages() {
     </div>
     ${matched.map(p => {
       if (apiKey) {
-        const searchTerms = buildSearchQuery(p, context);
-        const searchUrl = 'https://www.pexels.com/search/' + encodeURIComponent(searchTerms) + '/';
-        const title = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
-        return `
-          <div class="prayer-section" id="section-${p.id}">
-            <div class="prayer-header">
-              <span class="prayer-title">${title} <span style="font-size:11px;color:var(--teal);font-weight:600;">&#9679; Live results</span></span>
-              <span class="prayer-theme">${p.theme}</span>
-            </div>
-            <div class="img-grid" id="grid-${p.id}">${loadingGridHtml(p.id)}</div>
-            <div class="refine-bar">
-              <label for="${p.id}-refine-input">Refine search:</label>
-              <input type="text" id="${p.id}-refine-input" value="${searchTerms}"
-                     placeholder="e.g. nature sunrise peaceful&hellip;"
-                     onkeydown="if(event.key==='Enter') refinePrayer('${p.id}', '${p.id}-refine-input', '${context.replace(/'/g,"\\'")}')">
-              <button class="btn-refine" onclick="refinePrayer('${p.id}', '${p.id}-refine-input', '${context.replace(/'/g,"\\'")}')">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                Refresh
-              </button>
-              <a class="btn-refine-pexels" id="pexels-link-${p.id}" href="${searchUrl}" target="_blank" rel="noopener">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                Browse on Pexels
-              </a>
-            </div>
-            <div class="action-bar">
-              <a id="dl-${p.id}" class="btn-download disabled" href="#">
-                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Select a photo above&hellip;
-              </a>
-            </div>
-          </div>`;
+        return prayerSectionHtml(p, context, [], true);
       } else {
         const storedPhotos = getCuratedPhotos(p.id);
         return storedPhotos && storedPhotos.length
