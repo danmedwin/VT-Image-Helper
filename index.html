@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VT Image Helper</title>
+<style>
+  :root {
+    --navy: #0b2d5e;
+    --navy-mid: #1a4a7a;
+    --navy-light: #e8f0f8;
+    --gold: #c49a2a;
+    --gold-light: #fdf6e3;
+    --teal: #1d7a6b;
+    --teal-light: #e6f5f2;
+    --text: #1a2a3a;
+    --text-muted: #4a6080;
+    --border: #d0dce8;
+    --surface: #f5f8fb;
+    --white: #ffffff;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--navy);
+    padding: 28px 32px 24px;
+    border-bottom: 3px solid var(--gold);
+  }
+  header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+  header .subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 64px;
+  }
+
+  /* API KEY PANEL */
+  .apikey-panel {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(11,45,94,0.07);
+  }
+  .apikey-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .apikey-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 0;
+  }
+  .apikey-status {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .apikey-status.active {
+    background: #e6f5f2;
+    color: var(--teal);
+  }
+  .apikey-status.inactive {
+    background: #fdf6e3;
+    color: #7a5c00;
+  }
+  .apikey-body {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .apikey-body p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    line-height: 1.55;
+  }
+  .apikey-row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .apikey-row input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 13px;
+    font-size: 14px;
+    font-family: monospace;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.15s;
+  }
+  .apikey-row input[type="text"]:focus {
+    outline: none;
+    border-color: var(--navy-mid);
+    background: var(--white);
+  }
+  .btn-save-key {
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .btn-save-key:hover { background: var(--navy-mid); }
+  .btn-clear-key {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 9px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .btn-clear-key:hover { color: #c0392b; border-color: #c0392b; }
+  .apikey-toggle {
+    background: none;
+    border: none;
+    color: var(--navy-mid);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .mode-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .mode-badge.live { background: #e6f5f2; color: var(--teal); }
+  .mode-badge.curated { background: var(--gold-light); color: #7a5c00; }
+
+  /* LOADING STATE */
+  .img-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 155px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 13px;
+    border-radius: var(--radius);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  /* SETUP PANEL */
+  .setup-panel {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 4px rgba(11,45,94,0.07);
+  }
+  .setup-panel h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 680px) { .field-row { grid-template-columns: 1fr; } }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .field .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+    font-weight: 400;
+  }
+  .field textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 13px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    resize: vertical;
+    transition: border-color 0.15s;
+    line-height: 1.5;
+  }
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--navy-mid);
+    background: var(--white);
+  }
+
+  .btn-find {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 12px 26px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-find:hover { background: var(--navy-mid); }
+  .btn-find svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; }
+
+  /* RESULTS AREA */
+  #results { display: none; }
+  #results.visible { display: block; }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .results-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .results-header .found-count {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--navy-light);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* PRAYER SECTION */
+  .prayer-section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 22px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(11,45,94,0.06);
+  }
+  .prayer-header {
+    background: var(--navy-light);
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .prayer-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .prayer-theme {
+    font-size: 12px;
+    color: var(--teal);
+    font-weight: 500;
+    background: var(--teal-light);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  /* IMAGE GRID */
+  .img-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    padding: 16px 20px;
+  }
+  .img-card {
+    border: 2px solid transparent;
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    background: var(--surface);
+    position: relative;
+  }
+  .img-card:hover { border-color: var(--navy-mid); box-shadow: 0 2px 10px rgba(11,45,94,0.12); }
+  .img-card.selected { border-color: var(--gold); box-shadow: 0 2px 12px rgba(196,154,42,0.2); }
+  .img-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+  .img-card img {
+    width: 100%;
+    height: 155px;
+    object-fit: cover;
+    display: block;
+  }
+  .img-caption {
+    padding: 8px 10px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .img-caption .cap-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.35;
+    flex: 1;
+  }
+  .img-caption .pexels-link {
+    font-size: 11px;
+    color: var(--navy-mid);
+    text-decoration: none;
+    white-space: nowrap;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+  .img-caption .pexels-link:hover { opacity: 1; }
+
+  /* SELECTED CHECKMARK */
+  .img-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--gold);
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 22px;
+    text-align: center;
+  }
+
+  /* REFINE BAR */
+  .refine-bar {
+    padding: 12px 20px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .refine-bar label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .refine-bar input[type="text"] {
+    flex: 1;
+    min-width: 160px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 11px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color 0.15s;
+  }
+  .refine-bar input[type="text"]:focus {
+    outline: none;
+    border-color: var(--navy-mid);
+  }
+  .btn-refine {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-refine:hover { background: var(--navy-mid); }
+  .btn-refine svg { width: 13px; height: 13px; fill: none; stroke: white; stroke-width: 2.2; }
+  .btn-refine-pexels {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--teal);
+    border: 1px solid var(--teal);
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .btn-refine-pexels:hover { background: var(--teal-light); }
+  .btn-refine-pexels svg { width: 12px; height: 12px; fill: none; stroke: var(--teal); stroke-width: 2; }
+
+  /* ACTION BAR */
+  .action-bar {
+    padding: 12px 20px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: #fafcff;
+  }
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--navy);
+    color: white;
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-download:hover { background: var(--navy-mid); }
+  .btn-download.disabled {
+    background: #b8c8d8;
+    pointer-events: none;
+    cursor: default;
+  }
+  .btn-download svg { width: 15px; height: 15px; fill: none; stroke: white; stroke-width: 2.2; flex-shrink: 0; }
+
+  .btn-pexels {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    color: var(--teal);
+    border: 1px solid var(--teal);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+  }
+  .btn-pexels:hover { background: var(--teal-light); }
+  .btn-pexels svg { width: 14px; height: 14px; fill: none; stroke: var(--teal); stroke-width: 2; flex-shrink: 0; }
+
+  /* EMPTY / NO MATCH */
+  .no-match {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+  }
+  .no-match p { font-size: 15px; margin-bottom: 8px; }
+  .no-match small { font-size: 13px; }
+
+  /* INFO BOX */
+  .info-box {
+    background: var(--gold-light);
+    border: 1px solid #e8d49a;
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #5a4400;
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+    padding: 20px 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  footer a { color: var(--navy-mid); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* SCROLL TO TOP */
+  .scroll-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 100;
+  }
+  .scroll-top.visible { display: flex; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>VT Image Helper</h1>
+  <div class="subtitle">Find beautiful, text-ready images for your service slides</div>
+</header>
+
+<main>
+  <div class="apikey-panel" id="apikeyPanel">
+    <div class="apikey-header">
+      <h2>
+        Pexels API key
+        <span class="mode-badge curated" id="modeBadge">Using curated photos</span>
+      </h2>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="apikey-status inactive" id="keyStatus">No key saved</span>
+        <button class="apikey-toggle" id="keyToggle" onclick="toggleKeyPanel()">Set up</button>
+      </div>
+    </div>
+    <div class="apikey-body" id="keyBody" style="display:none;">
+      <p>
+        A free Pexels API key lets this tool fetch fresh live photos instead of the built-in curated set.
+        Get one in about two minutes at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener" style="color:var(--navy-mid);">pexels.com/api</a> &mdash;
+        sign up, go to your profile, and copy the API key. It stays saved in your browser only; it is never sent anywhere except directly to Pexels.
+      </p>
+      <div class="apikey-row">
+        <input type="text" id="keyInput" placeholder="Paste your Pexels API key here&hellip;" autocomplete="off" spellcheck="false">
+        <button class="btn-save-key" onclick="saveKey()">Save key</button>
+        <button class="btn-clear-key" id="clearKeyBtn" style="display:none;" onclick="clearKey()">Remove</button>
+      </div>
+      <p id="keyMsg" style="margin-top:10px;display:none;"></p>
+    </div>
+  </div>
+
+  <div class="info-box">
+    This tool surfaces photos matched to common Jewish prayers &mdash; selected for beauty, thematic resonance, and clear space for text overlay. With a free Pexels API key (above), it fetches fresh live results. Without one, it uses a built-in curated set. Each prayer section also includes a direct Pexels search link.
+  </div>
+
+  <div class="setup-panel">
+    <h2>About your service</h2>
+    <div class="field-row">
+      <div class="field">
+        <label for="ctx">Service context <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+        <div class="hint">Theme, holiday, tone, or image style &mdash; e.g. &ldquo;Rosh Hashanah, solemn, nature photography&rdquo; or &ldquo;Shabbat morning, warm, realistic&rdquo;</div>
+        <textarea id="ctx" rows="4" placeholder="e.g. Kabbalat Shabbat, joyful, nature and light imagery"></textarea>
+      </div>
+      <div class="field">
+        <label for="outline">Service outline or prayers</label>
+        <div class="hint">Paste your service order or list prayers by name &mdash; one per line, or as a paragraph. Hebrew or English names both work.</div>
+        <textarea id="outline" rows="4" placeholder="e.g.&#10;Mah Tovu&#10;Barchu&#10;Shema and V'ahavta&#10;Amidah&#10;Torah service&#10;Oseh Shalom&#10;Aleinu&#10;Kaddish"></textarea>
+      </div>
+    </div>
+    <button class="btn-find" onclick="findImages()">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      Find images
+    </button>
+  </div>
+
+  <div id="results"></div>
+</main>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
+
+<footer>
+  <p>Created by Rabbi Dan with help from Claude.</p>
+  <p>This page is not affiliated with the Central Conference of American Rabbis (<a href="https://www.ccarnet.org/" target="_blank" rel="noopener">ccarnet.org</a>).
+  For more information on Visual T&#x2019;filah&trade;, see the
+  <a href="https://www.ccarpress.org/search-grid/?category=CCARVT" target="_blank" rel="noopener">CCAR Press VT collection</a>.</p>
+</footer>
+
+<script>
+// ─── PRAYER LIBRARY ────────────────────────────────────────────────────────────
+// Each prayer: id, names (for matching), theme label, search terms, photo sets
+// Photos: { id, caption } — Pexels photo ID + short descriptive caption
+// Multiple photo sets keyed by context hints (default, highholidays, shabbat, nature, etc.)
+
+const PRAYERS = [
+  {
+    id: 'mahtovu',
+    names: ['mah tovu', 'ma tovu', 'מה טובו', 'how goodly'],
+    theme: 'Welcome & dwelling',
+    searchTerms: 'open tent morning light peaceful sunrise',
+    photos: [
+      { id: 36167613, caption: 'Sunlit tent opening at dawn' },
+      { id: 1624496,  caption: 'Golden morning light through trees' },
+      { id: 36983661, caption: 'Peaceful sunrise over meadow' },
+      { id: 3408744,  caption: 'Open doorway with warm light' },
+    ]
+  },
+  {
+    id: 'modehanee',
+    names: ['modeh ani', 'modah ani', 'מודה אני', 'morning prayer', 'morning thanks', 'morning gratitude'],
+    theme: 'Morning gratitude',
+    searchTerms: 'sunrise morning light awakening dawn',
+    photos: [
+      { id: 36983661, caption: 'Soft sunrise over calm water' },
+      { id: 1028600,  caption: 'Golden sunrise horizon' },
+      { id: 1624496,  caption: 'Morning light through forest' },
+      { id: 1166209,  caption: 'Dew on grass at dawn' },
+    ]
+  },
+  {
+    id: 'asheryatzar',
+    names: ['asher yatzar', 'אשר יצר', 'body prayer', 'healing prayer'],
+    theme: 'Body & healing',
+    searchTerms: 'human hands healing light body nature',
+    photos: [
+      { id: 7169668,  caption: 'Cupped hands holding light' },
+      { id: 3807517,  caption: 'Open hands in morning light' },
+      { id: 36409227, caption: 'Hands holding small green plant' },
+      { id: 34950,    caption: 'Gentle light through hands' },
+    ]
+  },
+  {
+    id: 'barchu',
+    names: ['barchu', 'bar\'chu', 'barchoo', 'ברכו', 'call to worship'],
+    theme: 'Call to worship',
+    searchTerms: 'morning horizon gathering nature sunrise meadow',
+    photos: [
+      { id: 325185,   caption: 'Light rays through tall windows' },
+      { id: 1755683,  caption: 'Warm glow at dusk' },
+      { id: 167699,   caption: 'Sunrise over open landscape' },
+      { id: 36167613, caption: 'Golden light through canopy' },
+    ]
+  },
+  {
+    id: 'yotzeior',
+    names: ['yotzeir or', 'yotzer or', 'יוצר אור', 'creator of light', 'who creates light'],
+    theme: 'Light & creation',
+    searchTerms: 'sunrise golden light sky dawn radiant',
+    photos: [
+      { id: 1028600,  caption: 'Brilliant sunrise over water' },
+      { id: 36983661, caption: 'Warm light through morning clouds' },
+      { id: 1624496,  caption: 'Golden hour through treetops' },
+      { id: 2440009,  caption: 'Rays of light over horizon' },
+    ]
+  },
+  {
+    id: 'ahavarabbah',
+    names: ['ahavah rabbah', 'ahavat olam', 'אהבה רבה', 'אהבת עולם', 'great love', 'everlasting love'],
+    theme: 'Love & Torah',
+    searchTerms: 'open book warm light love embrace',
+    photos: [
+      { id: 261763,   caption: 'Open book in soft light' },
+      { id: 159866,   caption: 'Warm hands clasped together' },
+      { id: 1166209,  caption: 'Soft golden light through leaves' },
+      { id: 3807517,  caption: 'Gentle light on open hands' },
+    ]
+  },
+  {
+    id: 'shema',
+    names: ['shema', 'sh\'ma', 'שמע', 'hear o israel', 'hear, o israel'],
+    theme: 'Unity & the One',
+    searchTerms: 'vast sky horizon single light unity one',
+    photos: [
+      { id: 36983661, caption: 'Sweeping sky over open field' },
+      { id: 1182942,  caption: 'Lone tree against blue sky' },
+      { id: 36167613, caption: 'Wide open sky and land' },
+      { id: 1370300,  caption: 'Stars in the night sky' },
+    ]
+  },
+  {
+    id: 'vahavta',
+    names: ['v\'ahavta', 'vahavta', 'ואהבת', 'and you shall love'],
+    theme: 'Love & commandment',
+    searchTerms: 'mezuzah doorway love family path forward',
+    photos: [
+      { id: 3408744,  caption: 'Welcoming doorway with warm light' },
+      { id: 36409227, caption: 'Child holding small plant' },
+      { id: 261763,   caption: 'Open scroll in golden light' },
+      { id: 1166209,  caption: 'Path through morning light' },
+    ]
+  },
+  {
+    id: 'michamocha',
+    names: ['mi chamocha', 'mi khamocha', 'מי כמכה', 'who is like you', 'song of the sea'],
+    theme: 'Redemption & sea',
+    searchTerms: 'ocean sea waves freedom shore sunrise',
+    photos: [
+      { id: 1001682,  caption: 'Waves on shore at sunrise' },
+      { id: 933054,   caption: 'Open ocean horizon' },
+      { id: 1032650,  caption: 'Crashing waves on rocks' },
+      { id: 36983661, caption: 'Sea spray and golden light' },
+    ]
+  },
+  {
+    id: 'amidah',
+    names: ['amidah', 'amida', 'שמונה עשרה', 'shmoneh esreh', 'standing prayer', 'silent prayer'],
+    theme: 'Standing & prayer',
+    searchTerms: 'mountain path mist still lake reflection nature solitude',
+    photos: [
+      { id: 1181715,  caption: 'Figure on mountaintop at dusk' },
+      { id: 1370300,  caption: 'Quiet lake at golden hour' },
+      { id: 36983661, caption: 'Still water reflecting sky' },
+      { id: 2440009,  caption: 'Lone path in misty morning' },
+    ]
+  },
+  {
+    id: 'avotimahot',
+    names: ['avot', 'imahot', 'avot v\'imahot', 'אבות', 'אמהות', 'patriarchs', 'matriarchs', 'ancestors', 'patriarchs and matriarchs'],
+    theme: 'Ancestors & covenant',
+    searchTerms: 'ancient tree roots heritage generational nature',
+    photos: [
+      { id: 1182942,  caption: 'Ancient oak tree with deep roots' },
+      { id: 17713087, caption: 'Large tree in open field' },
+      { id: 1166209,  caption: 'Old tree roots in forest' },
+      { id: 36983661, caption: 'Twisting ancient tree trunk' },
+    ]
+  },
+  {
+    id: 'gevurot',
+    names: ['gevurot', 'g\'vurot', 'גבורות', 'power of god', 'divine power', 'rain prayer', 'geshem', 'tal'],
+    theme: 'Power & rain',
+    searchTerms: 'rain dew water drops morning renewal',
+    photos: [
+      { id: 36832999, caption: 'Morning dew on fresh green grass' },
+      { id: 36236131, caption: 'Dew drops on grass at dawn' },
+      { id: 20785231, caption: 'Grass covered in morning dew' },
+      { id: 1166209,  caption: 'Rain falling on still water' },
+    ]
+  },
+  {
+    id: 'kedushah',
+    names: ['kedushah', 'k\'dushah', 'קדושה', 'holiness', 'holy holy holy', 'kadosh'],
+    theme: 'Holiness',
+    searchTerms: 'mountain peak clouds sky radiant light nature',
+    photos: [
+      { id: 325185,   caption: 'Light rays through cloudy sky' },
+      { id: 2440009,  caption: 'Radiant sunrise over mountains' },
+      { id: 36983661, caption: 'Light breaking through clouds' },
+      { id: 1028600,  caption: 'Glowing horizon at dawn' },
+    ]
+  },
+  {
+    id: 'torahservice',
+    names: ['torah service', 'torah reading', 'etz chaim', 'eitz chaim', 'עץ חיים', 'gadlu', 'hagbah', 'Torah portion'],
+    theme: 'Torah & learning',
+    searchTerms: 'open book scroll calligraphy parchment old letters',
+    photos: [
+      { id: 261763,   caption: 'Open book bathed in light' },
+      { id: 159866,   caption: 'Ancient parchment in warm light' },
+      { id: 1182942,  caption: 'Tree of life roots and sky' },
+      { id: 36409227, caption: 'Hands holding living plant' },
+    ]
+  },
+  {
+    id: 'hineimahtov',
+    names: ['hinei mah tov', 'הנה מה טוב', 'how good and pleasant', 'community together'],
+    theme: 'Community & togetherness',
+    searchTerms: 'community friends together joyful outdoor',
+    photos: [
+      { id: 30275074, caption: 'Three children holding hands in sunlight' },
+      { id: 4894804,  caption: 'Friends holding hands together' },
+      { id: 10043511, caption: 'Students holding hands on grass' },
+      { id: 7577074,  caption: 'Kids together in park' },
+    ]
+  },
+  {
+    id: 'lechadodi',
+    names: ['lecha dodi', 'l\'cha dodi', 'לכה דודי', 'come my beloved', 'shabbat bride', 'kabbalat shabbat'],
+    theme: 'Shabbat & welcome',
+    searchTerms: 'sunset friday shabbat candles warm glow',
+    photos: [
+      { id: 1755683,  caption: 'Warm sunset over horizon' },
+      { id: 1028600,  caption: 'Golden hour light over water' },
+      { id: 36983661, caption: 'Purple and gold sunset sky' },
+      { id: 36167613, caption: 'Candles in soft warm light' },
+    ]
+  },
+  {
+    id: 'shabbatcandles',
+    names: ['candle lighting', 'shabbat candles', 'hadlakat nerot', 'נרות', 'candles'],
+    theme: 'Light & Shabbat',
+    searchTerms: 'candles soft warm light flame Shabbat',
+    photos: [
+      { id: 36167613, caption: 'Shabbat candles glowing' },
+      { id: 1755683,  caption: 'Warm candlelight' },
+      { id: 2440009,  caption: 'Candle flame close-up' },
+      { id: 167699,   caption: 'Soft golden candlelight' },
+    ]
+  },
+  {
+    id: 'kiddushshabbat',
+    names: ['kiddush', 'קידוש', 'kiddush shabbat', 'wine blessing', 'borei pri hagafen'],
+    theme: 'Wine & blessing',
+    searchTerms: 'wine glass grapes vineyard kiddush',
+    photos: [
+      { id: 2912033,  caption: 'Wine glass in golden light' },
+      { id: 1407846,  caption: 'Red grapes on vine' },
+      { id: 2449600,  caption: 'Glass of wine at sunset' },
+      { id: 36983661, caption: 'Wine and bread on table' },
+    ]
+  },
+  {
+    id: 'motzi',
+    names: ['motzi', 'hamotzi', 'המוציא', 'bread blessing', 'challah'],
+    theme: 'Bread & blessing',
+    searchTerms: 'challah bread golden loaf fresh baked',
+    photos: [
+      { id: 1775043,  caption: 'Golden braided challah loaf' },
+      { id: 2724354,  caption: 'Freshly baked bread in warm light' },
+      { id: 1407846,  caption: 'Bread and wheat in sunlight' },
+      { id: 36409227, caption: 'Hands breaking fresh bread' },
+    ]
+  },
+  {
+    id: 'oseishalom',
+    names: ['oseh shalom', 'עושה שלום', 'who makes peace', 'shalom rav'],
+    theme: 'Peace',
+    searchTerms: 'white dove peace sky serene blue',
+    photos: [
+      { id: 19915968, caption: 'White dove in flight' },
+      { id: 33978515, caption: 'Dove flying against blue sky' },
+      { id: 32716025, caption: 'White dove soaring' },
+      { id: 17643023, caption: 'White bird in open sky' },
+    ]
+  },
+  {
+    id: 'aleinu',
+    names: ['aleinu', 'עלינו', 'tikkun olam', 'our duty'],
+    theme: 'Tikkun olam & hope',
+    searchTerms: 'child planting nature world hope future',
+    photos: [
+      { id: 36409227, caption: 'Child holding small plant' },
+      { id: 28744932, caption: 'Hand holding green seedling' },
+      { id: 16239477, caption: 'Child hands with flower' },
+      { id: 37536800, caption: 'Child holding daisies' },
+    ]
+  },
+  {
+    id: 'kaddish',
+    names: ['kaddish', 'קדיש', 'mourners kaddish', 'mourner\'s kaddish', 'yitgadal', 'yitgadal v\'yitkadash'],
+    theme: 'Memory & sanctification',
+    searchTerms: 'candle flame memory sunset quiet light',
+    photos: [
+      { id: 36167613, caption: 'Single candle flame at dusk' },
+      { id: 1755683,  caption: 'Soft sunset light on water' },
+      { id: 2440009,  caption: 'Quiet horizon at golden hour' },
+      { id: 36983661, caption: 'Sunlight through evening clouds' },
+    ]
+  },
+  {
+    id: 'einkelo',
+    names: ['ein keloheinu', 'ein kelohenu', 'אין כאלהינו', 'there is none like our god'],
+    theme: 'Praise & celebration',
+    searchTerms: 'joyful celebration music light festive',
+    photos: [
+      { id: 8107205,  caption: 'Gold trumpet in sunlight' },
+      { id: 1370300,  caption: 'Stars and night sky' },
+      { id: 325185,   caption: 'Light and sky' },
+      { id: 1028600,  caption: 'Golden light over landscape' },
+    ]
+  },
+  {
+    id: 'adonolam',
+    names: ['adon olam', 'אדון עולם', 'lord of the universe', 'eternal master'],
+    theme: 'Eternity & wonder',
+    searchTerms: 'universe stars galaxy infinity night sky',
+    photos: [
+      { id: 1370300,  caption: 'Milky way stars over landscape' },
+      { id: 36983661, caption: 'Star-filled night sky' },
+      { id: 2440009,  caption: 'Night sky over mountains' },
+      { id: 1028600,  caption: 'Dawn breaking over dark landscape' },
+    ]
+  },
+  {
+    id: 'yigdal',
+    names: ['yigdal', 'יגדל'],
+    theme: 'Praise & principles',
+    searchTerms: 'sunrise expansive sky mountains grandeur',
+    photos: [
+      { id: 2440009,  caption: 'Grand mountain sunrise' },
+      { id: 1028600,  caption: 'Sweeping sky and horizon' },
+      { id: 36983661, caption: 'Wide open sky' },
+      { id: 325185,   caption: 'Light and clouds' },
+    ]
+  },
+  {
+    id: 'psalm150',
+    names: ['psalm 150', 'mizmor', 'mizmor shir', 'praise with instruments', 'hallelujah'],
+    theme: 'Praise with instruments',
+    searchTerms: 'musical instruments trumpet praise joyful',
+    photos: [
+      { id: 8107205,  caption: 'Gold trumpet' },
+      { id: 15441039, caption: 'Close-up of two trumpets' },
+      { id: 20385211, caption: 'Trumpet and musical notes' },
+      { id: 51932,    caption: 'Gleaming musical instrument' },
+    ]
+  },
+  {
+    id: 'mahrabu',
+    names: ['mah rabu', 'מה רבו', 'how abundant', 'wonder of creation'],
+    theme: 'Wonder & creation',
+    searchTerms: 'wildflowers field nature wonder creation colorful',
+    photos: [
+      { id: 37728654, caption: 'Wildflower field with poppies' },
+      { id: 33802061, caption: 'Wildflowers in lush meadow' },
+      { id: 38027227, caption: 'Red poppies and blue cornflowers' },
+      { id: 7254331,  caption: 'Red poppies on green field' },
+    ]
+  },
+  {
+    id: 'kavanah',
+    names: ['kavanah', 'kavanot', 'כוונה', 'intention', 'mindfulness', 'rootedness'],
+    theme: 'Intention & rootedness',
+    searchTerms: 'tree roots grounded stillness meditation',
+    photos: [
+      { id: 17713087, caption: 'Large oak in open field' },
+      { id: 1182942,  caption: 'Ancient tree against blue sky' },
+      { id: 36983661, caption: 'Rooted tree in morning mist' },
+      { id: 2440009,  caption: 'Trees in still landscape' },
+    ]
+  },
+  {
+    id: 'hashkivenu',
+    names: ['hashkivenu', 'השכיבנו', 'lay us down in peace', 'evening prayer', 'maariv aravim'],
+    theme: 'Evening & rest',
+    searchTerms: 'sunset evening dusk peaceful sky rest',
+    photos: [
+      { id: 1755683,  caption: 'Peaceful sunset over water' },
+      { id: 36983661, caption: 'Purple evening sky' },
+      { id: 1028600,  caption: 'Calm dusk over horizon' },
+      { id: 36167613, caption: 'Soft evening light' },
+    ]
+  },
+  {
+    id: 'veshamru',
+    names: ['v\'shamru', 'veshamru', 'ושמרו', 'shabbat sign', 'shabbat covenant'],
+    theme: 'Shabbat covenant',
+    searchTerms: 'shabbat rest peaceful nature covenant light',
+    photos: [
+      { id: 36983661, caption: 'Peaceful Shabbat light' },
+      { id: 1755683,  caption: 'Warm golden rest' },
+      { id: 167699,   caption: 'Still water at dusk' },
+      { id: 36167613, caption: 'Candles and warm light' },
+    ]
+  },
+  {
+    id: 'torahblessings',
+    names: ['aliyah', 'birkot hatorah', 'torah blessings', 'blessed are you', 'baruch atah re: torah'],
+    theme: 'Torah & blessing',
+    searchTerms: 'open book scroll learning light wisdom',
+    photos: [
+      { id: 261763,   caption: 'Book open in warm light' },
+      { id: 159866,   caption: 'Ancient scroll on table' },
+      { id: 1182942,  caption: 'Tree of life' },
+      { id: 1166209,  caption: 'Warm reading light' },
+    ]
+  },
+  {
+    id: 'wherever',
+    names: ['wherever you go', 'jewish world', 'am yisrael', 'עם ישראל', 'jewish community'],
+    theme: 'Jewish world & peoplehood',
+    searchTerms: 'globe world map wandering journey',
+    photos: [
+      { id: 3828834,  caption: 'Desk globe' },
+      { id: 30792661, caption: 'Vintage world globe' },
+      { id: 8828394,  caption: 'Globes on wooden table' },
+      { id: 4870334,  caption: 'Globe over open hand' },
+    ]
+  },
+];
+
+// ─── API KEY MANAGEMENT ────────────────────────────────────────────────────────
+
+const KEY_STORAGE = 'vtImageHelper_pexelsKey';
+
+function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
+
+function updateKeyUI() {
+  const key = getKey();
+  const status = document.getElementById('keyStatus');
+  const badge  = document.getElementById('modeBadge');
+  const toggle = document.getElementById('keyToggle');
+  const clearBtn = document.getElementById('clearKeyBtn');
+  const input  = document.getElementById('keyInput');
+  if (key) {
+    status.textContent = 'Key saved \u2713';
+    status.className = 'apikey-status active';
+    badge.textContent = 'Live search active';
+    badge.className = 'mode-badge live';
+    toggle.textContent = 'Change';
+    clearBtn.style.display = 'inline-block';
+    input.value = key;
+  } else {
+    status.textContent = 'No key saved';
+    status.className = 'apikey-status inactive';
+    badge.textContent = 'Using curated photos';
+    badge.className = 'mode-badge curated';
+    toggle.textContent = 'Set up';
+    clearBtn.style.display = 'none';
+    input.value = '';
+  }
+}
+
+function toggleKeyPanel() {
+  const body = document.getElementById('keyBody');
+  const toggle = document.getElementById('keyToggle');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  toggle.textContent = open ? 'Hide' : (getKey() ? 'Change' : 'Set up');
+}
+
+function saveKey() {
+  const val = document.getElementById('keyInput').value.trim();
+  const msg = document.getElementById('keyMsg');
+  if (!val) {
+    showKeyMsg('Please paste your Pexels API key first.', '#c0392b');
+    return;
+  }
+  localStorage.setItem(KEY_STORAGE, val);
+  updateKeyUI();
+  showKeyMsg('Key saved. Live search is now active.', 'var(--teal)');
+  setTimeout(() => {
+    document.getElementById('keyBody').style.display = 'none';
+    document.getElementById('keyToggle').textContent = 'Change';
+  }, 1800);
+}
+
+function clearKey() {
+  localStorage.removeItem(KEY_STORAGE);
+  updateKeyUI();
+  showKeyMsg('Key removed. Falling back to curated photos.', 'var(--text-muted)');
+}
+
+function showKeyMsg(text, color) {
+  const msg = document.getElementById('keyMsg');
+  msg.textContent = text;
+  msg.style.color = color;
+  msg.style.display = 'block';
+}
+
+// ─── MATCHING LOGIC ────────────────────────────────────────────────────────────
+
+function parsePrayers(outline) {
+  const lower = outline.toLowerCase();
+  const matched = [];
+  const used = new Set();
+  for (const p of PRAYERS) {
+    for (const name of p.names) {
+      if (lower.includes(name.toLowerCase()) && !used.has(p.id)) {
+        matched.push(p);
+        used.add(p.id);
+        break;
+      }
+    }
+  }
+  return matched;
+}
+
+function buildSearchQuery(prayer, context) {
+  let q = prayer.searchTerms;
+  if (context) {
+    const ctx = context.toLowerCase();
+    if (ctx.includes('high holiday') || ctx.includes('rosh hashanah') || ctx.includes('yom kippur'))
+      q += ' solemn meaningful';
+    else if (ctx.includes('shabbat')) q += ' warm gentle';
+    else if (ctx.includes('nature')) q += ' outdoor natural';
+    else if (ctx.includes('artistic') || ctx.includes('art')) q += ' artistic';
+  }
+  return q;
+}
+
+function pexelsSearchUrl(prayer, context) {
+  return 'https://www.pexels.com/search/' + encodeURIComponent(buildSearchQuery(prayer, context)) + '/';
+}
+
+// ─── PEXELS API FETCH ──────────────────────────────────────────────────────────
+
+async function fetchLivePhotos(prayer, context, apiKey) {
+  const q = encodeURIComponent(buildSearchQuery(prayer, context));
+  const url = `https://api.pexels.com/v1/search?query=${q}&per_page=8&orientation=landscape`;
+  const res = await fetch(url, { headers: { Authorization: apiKey } });
+  if (!res.ok) throw new Error('Pexels API error: ' + res.status);
+  const data = await res.json();
+  return (data.photos || []).map(p => ({
+    id: p.id,
+    caption: p.alt || p.photographer,
+    src: p.src.large,
+    pexelsUrl: p.url,
+    photographer: p.photographer,
+    photographerUrl: p.photographer_url,
+  }));
+}
+
+// ─── RENDERING ─────────────────────────────────────────────────────────────────
+
+const selections = {};
+
+function selectPhoto(prayerId, photoId, caption, srcUrl) {
+  selections[prayerId] = { photoId, caption, srcUrl };
+
+  document.querySelectorAll(`.img-card[data-prayer="${prayerId}"]`).forEach(card => {
+    card.classList.toggle('selected', card.dataset.photo == photoId);
+  });
+
+  const dl = document.getElementById('dl-' + prayerId);
+  if (dl) {
+    const slug = caption.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+    const filename = prayerId + '-' + slug + '.jpg';
+    // Use the direct image src for download; Pexels live photos need dl param
+    const dlHref = srcUrl
+      ? srcUrl + (srcUrl.includes('?') ? '&' : '?') + `dl=${filename}&fm=jpg`
+      : `https://images.pexels.com/photos/${photoId}/pexels-photo-${photoId}.jpeg?cs=srgb&dl=${filename}&fm=jpg`;
+    dl.href = dlHref;
+    dl.download = filename;
+    dl.textContent = '';
+    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download ${filename}`;
+    dl.classList.remove('disabled');
+  }
+}
+
+function photoCardHtml(prayerId, photo, isLive) {
+  const src = isLive
+    ? photo.src
+    : `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=520`;
+  const pageUrl = isLive ? photo.pexelsUrl : `https://www.pexels.com/photo/${photo.id}/`;
+  const captionExtra = isLive && photo.photographer
+    ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`
+    : '';
+  const srcAttr = isLive ? `data-src="${photo.src}"` : '';
+  return `
+    <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
+         onclick="selectPhoto('${prayerId}', ${photo.id}, '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${isLive ? photo.src : ''}')">
+      <input type="radio" name="${prayerId}" value="${photo.id}">
+      <img src="${src}" loading="lazy" alt="${photo.caption}">
+      <div class="img-caption">
+        <span class="cap-text">${photo.caption}${captionExtra}</span>
+        <a class="pexels-link" href="${pageUrl}" target="_blank" rel="noopener" title="View on Pexels">&#8599;</a>
+      </div>
+    </div>`;
+}
+
+function prayerSectionHtml(prayer, context, photos, isLive, customTerms) {
+  const searchTerms = customTerms || buildSearchQuery(prayer, context);
+  const searchUrl = 'https://www.pexels.com/search/' + encodeURIComponent(searchTerms) + '/';
+  const title = prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1);
+  const cards = photos.map(ph => photoCardHtml(prayer.id, ph, isLive)).join('');
+  const sourceLabel = isLive
+    ? '<span style="font-size:11px;color:var(--teal);font-weight:600;">&#9679; Live results</span>'
+    : '<span style="font-size:11px;color:var(--text-muted);">Curated</span>';
+  const apiKey = getKey();
+  const refineSearchBtn = apiKey
+    ? `<button class="btn-refine" onclick="refinePrayer('${prayer.id}', '${prayer.id}-refine-input', '${context.replace(/'/g,"\\'")}')">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        Refresh
+      </button>`
+    : '';
+  return `
+    <div class="prayer-section" id="section-${prayer.id}">
+      <div class="prayer-header">
+        <span class="prayer-title">${title} ${sourceLabel}</span>
+        <span class="prayer-theme">${prayer.theme}</span>
+      </div>
+      <div class="img-grid" id="grid-${prayer.id}">${cards}</div>
+      <div class="refine-bar">
+        <label for="${prayer.id}-refine-input">Refine search:</label>
+        <input type="text" id="${prayer.id}-refine-input" value="${searchTerms}"
+               placeholder="e.g. nature sunrise peaceful&hellip;"
+               onkeydown="if(event.key==='Enter' && '${apiKey}') refinePrayer('${prayer.id}', '${prayer.id}-refine-input', '${context.replace(/'/g,"\\'")}')">
+        ${refineSearchBtn}
+        <a class="btn-refine-pexels" id="pexels-link-${prayer.id}" href="${searchUrl}" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          Browse on Pexels
+        </a>
+      </div>
+      <div class="action-bar">
+        <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Select a photo above&hellip;
+        </a>
+      </div>
+    </div>`;
+}
+
+async function refinePrayer(prayerId, inputId, context) {
+  const apiKey = getKey();
+  if (!apiKey) return;
+  const input = document.getElementById(inputId);
+  const terms = input ? input.value.trim() : '';
+  if (!terms) return;
+
+  const grid = document.getElementById('grid-' + prayerId);
+  if (!grid) return;
+
+  // Update Pexels browse link to match new terms
+  const pexelsLink = document.getElementById('pexels-link-' + prayerId);
+  if (pexelsLink) {
+    pexelsLink.href = 'https://www.pexels.com/search/' + encodeURIComponent(terms) + '/';
+  }
+
+  // Reset download button
+  const dl = document.getElementById('dl-' + prayerId);
+  if (dl) {
+    dl.className = 'btn-download disabled';
+    dl.removeAttribute('href');
+    dl.removeAttribute('download');
+    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Select a photo above&hellip;`;
+  }
+
+  grid.innerHTML = loadingGridHtml(prayerId);
+
+  try {
+    const q = encodeURIComponent(terms);
+    const url = `https://api.pexels.com/v1/search?query=${q}&per_page=8&orientation=landscape`;
+    const res = await fetch(url, { headers: { Authorization: apiKey } });
+    if (!res.ok) throw new Error('Pexels API error: ' + res.status);
+    const data = await res.json();
+    const photos = (data.photos || []).map(p => ({
+      id: p.id,
+      caption: p.alt || p.photographer,
+      src: p.src.large,
+      pexelsUrl: p.url,
+      photographer: p.photographer,
+      photographerUrl: p.photographer_url,
+    }));
+    if (photos.length === 0) {
+      grid.innerHTML = '<div class="img-loading">No results for those terms. Try different keywords.</div>';
+    } else {
+      grid.innerHTML = photos.map(ph => photoCardHtml(prayerId, ph, true)).join('');
+      // Update source badge
+      const titleEl = document.querySelector(`#section-${prayerId} .prayer-title`);
+      if (titleEl) {
+        titleEl.innerHTML = titleEl.innerHTML.replace(/<span[^>]*>.*?<\/span>/, '<span style="font-size:11px;color:var(--teal);font-weight:600;">&#9679; Live results</span>');
+      }
+    }
+  } catch (err) {
+    grid.innerHTML = '<div class="img-loading" style="color:#c0392b;">Search failed. Check your API key or try again.</div>';
+  }
+}
+
+function loadingGridHtml(prayerId) {
+  return `<div class="img-loading"><div class="spinner"></div>Fetching photos&hellip;</div>`;
+}
+
+// ─── MAIN FIND FUNCTION ────────────────────────────────────────────────────────
+
+async function findImages() {
+  const outline = document.getElementById('outline').value.trim();
+  const context = document.getElementById('ctx').value.trim();
+  const resultsEl = document.getElementById('results');
+  const apiKey = getKey();
+
+  if (!outline) {
+    resultsEl.innerHTML = '<div class="prayer-section" style="padding:24px 20px;color:var(--text-muted);">Please enter your service outline or prayer names above.</div>';
+    resultsEl.classList.add('visible');
+    return;
+  }
+
+  const matched = parsePrayers(outline);
+
+  if (matched.length === 0) {
+    resultsEl.innerHTML = `
+      <div class="no-match">
+        <p>No prayers recognized from your outline.</p>
+        <small>Try names like: Shema, Amidah, Kaddish, Lecha Dodi, Oseh Shalom, Aleinu&hellip;</small>
+      </div>`;
+    resultsEl.classList.add('visible');
+    return;
+  }
+
+  // Render shells immediately with curated or loading placeholders
+  const html = `
+    <div class="results-header">
+      <h2>Image options for your service</h2>
+      <span class="found-count">${matched.length} prayer${matched.length !== 1 ? 's' : ''} matched</span>
+    </div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.6;">
+      Select an image in each section, then download it. The file will be named <strong>[prayer]-[image].jpg</strong>.
+      All photos are from <a href="https://www.pexels.com" target="_blank" style="color:var(--navy-mid);">Pexels</a> and free to use.
+    </div>
+    ${matched.map(p => {
+      if (apiKey) {
+        const searchTerms = buildSearchQuery(p, context);
+        const searchUrl = 'https://www.pexels.com/search/' + encodeURIComponent(searchTerms) + '/';
+        const title = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
+        return `
+          <div class="prayer-section" id="section-${p.id}">
+            <div class="prayer-header">
+              <span class="prayer-title">${title} <span style="font-size:11px;color:var(--teal);font-weight:600;">&#9679; Live results</span></span>
+              <span class="prayer-theme">${p.theme}</span>
+            </div>
+            <div class="img-grid" id="grid-${p.id}">${loadingGridHtml(p.id)}</div>
+            <div class="refine-bar">
+              <label for="${p.id}-refine-input">Refine search:</label>
+              <input type="text" id="${p.id}-refine-input" value="${searchTerms}"
+                     placeholder="e.g. nature sunrise peaceful&hellip;"
+                     onkeydown="if(event.key==='Enter') refinePrayer('${p.id}', '${p.id}-refine-input', '${context.replace(/'/g,"\\'")}')">
+              <button class="btn-refine" onclick="refinePrayer('${p.id}', '${p.id}-refine-input', '${context.replace(/'/g,"\\'")}')">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                Refresh
+              </button>
+              <a class="btn-refine-pexels" id="pexels-link-${p.id}" href="${searchUrl}" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                Browse on Pexels
+              </a>
+            </div>
+            <div class="action-bar">
+              <a id="dl-${p.id}" class="btn-download disabled" href="#">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Select a photo above&hellip;
+              </a>
+            </div>
+          </div>`;
+      } else {
+        return prayerSectionHtml(p, context, p.photos, false);
+      }
+    }).join('')}
+  `;
+
+  resultsEl.innerHTML = html;
+  resultsEl.classList.add('visible');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // If we have an API key, fetch live photos for each prayer in parallel
+  if (apiKey) {
+    matched.forEach(async (prayer) => {
+      const grid = document.getElementById('grid-' + prayer.id);
+      if (!grid) return;
+      try {
+        const photos = await fetchLivePhotos(prayer, context, apiKey);
+        if (photos.length === 0) throw new Error('No results');
+        grid.innerHTML = photos.map(ph => photoCardHtml(prayer.id, ph, true)).join('');
+      } catch (err) {
+        // Fall back to curated on any error
+        const isAuthErr = err.message.includes('401') || err.message.includes('403');
+        const note = isAuthErr
+          ? '<div style="font-size:12px;color:#c0392b;padding:0 20px 10px;">API key error &mdash; check your key in the setup panel above. Showing curated photos.</div>'
+          : '<div style="font-size:12px;color:var(--text-muted);padding:0 20px 10px;">Could not load live photos &mdash; showing curated set.</div>';
+        grid.innerHTML = prayer.photos.map(ph => photoCardHtml(prayer.id, ph, false)).join('');
+        grid.insertAdjacentHTML('beforebegin', note);
+      }
+    });
+  }
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+
+updateKeyUI();
+
+// Scroll-to-top button
+window.addEventListener('scroll', () => {
+  document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
+});
+
+document.getElementById('outline').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); findImages(); }
+});
+</script>
+
+</body>
+</html>
