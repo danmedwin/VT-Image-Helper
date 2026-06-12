@@ -635,6 +635,42 @@
   body.admin-mode .admin-blocked-panel { display: block; }
   .admin-blocked-panel h3 { font-size: 14px; color: #c0392b; margin-bottom: 12px; }
 
+  .admin-review-panel {
+    display: none;
+    background: #f2fff8;
+    border: 1px solid #b3dfc8;
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-top: 28px;
+  }
+  body.admin-mode .admin-review-panel { display: block; }
+  .admin-review-panel h3 { font-size: 14px; color: #1a7a4a; margin-bottom: 6px; }
+  .review-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 10px 0 4px;
+  }
+  .review-prayer-select {
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid #b3dfc8;
+    border-radius: var(--radius);
+    font-family: inherit;
+    min-width: 200px;
+    background: var(--white);
+  }
+  .review-fav-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--navy);
+    cursor: pointer;
+    user-select: none;
+  }
+
   .admin-terms-panel {
     display: none;
     background: #f0f7ff;
@@ -848,6 +884,23 @@
 
   <div id="results"></div>
 
+  <div class="admin-review-panel" id="adminReviewPanel">
+    <h3>&#128247; Browse &amp; review photos</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin:0;">
+      Browse curated photos for any prayer. Block &#10005; removes from future refreshes. &#9825; favorites are shared across users.
+    </p>
+    <div class="review-controls">
+      <select class="review-prayer-select" id="reviewPrayerSelect" onchange="loadReviewPhotos()">
+        <option value="">&#8212; Choose a prayer &#8212;</option>
+      </select>
+      <label class="review-fav-toggle">
+        <input type="checkbox" id="reviewFavoritesOnly" onchange="loadReviewPhotos()">
+        Favorites only
+      </label>
+    </div>
+    <div id="reviewGrid"></div>
+  </div>
+
   <div class="admin-blocked-panel" id="adminBlockedPanel">
     <h3>&#128683; Blocked photos</h3>
     <div id="blockedList" style="font-size:13px;color:var(--text-muted);">Loading&hellip;</div>
@@ -869,7 +922,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.0</span>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.1</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1480,12 +1533,55 @@ function toggleAdmin() {
       sessionStorage.setItem('vtAdmin', '1');
       document.body.classList.add('admin-mode');
       btn.textContent = 'Exit admin';
+      renderAdminReviewPanel();
       renderBlockedPanel();
       renderSearchTermsEditor();
     } else if (pass !== null) {
       alert('Incorrect passcode.');
     }
   }
+}
+
+// ─── ADMIN PHOTO REVIEW ────────────────────────────────────────────────────────
+
+function renderAdminReviewPanel() {
+  const select = document.getElementById('reviewPrayerSelect');
+  if (!select || select.options.length > 1) return;
+  for (const p of PRAYERS) {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
+    select.appendChild(opt);
+  }
+}
+
+function loadReviewPhotos() {
+  const prayerId = document.getElementById('reviewPrayerSelect').value;
+  const favoritesOnly = document.getElementById('reviewFavoritesOnly').checked;
+  const container = document.getElementById('reviewGrid');
+  if (!container) return;
+  if (!prayerId) { container.innerHTML = ''; return; }
+
+  let photos = getCuratedPhotos(prayerId);
+  if (!photos || !photos.length) {
+    const prayer = PRAYERS.find(p => p.id === prayerId);
+    photos = prayer ? prayer.photos : [];
+  }
+
+  if (favoritesOnly) {
+    photos = photos.filter(ph => ((favoritesData[prayerId] || {})[String(ph.id)] || 0) > 0);
+  }
+
+  if (!photos.length) {
+    container.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 0;">No photos to show.</p>';
+    return;
+  }
+
+  container.innerHTML = `<div class="img-grid" style="padding:12px 0 0;">${
+    photos.map(ph => photoCardHtml(prayerId, ph, !!ph.src)).join('')
+  }</div>`;
+  renderAllFavoriteCounts();
+  applyBlockedToCards();
 }
 
 // ─── SEARCH TERMS EDITOR ───────────────────────────────────────────────────────
