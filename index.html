@@ -538,6 +538,27 @@
     line-height: 1.5;
   }
 
+  /* FAVORITE BUTTON */
+  .btn-fav {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 2px 3px;
+    color: var(--text-muted);
+    line-height: 1;
+    transition: color 0.15s, transform 0.1s;
+    flex-shrink: 0;
+  }
+  .btn-fav:hover { color: #e74c3c; transform: scale(1.2); }
+  .btn-fav.favorited { color: #e74c3c; }
+  .fav-count {
+    font-size: 11px;
+    color: #e74c3c;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
   /* FOOTER */
   footer {
     border-top: 1px solid var(--border);
@@ -644,7 +665,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.5</span></p>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.6</span></p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
   For more information on Visual T&#x2019;filah&trade;, see the
   <a href="https://www.ccarpress.org/search-grid/?category=CCARVT" target="_blank" rel="noopener">CCAR Press VT collection</a>.</p>
@@ -1045,9 +1066,14 @@ const PRAYERS = [
 
 // ─── API KEY MANAGEMENT ────────────────────────────────────────────────────────
 
-const KEY_STORAGE        = 'vtImageHelper_pexelsKey';
-const CURATED_STORAGE    = 'vtImageHelper_curatedPhotos';
+const KEY_STORAGE          = 'vtImageHelper_pexelsKey';
+const CURATED_STORAGE      = 'vtImageHelper_curatedPhotos';
 const CURATED_DATE_STORAGE = 'vtImageHelper_curatedDate';
+const MY_FAVORITES_KEY     = 'vtMyFavorites';
+const FIREBASE_URL         = 'https://vt-image-helper-default-rtdb.firebaseio.com';
+
+let favoritesData = {}; // { prayerId: { photoId: count } } — from Firebase
+let myFavorites   = new Set(); // 'prayerId:photoId' strings this browser has favorited
 
 function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
 
@@ -1149,6 +1175,86 @@ async function loadCuratedJson() {
       updateKeyUI();
     }
   } catch (e) { /* offline or local file — hardcoded fallback */ }
+}
+
+// ─── FAVORITES ─────────────────────────────────────────────────────────────────
+
+function loadMyFavorites() {
+  try {
+    const stored = localStorage.getItem(MY_FAVORITES_KEY);
+    if (stored) JSON.parse(stored).forEach(k => myFavorites.add(k));
+  } catch (e) {}
+}
+
+function saveMyFavorites() {
+  localStorage.setItem(MY_FAVORITES_KEY, JSON.stringify([...myFavorites]));
+}
+
+async function loadFavorites() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/favorites.json`);
+    if (res.ok) {
+      favoritesData = (await res.json()) || {};
+      renderAllFavoriteCounts();
+    }
+  } catch (e) {}
+}
+
+function renderAllFavoriteCounts() {
+  for (const [prayerId, photos] of Object.entries(favoritesData)) {
+    for (const [photoId, count] of Object.entries(photos || {})) {
+      updateFavUI(prayerId, photoId, count);
+    }
+  }
+}
+
+function updateFavUI(prayerId, photoId, count) {
+  const countEl = document.getElementById(`fav-count-${photoId}`);
+  const btnEl   = document.getElementById(`fav-btn-${photoId}`);
+  if (countEl) countEl.textContent = count > 0 ? count : '';
+  if (btnEl) {
+    const isMine = myFavorites.has(`${prayerId}:${photoId}`);
+    btnEl.textContent = isMine ? '♥' : '♡';
+    btnEl.classList.toggle('favorited', isMine);
+  }
+}
+
+async function incrementFirebase(prayerId, photoId, delta, retries = 3) {
+  const url = `${FIREBASE_URL}/favorites/${prayerId}/${photoId}.json`;
+  for (let i = 0; i < retries; i++) {
+    try {
+      const getRes = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+      const etag = getRes.headers.get('ETag');
+      const current = (await getRes.json()) || 0;
+      const putRes = await fetch(url, {
+        method: 'PUT',
+        headers: { 'if-match': etag, 'Content-Type': 'application/json' },
+        body: JSON.stringify(Math.max(0, current + delta)),
+      });
+      if (putRes.ok || putRes.status !== 412) return;
+    } catch (e) { return; }
+  }
+}
+
+async function toggleFavorite(prayerId, photoId, event) {
+  if (event) event.stopPropagation();
+  const key = `${prayerId}:${photoId}`;
+  const wasFav = myFavorites.has(key);
+  const delta = wasFav ? -1 : 1;
+
+  if (wasFav) myFavorites.delete(key);
+  else myFavorites.add(key);
+  saveMyFavorites();
+
+  if (!favoritesData[prayerId]) favoritesData[prayerId] = {};
+  favoritesData[prayerId][photoId] = Math.max(0, (favoritesData[prayerId][photoId] || 0) + delta);
+  updateFavUI(prayerId, photoId, favoritesData[prayerId][photoId]);
+
+  await incrementFirebase(prayerId, photoId, delta);
+}
+
+function autoFavorite(prayerId, photoId) {
+  if (!myFavorites.has(`${prayerId}:${photoId}`)) toggleFavorite(prayerId, photoId);
 }
 
 async function refreshCuratedLibrary() {
@@ -1260,6 +1366,7 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
     dl.textContent = '';
     dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download ${filename}`;
     dl.classList.remove('disabled');
+    dl.onclick = () => autoFavorite(prayerId, photoId);
   }
 }
 
@@ -1282,7 +1389,12 @@ function photoCardHtml(prayerId, photo, isLive) {
       <img src="${src}" loading="lazy" alt="${photo.caption}" onerror="this.closest('.img-card').style.display='none'">
       <div class="img-caption">
         <span class="cap-text">${captionText}</span>
-        <a class="pexels-link" href="${pageUrl}" target="_blank" rel="noopener" title="View on Pexels">&#8599;</a>
+        <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+          <button class="btn-fav" id="fav-btn-${photo.id}"
+                  onclick="toggleFavorite('${prayerId}', ${photo.id}, event)" title="Favorite">&#9825;</button>
+          <span class="fav-count" id="fav-count-${photo.id}"></span>
+          <a class="pexels-link" href="${pageUrl}" target="_blank" rel="noopener" title="View on Pexels">&#8599;</a>
+        </div>
       </div>
     </div>`;
 }
@@ -1374,6 +1486,7 @@ async function refinePrayer(prayerId, inputId, context) {
       grid.innerHTML = '<div class="img-loading">No results for those terms. Try different keywords.</div>';
     } else {
       grid.innerHTML = photos.map(ph => photoCardHtml(prayerId, ph, true)).join('');
+      renderAllFavoriteCounts();
       // Update source badge
       const titleEl = document.querySelector(`#section-${prayerId} .prayer-title`);
       if (titleEl) {
@@ -1470,6 +1583,7 @@ async function findImages() {
   resultsEl.innerHTML = html;
   resultsEl.classList.add('visible');
   resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  renderAllFavoriteCounts();
 
   // If we have an API key, fetch live photos for each prayer in parallel
   if (apiKey) {
@@ -1480,6 +1594,7 @@ async function findImages() {
         const photos = await fetchLivePhotos(prayer, context, apiKey);
         if (photos.length === 0) throw new Error('No results');
         grid.innerHTML = photos.map(ph => photoCardHtml(prayer.id, ph, true)).join('');
+        renderAllFavoriteCounts();
       } catch (err) {
         // Fall back to curated on any error
         const isAuthErr = err.message.includes('401') || err.message.includes('403');
@@ -1488,6 +1603,7 @@ async function findImages() {
           : '<div style="font-size:12px;color:var(--text-muted);padding:0 20px 10px;">Could not load live photos &mdash; showing curated set.</div>';
         grid.innerHTML = prayer.photos.map(ph => photoCardHtml(prayer.id, ph, false)).join('');
         grid.insertAdjacentHTML('beforebegin', note);
+        renderAllFavoriteCounts();
       }
     });
   }
@@ -1495,6 +1611,8 @@ async function findImages() {
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 
+loadMyFavorites();
+loadFavorites();
 updateKeyUI();
 loadCuratedJson();
 

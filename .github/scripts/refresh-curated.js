@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 // Fetches 4 landscape photos per prayer from Pexels and writes curated.json.
+// Reads favorites from Firebase — any favorited photo is fetched by ID and
+// preserved in the curated set even if the new Pexels search doesn't return it.
 // Run by the GitHub Action; requires PEXELS_API_KEY env var.
 
 const https = require('https');
 const fs    = require('fs');
 const path  = require('path');
 
-const API_KEY = process.env.PEXELS_API_KEY;
+const API_KEY      = process.env.PEXELS_API_KEY;
+const FIREBASE_URL = 'https://vt-image-helper-default-rtdb.firebaseio.com';
+
 if (!API_KEY) { console.error('PEXELS_API_KEY is not set'); process.exit(1); }
 
 const PRAYERS = [
@@ -44,46 +48,99 @@ const PRAYERS = [
   { id: 'wherever',      searchTerms: 'globe world map wandering journey' },
 ];
 
-function pexelsFetch(query) {
+function get(url, headers = {}) {
   return new Promise((resolve, reject) => {
-    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=4&orientation=landscape`;
-    https.get(url, { headers: { Authorization: API_KEY } }, res => {
+    https.get(url, { headers }, res => {
       let body = '';
       res.on('data', chunk => body += chunk);
-      res.on('end', () => {
-        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
-        resolve(JSON.parse(body));
-      });
+      res.on('end', () => resolve({ status: res.statusCode, body }));
     }).on('error', reject);
   });
+}
+
+async function pexelsSearch(query) {
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=4&orientation=landscape`;
+  const { status, body } = await get(url, { Authorization: API_KEY });
+  if (status !== 200) throw new Error(`Pexels search HTTP ${status}`);
+  return JSON.parse(body);
+}
+
+async function pexelsFetchById(photoId) {
+  const { status, body } = await get(`https://api.pexels.com/v1/photos/${photoId}`, { Authorization: API_KEY });
+  if (status !== 200) return null;
+  return JSON.parse(body);
+}
+
+async function getFavorites() {
+  try {
+    const { status, body } = await get(`${FIREBASE_URL}/favorites.json`);
+    if (status !== 200) return {};
+    return JSON.parse(body) || {};
+  } catch (e) {
+    console.warn('Could not fetch favorites from Firebase:', e.message);
+    return {};
+  }
+}
+
+function toPhotoObj(p) {
+  return {
+    id:           p.id,
+    caption:      p.alt || p.photographer,
+    src:          p.src.large,
+    pexelsUrl:    p.url,
+    photographer: p.photographer,
+  };
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function main() {
+  console.log('Fetching favorites from Firebase…');
+  const favorites = await getFavorites();
+
   const prayers = {};
 
   for (let i = 0; i < PRAYERS.length; i++) {
     const { id, searchTerms } = PRAYERS[i];
-    console.log(`[${i + 1}/${PRAYERS.length}] ${id}`);
+    process.stdout.write(`[${i + 1}/${PRAYERS.length}] ${id} … `);
+
+    // 1. Fresh Pexels search
+    let freshPhotos = [];
     try {
-      const data = await pexelsFetch(searchTerms);
-      prayers[id] = (data.photos || []).map(p => ({
-        id:           p.id,
-        caption:      p.alt || p.photographer,
-        src:          p.src.large,
-        pexelsUrl:    p.url,
-        photographer: p.photographer,
-      }));
+      const data = await pexelsSearch(searchTerms);
+      freshPhotos = (data.photos || []).map(toPhotoObj);
+      process.stdout.write(`${freshPhotos.length} fresh`);
     } catch (e) {
-      console.error(`  ✗ ${e.message}`);
-      prayers[id] = [];
+      process.stdout.write(`search failed (${e.message})`);
     }
-    if (i < PRAYERS.length - 1) await sleep(250); // stay within rate limits
+
+    // 2. Fetch any favorited photos not already in fresh results
+    const freshIds    = new Set(freshPhotos.map(p => String(p.id)));
+    const prayerFavs  = favorites[id] || {};
+    const favoritedIds = Object.entries(prayerFavs)
+      .filter(([, count]) => count > 0)
+      .map(([photoId]) => photoId);
+    const missingFavIds = favoritedIds.filter(pid => !freshIds.has(pid));
+
+    const protectedPhotos = [];
+    for (const photoId of missingFavIds) {
+      await sleep(150);
+      const p = await pexelsFetchById(photoId);
+      if (p) {
+        protectedPhotos.push({ ...toPhotoObj(p), favorited: true });
+        process.stdout.write(` +protected(${photoId})`);
+      }
+    }
+
+    // Favorited photos come first so they always appear in the UI
+    prayers[id] = [...protectedPhotos, ...freshPhotos];
+    console.log();
+
+    if (i < PRAYERS.length - 1) await sleep(250);
   }
 
   const today = new Date().toISOString().split('T')[0];
-  const out = { refreshed: today, prayers };
+  const out   = { refreshed: today, prayers };
   const outPath = path.join(process.cwd(), 'curated.json');
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
   console.log(`\nWritten ${outPath} (refreshed: ${today})`);
