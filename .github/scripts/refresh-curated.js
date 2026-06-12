@@ -225,7 +225,7 @@ async function main() {
 
     const blockedInPrayer = new Set(
       Object.entries(blocked[id] || {})
-        .filter(([, v]) => v === true)
+        .filter(([, v]) => v === true || (v && v.blocked === true))
         .map(([photoId]) => String(photoId))
     );
 

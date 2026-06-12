@@ -635,6 +635,51 @@
   body.admin-mode .admin-blocked-panel { display: block; }
   .admin-blocked-panel h3 { font-size: 14px; color: #c0392b; margin-bottom: 12px; }
 
+  /* BLOCK REASON MODAL */
+  .block-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .block-modal-overlay.open { display: flex; }
+  .block-modal {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  }
+  .block-modal h3 { font-size: 14px; color: #c0392b; margin: 0 0 12px; }
+  .block-modal-thumb {
+    width: 100%; height: 110px; object-fit: cover;
+    border-radius: var(--radius); margin-bottom: 14px; display: block;
+  }
+  .block-modal p { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 8px; }
+  .block-reason-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+  .block-reason-list label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+  .block-notes {
+    width: 100%; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 7px 10px; font-size: 13px; font-family: inherit; resize: vertical;
+    margin-bottom: 16px; box-sizing: border-box;
+  }
+  .block-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-modal-cancel {
+    background: none; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 7px 16px; font-size: 13px; cursor: pointer; color: var(--text-muted);
+  }
+  .btn-modal-block {
+    background: #c0392b; color: white; border: none; border-radius: var(--radius);
+    padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .btn-modal-block:hover { background: #a93226; }
+
   .admin-review-panel {
     display: none;
     background: #f2fff8;
@@ -909,10 +954,33 @@
   </div>
 </main>
 
+<!-- Block reason modal -->
+<div class="block-modal-overlay" id="blockModalOverlay" onclick="closeBlockModal()">
+  <div class="block-modal" onclick="event.stopPropagation()">
+    <h3>&#128683; Block this photo</h3>
+    <img class="block-modal-thumb" id="blockModalThumb" src="" alt="">
+    <p>Reason(s) for blocking:</p>
+    <div class="block-reason-list">
+      <label><input type="checkbox" value="inappropriate"> Inappropriate content</label>
+      <label><input type="checkbox" value="no_clear_space"> No clear space for text overlay</label>
+      <label><input type="checkbox" value="too_distracting"> Too distracting / busy composition</label>
+      <label><input type="checkbox" value="wrong_tone"> Wrong tone for this prayer</label>
+      <label><input type="checkbox" value="poor_quality"> Poor image quality (blurry or dark)</label>
+      <label><input type="checkbox" value="too_commercial"> Too commercial / stock-photo feel</label>
+      <label><input type="checkbox" value="off_topic"> Off-topic for this prayer</label>
+    </div>
+    <textarea class="block-notes" id="blockModalNotes" rows="2" placeholder="Additional notes (optional)&hellip;"></textarea>
+    <div class="block-modal-actions">
+      <button class="btn-modal-cancel" onclick="closeBlockModal()">Cancel</button>
+      <button class="btn-modal-block" onclick="confirmBlock()">Block photo</button>
+    </div>
+  </div>
+</div>
+
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.2</span>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.3</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1632,10 +1700,14 @@ async function loadBlocked() {
   } catch (e) {}
 }
 
+function isBlockedValue(v) {
+  return v === true || (v && v.blocked === true);
+}
+
 function applyBlockedToCards() {
   for (const [prayerId, photos] of Object.entries(blockedData)) {
-    for (const [photoId, isBlocked] of Object.entries(photos || {})) {
-      if (isBlocked) {
+    for (const [photoId, val] of Object.entries(photos || {})) {
+      if (isBlockedValue(val)) {
         document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
           .forEach(c => c.classList.add('blocked'));
       }
@@ -1643,29 +1715,59 @@ function applyBlockedToCards() {
   }
 }
 
-async function blockPhoto(prayerId, photoId, event) {
+let _pendingBlock = null;
+
+function showBlockModal(prayerId, photoId, event) {
   if (event) event.stopPropagation();
-  if (!confirm('Block this photo? It will be hidden for all users and excluded from future refreshes.')) return;
+  _pendingBlock = { prayerId, photoId };
+  // Grab thumbnail from any matching card on the page
+  const card = document.querySelector(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`);
+  const imgEl = card ? card.querySelector('img') : null;
+  const thumb = document.getElementById('blockModalThumb');
+  if (imgEl && imgEl.src) { thumb.src = imgEl.src; thumb.style.display = 'block'; }
+  else { thumb.style.display = 'none'; }
+  // Reset form
+  document.querySelectorAll('#blockModalOverlay input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.getElementById('blockModalNotes').value = '';
+  document.getElementById('blockModalOverlay').classList.add('open');
+}
+
+function closeBlockModal() {
+  document.getElementById('blockModalOverlay').classList.remove('open');
+  _pendingBlock = null;
+}
+
+async function confirmBlock() {
+  if (!_pendingBlock) return;
+  const { prayerId, photoId } = _pendingBlock;
+  const reasons = [...document.querySelectorAll('#blockModalOverlay input[type="checkbox"]:checked')]
+    .map(cb => cb.value);
+  const notes = document.getElementById('blockModalNotes').value.trim();
+  closeBlockModal();
+
+  const blockData = (reasons.length || notes)
+    ? { blocked: true, reasons, notes }
+    : true;
 
   await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'true',
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockData),
   });
-  // Zero out any favorites so it won't be protected
   await fetch(`${FIREBASE_URL}/favorites/${prayerId}/${photoId}.json`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '0',
   });
 
   if (!blockedData[prayerId]) blockedData[prayerId] = {};
-  blockedData[prayerId][photoId] = true;
+  blockedData[prayerId][photoId] = blockData;
   if (favoritesData[prayerId]) favoritesData[prayerId][photoId] = 0;
-  const key = `${prayerId}:${photoId}`;
-  myFavorites.delete(key);
+  myFavorites.delete(`${prayerId}:${photoId}`);
   saveMyFavorites();
 
   document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
     .forEach(c => c.classList.add('blocked'));
   updateFavUI(prayerId, photoId, 0);
   renderBlockedPanel();
+  const reviewSelect = document.getElementById('reviewPrayerSelect');
+  if (reviewSelect && reviewSelect.value === prayerId) loadReviewPhotos();
 }
 
 async function unblockPhoto(prayerId, photoId) {
@@ -1683,15 +1785,19 @@ function renderBlockedPanel() {
   if (!list) return;
   const items = [];
   for (const [prayerId, photos] of Object.entries(blockedData)) {
-    for (const [photoId, isBlocked] of Object.entries(photos || {})) {
-      if (isBlocked) items.push({ prayerId, photoId });
+    for (const [photoId, val] of Object.entries(photos || {})) {
+      if (isBlockedValue(val)) items.push({ prayerId, photoId, val });
     }
   }
   if (items.length === 0) {
     list.innerHTML = '<em>No photos blocked.</em>';
     return;
   }
-  list.innerHTML = items.map(({ prayerId, photoId }) => `
+  list.innerHTML = items.map(({ prayerId, photoId, val }) => {
+    const reasons = val && val.reasons && val.reasons.length
+      ? `<span style="font-size:11px;color:var(--text-muted);display:block;margin-top:2px;">${val.reasons.join(', ')}${val.notes ? ' — ' + val.notes : ''}</span>`
+      : (val && val.notes ? `<span style="font-size:11px;color:var(--text-muted);display:block;margin-top:2px;">${val.notes}</span>` : '');
+    return `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
       <img src="https://images.pexels.com/photos/${photoId}/pexels-photo-${photoId}.jpeg?auto=compress&cs=tinysrgb&w=80&h=50&fit=crop"
            style="width:80px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;" loading="lazy">
@@ -1699,17 +1805,22 @@ function renderBlockedPanel() {
         <strong>${prayerId}</strong> &mdash; photo&nbsp;${photoId}
         <a href="https://www.pexels.com/photo/${photoId}/" target="_blank" rel="noopener"
            style="font-size:11px;color:var(--navy-mid);margin-left:4px;">&#8599;</a>
+        ${reasons}
       </span>
       <button onclick="unblockPhoto('${prayerId}', ${photoId})"
               style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text-muted);">Unblock</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function copyFeedbackForClaude() {
   const items = [];
   for (const [prayerId, photos] of Object.entries(blockedData)) {
-    for (const [photoId, isBlocked] of Object.entries(photos || {})) {
-      if (isBlocked) items.push(`- ${prayerId}: photo ID ${photoId} (https://www.pexels.com/photo/${photoId}/)`);
+    for (const [photoId, val] of Object.entries(photos || {})) {
+      if (!isBlockedValue(val)) continue;
+      const reasons = val && val.reasons && val.reasons.length ? `\n    Reasons: ${val.reasons.join(', ')}` : '';
+      const notes   = val && val.notes ? `\n    Notes: ${val.notes}` : '';
+      items.push(`- ${prayerId}: photo ${photoId} (https://www.pexels.com/photo/${photoId}/)${reasons}${notes}`);
     }
   }
   const text = items.length
@@ -1855,7 +1966,7 @@ function photoCardHtml(prayerId, photo, isLive) {
     <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
          onclick="selectPhoto('${prayerId}', ${photo.id}, '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${isLive ? photo.src : ''}')">
       <input type="radio" name="${prayerId}" value="${photo.id}">
-      <button class="btn-block" onclick="blockPhoto('${prayerId}', ${photo.id}, event)" title="Block this photo (admin)">&#10005;</button>
+      <button class="btn-block" onclick="showBlockModal('${prayerId}', ${photo.id}, event)" title="Block this photo (admin)">&#10005;</button>
       <img src="${src}" loading="lazy" alt="${photo.caption}" onerror="this.closest('.img-card').style.display='none'">
       <div class="img-caption">
         <span class="cap-text">${captionText}</span>
