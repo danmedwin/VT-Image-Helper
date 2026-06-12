@@ -607,11 +607,15 @@
         <button class="btn-clear-key" id="clearKeyBtn" style="display:none;" onclick="clearKey()">Remove</button>
       </div>
       <p id="keyMsg" style="margin-top:10px;display:none;"></p>
+      <div id="refreshBar" style="display:none;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px;">
+        <button class="btn-save-key" id="refreshCuratedBtn" onclick="refreshCuratedLibrary()" style="background:var(--teal);">&#8635; Refresh curated library</button>
+        <span id="refreshCuratedStatus" style="font-size:12px;color:var(--text-muted);"></span>
+      </div>
     </div>
   </div>
 
   <div class="info-box">
-    This tool surfaces photos matched to common Jewish prayers &mdash; selected for beauty, thematic resonance, and clear space for text overlay. With a free Pexels API key (above), it fetches fresh live results. Without one, it uses a built-in curated set. Each prayer section also includes a direct Pexels search link.
+    This tool surfaces photos matched to common Jewish prayers &mdash; selected for beauty, thematic resonance, and clear space for text overlay. With a free Pexels API key (above), it fetches fresh live results. Use <strong>Refresh curated library</strong> (in the key panel above) to save a verified set of photos for offline use. Each prayer section also includes a direct Pexels search link.
   </div>
 
   <div class="setup-panel">
@@ -640,7 +644,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.3</span></p>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.4</span></p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
   For more information on Visual T&#x2019;filah&trade;, see the
   <a href="https://www.ccarpress.org/search-grid/?category=CCARVT" target="_blank" rel="noopener">CCAR Press VT collection</a>.</p>
@@ -1041,7 +1045,9 @@ const PRAYERS = [
 
 // ─── API KEY MANAGEMENT ────────────────────────────────────────────────────────
 
-const KEY_STORAGE = 'vtImageHelper_pexelsKey';
+const KEY_STORAGE        = 'vtImageHelper_pexelsKey';
+const CURATED_STORAGE    = 'vtImageHelper_curatedPhotos';
+const CURATED_DATE_STORAGE = 'vtImageHelper_curatedDate';
 
 function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
 
@@ -1052,6 +1058,8 @@ function updateKeyUI() {
   const toggle = document.getElementById('keyToggle');
   const clearBtn = document.getElementById('clearKeyBtn');
   const input  = document.getElementById('keyInput');
+  const refreshBar = document.getElementById('refreshBar');
+  const refreshStatus = document.getElementById('refreshCuratedStatus');
   if (key) {
     status.textContent = 'Key saved \u2713';
     status.className = 'apikey-status active';
@@ -1060,14 +1068,21 @@ function updateKeyUI() {
     toggle.textContent = 'Change';
     clearBtn.style.display = 'inline-block';
     input.value = key;
+    if (refreshBar) refreshBar.style.display = 'flex';
   } else {
+    const hasCurated = !!localStorage.getItem(CURATED_STORAGE);
     status.textContent = 'No key saved';
     status.className = 'apikey-status inactive';
-    badge.textContent = 'Using curated photos';
+    badge.textContent = hasCurated ? 'Using verified library' : 'Using curated photos';
     badge.className = 'mode-badge curated';
     toggle.textContent = 'Set up';
     clearBtn.style.display = 'none';
     input.value = '';
+    if (refreshBar) refreshBar.style.display = 'none';
+  }
+  if (refreshStatus && !refreshStatus.textContent) {
+    const lastDate = localStorage.getItem(CURATED_DATE_STORAGE);
+    if (lastDate) refreshStatus.textContent = `Last updated ${lastDate}`;
   }
 }
 
@@ -1106,6 +1121,52 @@ function showKeyMsg(text, color) {
   msg.textContent = text;
   msg.style.color = color;
   msg.style.display = 'block';
+}
+
+function getCuratedPhotos(prayerId) {
+  try {
+    const stored = localStorage.getItem(CURATED_STORAGE);
+    if (!stored) return null;
+    return JSON.parse(stored)[prayerId] || null;
+  } catch (e) { return null; }
+}
+
+async function refreshCuratedLibrary() {
+  const apiKey = getKey();
+  if (!apiKey) return;
+  const btn = document.getElementById('refreshCuratedBtn');
+  const statusEl = document.getElementById('refreshCuratedStatus');
+  btn.disabled = true;
+  btn.textContent = 'Refreshing…';
+  const curated = {};
+  for (let i = 0; i < PRAYERS.length; i++) {
+    const prayer = PRAYERS[i];
+    if (statusEl) statusEl.textContent = `${i + 1} / ${PRAYERS.length} — ${prayer.names[0]}…`;
+    try {
+      const q = encodeURIComponent(prayer.searchTerms);
+      const res = await fetch(
+        `https://api.pexels.com/v1/search?query=${q}&per_page=4&orientation=landscape`,
+        { headers: { Authorization: apiKey } }
+      );
+      if (!res.ok) throw new Error('API ' + res.status);
+      const data = await res.json();
+      curated[prayer.id] = (data.photos || []).map(p => ({
+        id: p.id,
+        caption: p.alt || p.photographer,
+        src: p.src.large,
+        pexelsUrl: p.url,
+        photographer: p.photographer,
+      }));
+    } catch (e) {
+      curated[prayer.id] = [];
+    }
+  }
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  localStorage.setItem(CURATED_STORAGE, JSON.stringify(curated));
+  localStorage.setItem(CURATED_DATE_STORAGE, dateStr);
+  btn.disabled = false;
+  btn.textContent = '↻ Refresh curated library';
+  if (statusEl) statusEl.textContent = `Library updated ${dateStr}`;
 }
 
 // ─── MATCHING LOGIC ────────────────────────────────────────────────────────────
@@ -1377,7 +1438,10 @@ async function findImages() {
             </div>
           </div>`;
       } else {
-        return prayerSectionHtml(p, context, p.photos, false);
+        const storedPhotos = getCuratedPhotos(p.id);
+        return storedPhotos && storedPhotos.length
+          ? prayerSectionHtml(p, context, storedPhotos, true)
+          : prayerSectionHtml(p, context, p.photos, false);
       }
     }).join('')}
   `;
