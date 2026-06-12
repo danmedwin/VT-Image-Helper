@@ -622,6 +622,45 @@
   body.admin-mode .admin-blocked-panel { display: block; }
   .admin-blocked-panel h3 { font-size: 14px; color: #c0392b; margin-bottom: 12px; }
 
+  .admin-terms-panel {
+    display: none;
+    background: #f0f7ff;
+    border: 1px solid #b3d0f0;
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-top: 16px;
+  }
+  body.admin-mode .admin-terms-panel { display: block; }
+  .admin-terms-panel h3 { font-size: 14px; color: #1a6aaa; margin-bottom: 6px; }
+  .terms-row {
+    display: grid;
+    grid-template-columns: 140px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 7px;
+  }
+  .terms-prayer-name { font-size: 12px; font-weight: 600; }
+  .terms-input {
+    font-size: 12px;
+    padding: 4px 8px;
+    border: 1px solid #cde;
+    border-radius: 5px;
+    width: 100%;
+    font-family: inherit;
+  }
+  .terms-save-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .terms-save-btn:hover { opacity: 0.85; }
+  .terms-saved-ok { font-size: 11px; color: #1a8a1a; visibility: hidden; }
+
   .admin-footer-btn {
     background: none;
     border: none;
@@ -804,12 +843,20 @@
               onclick="copyFeedbackForClaude()">&#128203; Copy feedback for Claude</button>
     </div>
   </div>
+
+  <div class="admin-terms-panel" id="adminTermsPanel">
+    <h3>&#128269; Prayer search terms</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
+      Keywords sent to Pexels for each prayer (before chip filters). Saved to Firebase &mdash; affects all users and the monthly auto-refresh.
+    </p>
+    <div id="termsList"></div>
+  </div>
 </main>
 
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.8</span>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.9</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1421,10 +1468,59 @@ function toggleAdmin() {
       document.body.classList.add('admin-mode');
       btn.textContent = 'Exit admin';
       renderBlockedPanel();
+      renderSearchTermsEditor();
     } else if (pass !== null) {
       alert('Incorrect passcode.');
     }
   }
+}
+
+// ─── SEARCH TERMS EDITOR ───────────────────────────────────────────────────────
+
+let customSearchTerms = {};
+
+async function loadCustomSearchTerms() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/searchTerms.json`);
+    if (res.ok) {
+      customSearchTerms = (await res.json()) || {};
+      for (const prayer of PRAYERS) {
+        if (customSearchTerms[prayer.id]) prayer.searchTerms = customSearchTerms[prayer.id];
+      }
+    }
+  } catch (e) {}
+}
+
+function renderSearchTermsEditor() {
+  const list = document.getElementById('termsList');
+  if (!list) return;
+  list.innerHTML = PRAYERS.map(p => `
+    <div class="terms-row">
+      <span class="terms-prayer-name">${p.names[0]}</span>
+      <input class="terms-input" id="terms-input-${p.id}" type="text"
+             value="${p.searchTerms.replace(/"/g, '&quot;')}">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="terms-save-btn" onclick="saveSearchTerm('${p.id}')">Save</button>
+        <span class="terms-saved-ok" id="terms-ok-${p.id}">&#10003;</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveSearchTerm(prayerId) {
+  const input = document.getElementById(`terms-input-${prayerId}`);
+  const terms = input.value.trim();
+  if (!terms) return;
+  await fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(terms),
+  });
+  const prayer = PRAYERS.find(p => p.id === prayerId);
+  if (prayer) prayer.searchTerms = terms;
+  customSearchTerms[prayerId] = terms;
+  const ok = document.getElementById(`terms-ok-${prayerId}`);
+  if (ok) { ok.style.visibility = 'visible'; setTimeout(() => ok.style.visibility = 'hidden', 2000); }
 }
 
 async function loadBlocked() {
@@ -1889,6 +1985,7 @@ async function findImages() {
 loadMyFavorites();
 loadFavorites();
 loadBlocked();
+loadCustomSearchTerms();
 updateKeyUI();
 loadCuratedJson();
 

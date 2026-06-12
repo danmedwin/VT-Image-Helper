@@ -96,11 +96,17 @@ function toPhotoObj(p) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function main() {
-  console.log('Reading favorites and blocked lists from Firebase…');
-  const [favorites, blocked] = await Promise.all([
+  console.log('Reading favorites, blocked, and custom search terms from Firebase…');
+  const [favorites, blocked, customTerms] = await Promise.all([
     getFirebase('favorites'),
     getFirebase('blocked'),
+    getFirebase('searchTerms'),
   ]);
+
+  // Apply admin-edited search terms
+  for (const prayer of PRAYERS) {
+    if (customTerms[prayer.id]) prayer.searchTerms = customTerms[prayer.id];
+  }
 
   const prayers = {};
 
