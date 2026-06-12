@@ -538,6 +538,49 @@
     line-height: 1.5;
   }
 
+  /* KEYWORD FILTER CHIPS */
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    min-width: 58px;
+    flex-shrink: 0;
+  }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 11px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+    user-select: none;
+  }
+  .filter-chip input[type="checkbox"] { display: none; }
+  .filter-chip:hover { border-color: var(--navy-mid); color: var(--navy); }
+  .filter-chip:has(input:checked) {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: white;
+  }
+  .keyword-filters {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
   /* ADMIN MODE */
   #apikeyPanel { display: none; }
   body.admin-mode #apikeyPanel { display: block; }
@@ -694,16 +737,54 @@
   </div>
 
   <div class="setup-panel">
-    <h2>About your service</h2>
+    <h2>Find images for your service</h2>
+
+    <div class="keyword-filters">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+        Select keywords to shape every image result. Your selections are added directly to each prayer&rsquo;s search &mdash; mix and match freely.
+      </p>
+      <div class="filter-group">
+        <span class="filter-label">Style</span>
+        <label class="filter-chip"><input type="checkbox" value="nature"> Nature</label>
+        <label class="filter-chip"><input type="checkbox" value="artistic"> Artistic</label>
+        <label class="filter-chip"><input type="checkbox" value="abstract"> Abstract</label>
+        <label class="filter-chip"><input type="checkbox" value="illustration"> Illustrated</label>
+        <label class="filter-chip"><input type="checkbox" value="minimalist"> Minimalist</label>
+        <label class="filter-chip"><input type="checkbox" value="cinematic"> Cinematic</label>
+        <label class="filter-chip"><input type="checkbox" value="vintage"> Vintage</label>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">People</span>
+        <label class="filter-chip"><input type="checkbox" value="baby"> Baby</label>
+        <label class="filter-chip"><input type="checkbox" value="child"> Child</label>
+        <label class="filter-chip"><input type="checkbox" value="teenager"> Teen</label>
+        <label class="filter-chip"><input type="checkbox" value="adult"> Adult</label>
+        <label class="filter-chip"><input type="checkbox" value="elderly"> Elder</label>
+        <label class="filter-chip"><input type="checkbox" value="family"> Family</label>
+        <label class="filter-chip"><input type="checkbox" value="community"> Community</label>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Tone</span>
+        <label class="filter-chip"><input type="checkbox" value="joyful"> Joyful</label>
+        <label class="filter-chip"><input type="checkbox" value="solemn"> Solemn</label>
+        <label class="filter-chip"><input type="checkbox" value="serene"> Serene</label>
+        <label class="filter-chip"><input type="checkbox" value="hopeful"> Hopeful</label>
+        <label class="filter-chip"><input type="checkbox" value="contemplative"> Contemplative</label>
+        <label class="filter-chip"><input type="checkbox" value="warm"> Warm</label>
+        <label class="filter-chip"><input type="checkbox" value="dramatic"> Dramatic</label>
+        <label class="filter-chip"><input type="checkbox" value="ethereal"> Ethereal</label>
+      </div>
+    </div>
+
     <div class="field-row">
       <div class="field">
-        <label for="ctx">Service context <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
-        <div class="hint">Theme, holiday, tone, or image style &mdash; e.g. &ldquo;Rosh Hashanah, solemn, nature photography&rdquo; or &ldquo;Shabbat morning, warm, realistic&rdquo;</div>
-        <textarea id="ctx" rows="4" placeholder="e.g. Kabbalat Shabbat, joyful, nature and light imagery"></textarea>
+        <label for="ctx">Additional keywords <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+        <div class="hint">Any other words added to every search &mdash; holiday, color, setting, etc. Combined with selections above.</div>
+        <textarea id="ctx" rows="2" placeholder="e.g. Rosh Hashanah, autumn, candlelight, blue tones"></textarea>
       </div>
       <div class="field">
         <label for="outline">Service outline or prayers</label>
-        <div class="hint">Paste your service order or list prayers by name &mdash; one per line, or as a paragraph. Hebrew or English names both work.</div>
+        <div class="hint">Paste your service order or list prayers by name &mdash; one per line or as a paragraph. Hebrew or English names both work.</div>
         <textarea id="outline" rows="4" placeholder="e.g.&#10;Mah Tovu&#10;Barchu&#10;Shema and V'ahavta&#10;Amidah&#10;Torah service&#10;Oseh Shalom&#10;Aleinu&#10;Kaddish"></textarea>
       </div>
     </div>
@@ -728,7 +809,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.7</span>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.8</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1454,7 +1535,8 @@ async function refreshCuratedLibrary() {
     const prayer = PRAYERS[i];
     if (statusEl) statusEl.textContent = `${i + 1} / ${PRAYERS.length} — ${prayer.names[0]}…`;
     try {
-      const q = encodeURIComponent(prayer.searchTerms);
+      const ctx = document.getElementById('ctx') ? document.getElementById('ctx').value.trim() : '';
+      const q = encodeURIComponent(buildSearchQuery(prayer, ctx));
       const res = await fetch(
         `https://api.pexels.com/v1/search?query=${q}&per_page=4&orientation=landscape`,
         { headers: { Authorization: apiKey } }
@@ -1464,7 +1546,7 @@ async function refreshCuratedLibrary() {
       curated[prayer.id] = (data.photos || []).map(p => ({
         id: p.id,
         caption: p.alt || p.photographer,
-        src: p.src.large,
+        src: p.src.large2x || p.src.large,
         pexelsUrl: p.url,
         photographer: p.photographer,
       }));
@@ -1498,9 +1580,16 @@ function parsePrayers(outline) {
   return matched;
 }
 
+function getKeywordFilters() {
+  return [...document.querySelectorAll('.filter-chip input:checked')]
+    .map(cb => cb.value).join(' ');
+}
+
 function buildSearchQuery(prayer, context) {
   let q = prayer.searchTerms;
-  if (context) q += ' ' + context.trim().slice(0, 80);
+  const keywords = getKeywordFilters();
+  if (keywords) q += ' ' + keywords;
+  if (context) q += ' ' + context.trim().slice(0, 60);
   return q;
 }
 
@@ -1519,7 +1608,7 @@ async function fetchLivePhotos(prayer, context, apiKey) {
   return (data.photos || []).map(p => ({
     id: p.id,
     caption: p.alt || p.photographer,
-    src: p.src.large,
+    src: p.src.large2x || p.src.large,
     pexelsUrl: p.url,
     photographer: p.photographer,
     photographerUrl: p.photographer_url,
@@ -1663,7 +1752,7 @@ async function refinePrayer(prayerId, inputId, context) {
     const photos = (data.photos || []).map(p => ({
       id: p.id,
       caption: p.alt || p.photographer,
-      src: p.src.large,
+      src: p.src.large2x || p.src.large,
       pexelsUrl: p.url,
       photographer: p.photographer,
       photographerUrl: p.photographer_url,
