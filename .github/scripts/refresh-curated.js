@@ -339,9 +339,16 @@ async function main() {
     fs.appendFileSync(summaryPath, lines.join('\n') + '\n');
   }
 
-  // Exit non-zero if Pexels was completely unavailable (more than half failed)
-  if (pexelsFailures > PRAYERS.length / 2) {
-    console.error(`\n✗ Pexels failed for ${pexelsFailures}/${PRAYERS.length} prayers — marking run as failed`);
+  // Exit non-zero to trigger GitHub email alert on significant failures
+  const claudeDown = ANTHROPIC_KEY && claudeConsecutiveFailures >= CLAUDE_FAILURE_THRESHOLD;
+  const pexelsDown = pexelsFailures > PRAYERS.length / 2;
+
+  if (pexelsDown) {
+    console.error(`\n✗ Pexels API failed for ${pexelsFailures}/${PRAYERS.length} prayers — check PEXELS_API_KEY secret`);
+    process.exit(1);
+  }
+  if (claudeDown) {
+    console.error(`\n✗ Claude API failed ${claudeConsecutiveFailures} times in a row — check ANTHROPIC_API_KEY secret`);
     process.exit(1);
   }
 }
