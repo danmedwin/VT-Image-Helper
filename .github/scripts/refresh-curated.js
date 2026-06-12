@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Fetches 4 landscape photos per prayer from Pexels and writes curated.json.
-// Reads favorites from Firebase — any favorited photo is fetched by ID and
-// preserved in the curated set even if the new Pexels search doesn't return it.
+// Reads favorites from Firebase — favorited photos are fetched by ID and
+// preserved even if the new Pexels search doesn't return them.
+// Reads blocked from Firebase — blocked photos are excluded entirely.
 // Run by the GitHub Action; requires PEXELS_API_KEY env var.
 
 const https = require('https');
@@ -71,13 +72,13 @@ async function pexelsFetchById(photoId) {
   return JSON.parse(body);
 }
 
-async function getFavorites() {
+async function getFirebase(path) {
   try {
-    const { status, body } = await get(`${FIREBASE_URL}/favorites.json`);
+    const { status, body } = await get(`${FIREBASE_URL}/${path}.json`);
     if (status !== 200) return {};
     return JSON.parse(body) || {};
   } catch (e) {
-    console.warn('Could not fetch favorites from Firebase:', e.message);
+    console.warn(`Could not fetch Firebase ${path}:`, e.message);
     return {};
   }
 }
@@ -95,8 +96,11 @@ function toPhotoObj(p) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function main() {
-  console.log('Fetching favorites from Firebase…');
-  const favorites = await getFavorites();
+  console.log('Reading favorites and blocked lists from Firebase…');
+  const [favorites, blocked] = await Promise.all([
+    getFirebase('favorites'),
+    getFirebase('blocked'),
+  ]);
 
   const prayers = {};
 
@@ -104,21 +108,28 @@ async function main() {
     const { id, searchTerms } = PRAYERS[i];
     process.stdout.write(`[${i + 1}/${PRAYERS.length}] ${id} … `);
 
-    // 1. Fresh Pexels search
+    const blockedInPrayer = new Set(
+      Object.entries(blocked[id] || {})
+        .filter(([, v]) => v === true)
+        .map(([photoId]) => String(photoId))
+    );
+
+    // 1. Fresh Pexels search — exclude blocked photos
     let freshPhotos = [];
     try {
       const data = await pexelsSearch(searchTerms);
-      freshPhotos = (data.photos || []).map(toPhotoObj);
+      freshPhotos = (data.photos || [])
+        .map(toPhotoObj)
+        .filter(p => !blockedInPrayer.has(String(p.id)));
       process.stdout.write(`${freshPhotos.length} fresh`);
     } catch (e) {
       process.stdout.write(`search failed (${e.message})`);
     }
 
-    // 2. Fetch any favorited photos not already in fresh results
-    const freshIds    = new Set(freshPhotos.map(p => String(p.id)));
-    const prayerFavs  = favorites[id] || {};
-    const favoritedIds = Object.entries(prayerFavs)
-      .filter(([, count]) => count > 0)
+    // 2. Fetch favorited photos not in fresh results and not blocked
+    const freshIds = new Set(freshPhotos.map(p => String(p.id)));
+    const favoritedIds = Object.entries(favorites[id] || {})
+      .filter(([photoId, count]) => count > 0 && !blockedInPrayer.has(photoId))
       .map(([photoId]) => photoId);
     const missingFavIds = favoritedIds.filter(pid => !freshIds.has(pid));
 
@@ -132,7 +143,6 @@ async function main() {
       }
     }
 
-    // Favorited photos come first so they always appear in the UI
     prayers[id] = [...protectedPhotos, ...freshPhotos];
     console.log();
 

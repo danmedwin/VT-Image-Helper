@@ -538,6 +538,60 @@
     line-height: 1.5;
   }
 
+  /* ADMIN MODE */
+  #apikeyPanel { display: none; }
+  body.admin-mode #apikeyPanel { display: block; }
+
+  .btn-block {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(180,0,0,0.75);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    z-index: 10;
+    transition: background 0.15s;
+  }
+  .btn-block:hover { background: rgba(180,0,0,1); }
+  body.admin-mode .btn-block { display: flex; }
+
+  .img-card.blocked { opacity: 0.25; outline: 3px solid #c0392b; }
+  body:not(.admin-mode) .img-card.blocked { display: none !important; }
+
+  .admin-blocked-panel {
+    display: none;
+    background: #fff5f5;
+    border: 1px solid #f5c6c6;
+    border-radius: var(--radius-lg);
+    padding: 18px 22px;
+    margin-top: 28px;
+  }
+  body.admin-mode .admin-blocked-panel { display: block; }
+  .admin-blocked-panel h3 { font-size: 14px; color: #c0392b; margin-bottom: 12px; }
+
+  .admin-footer-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 0;
+    margin-left: 10px;
+  }
+  .admin-footer-btn:hover { color: #c0392b; }
+
   /* FAVORITE BUTTON */
   .btn-fav {
     background: none;
@@ -636,7 +690,7 @@
   </div>
 
   <div class="info-box">
-    This tool surfaces photos matched to common Jewish prayers &mdash; selected for beauty, thematic resonance, and clear space for text overlay. With a free Pexels API key (above), it fetches fresh live results. Use <strong>Refresh curated library</strong> (in the key panel above) to save a verified set of photos for offline use. Each prayer section also includes a direct Pexels search link.
+    This tool surfaces photos matched to common Jewish prayers &mdash; selected for beauty, thematic resonance, and clear space for text overlay. All photos are sourced from <a href="https://www.pexels.com" target="_blank" rel="noopener" style="color:#7a5c00;">Pexels</a> and are free to use. Click &#9825; to favorite a photo &mdash; favorites are shared across users and survive the monthly refresh.
   </div>
 
   <div class="setup-panel">
@@ -660,12 +714,23 @@
   </div>
 
   <div id="results"></div>
+
+  <div class="admin-blocked-panel" id="adminBlockedPanel">
+    <h3>&#128683; Blocked photos</h3>
+    <div id="blockedList" style="font-size:13px;color:var(--text-muted);">Loading&hellip;</div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn-save-key" style="background:var(--teal);font-size:12px;padding:7px 14px;"
+              onclick="copyFeedbackForClaude()">&#128203; Copy feedback for Claude</button>
+    </div>
+  </div>
 </main>
 
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.6</span></p>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.7</span>
+    <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
+  </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
   For more information on Visual T&#x2019;filah&trade;, see the
   <a href="https://www.ccarpress.org/search-grid/?category=CCARVT" target="_blank" rel="noopener">CCAR Press VT collection</a>.</p>
@@ -1071,9 +1136,11 @@ const CURATED_STORAGE      = 'vtImageHelper_curatedPhotos';
 const CURATED_DATE_STORAGE = 'vtImageHelper_curatedDate';
 const MY_FAVORITES_KEY     = 'vtMyFavorites';
 const FIREBASE_URL         = 'https://vt-image-helper-default-rtdb.firebaseio.com';
+const ADMIN_PASS           = 'vtadmin2026'; // change this in source to customize
 
 let favoritesData = {}; // { prayerId: { photoId: count } } — from Firebase
 let myFavorites   = new Set(); // 'prayerId:photoId' strings this browser has favorited
+let blockedData   = {}; // { prayerId: { photoId: true } } — from Firebase
 
 function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
 
@@ -1206,6 +1273,7 @@ function renderAllFavoriteCounts() {
       updateFavUI(prayerId, photoId, count);
     }
   }
+  applyBlockedToCards();
 }
 
 function updateFavUI(prayerId, photoId, count) {
@@ -1255,6 +1323,123 @@ async function toggleFavorite(prayerId, photoId, event) {
 
 function autoFavorite(prayerId, photoId) {
   if (!myFavorites.has(`${prayerId}:${photoId}`)) toggleFavorite(prayerId, photoId);
+}
+
+// ─── ADMIN ─────────────────────────────────────────────────────────────────────
+
+function toggleAdmin() {
+  const btn = document.getElementById('adminToggle');
+  if (sessionStorage.getItem('vtAdmin')) {
+    sessionStorage.removeItem('vtAdmin');
+    document.body.classList.remove('admin-mode');
+    btn.textContent = 'Admin';
+  } else {
+    const pass = prompt('Admin passcode:');
+    if (pass === ADMIN_PASS) {
+      sessionStorage.setItem('vtAdmin', '1');
+      document.body.classList.add('admin-mode');
+      btn.textContent = 'Exit admin';
+      renderBlockedPanel();
+    } else if (pass !== null) {
+      alert('Incorrect passcode.');
+    }
+  }
+}
+
+async function loadBlocked() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/blocked.json`);
+    if (res.ok) {
+      blockedData = (await res.json()) || {};
+      applyBlockedToCards();
+    }
+  } catch (e) {}
+}
+
+function applyBlockedToCards() {
+  for (const [prayerId, photos] of Object.entries(blockedData)) {
+    for (const [photoId, isBlocked] of Object.entries(photos || {})) {
+      if (isBlocked) {
+        document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
+          .forEach(c => c.classList.add('blocked'));
+      }
+    }
+  }
+}
+
+async function blockPhoto(prayerId, photoId, event) {
+  if (event) event.stopPropagation();
+  if (!confirm('Block this photo? It will be hidden for all users and excluded from future refreshes.')) return;
+
+  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'true',
+  });
+  // Zero out any favorites so it won't be protected
+  await fetch(`${FIREBASE_URL}/favorites/${prayerId}/${photoId}.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '0',
+  });
+
+  if (!blockedData[prayerId]) blockedData[prayerId] = {};
+  blockedData[prayerId][photoId] = true;
+  if (favoritesData[prayerId]) favoritesData[prayerId][photoId] = 0;
+  const key = `${prayerId}:${photoId}`;
+  myFavorites.delete(key);
+  saveMyFavorites();
+
+  document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
+    .forEach(c => c.classList.add('blocked'));
+  updateFavUI(prayerId, photoId, 0);
+  renderBlockedPanel();
+}
+
+async function unblockPhoto(prayerId, photoId) {
+  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false',
+  });
+  if (blockedData[prayerId]) blockedData[prayerId][photoId] = false;
+  document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
+    .forEach(c => c.classList.remove('blocked'));
+  renderBlockedPanel();
+}
+
+function renderBlockedPanel() {
+  const list = document.getElementById('blockedList');
+  if (!list) return;
+  const items = [];
+  for (const [prayerId, photos] of Object.entries(blockedData)) {
+    for (const [photoId, isBlocked] of Object.entries(photos || {})) {
+      if (isBlocked) items.push({ prayerId, photoId });
+    }
+  }
+  if (items.length === 0) {
+    list.innerHTML = '<em>No photos blocked.</em>';
+    return;
+  }
+  list.innerHTML = items.map(({ prayerId, photoId }) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+      <img src="https://images.pexels.com/photos/${photoId}/pexels-photo-${photoId}.jpeg?auto=compress&cs=tinysrgb&w=80&h=50&fit=crop"
+           style="width:80px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;" loading="lazy">
+      <span style="flex:1;min-width:0;">
+        <strong>${prayerId}</strong> &mdash; photo&nbsp;${photoId}
+        <a href="https://www.pexels.com/photo/${photoId}/" target="_blank" rel="noopener"
+           style="font-size:11px;color:var(--navy-mid);margin-left:4px;">&#8599;</a>
+      </span>
+      <button onclick="unblockPhoto('${prayerId}', ${photoId})"
+              style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text-muted);">Unblock</button>
+    </div>`).join('');
+}
+
+function copyFeedbackForClaude() {
+  const items = [];
+  for (const [prayerId, photos] of Object.entries(blockedData)) {
+    for (const [photoId, isBlocked] of Object.entries(photos || {})) {
+      if (isBlocked) items.push(`- ${prayerId}: photo ID ${photoId} (https://www.pexels.com/photo/${photoId}/)`);
+    }
+  }
+  const text = items.length
+    ? `Blocked photos in VT Image Helper:\n${items.join('\n')}\n\nPlease suggest refined search terms for the affected prayers.`
+    : 'No photos are currently blocked.';
+  navigator.clipboard.writeText(text).then(() => alert('Copied! Paste this into your Claude conversation.'));
 }
 
 async function refreshCuratedLibrary() {
@@ -1386,6 +1571,7 @@ function photoCardHtml(prayerId, photo, isLive) {
     <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
          onclick="selectPhoto('${prayerId}', ${photo.id}, '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${isLive ? photo.src : ''}')">
       <input type="radio" name="${prayerId}" value="${photo.id}">
+      <button class="btn-block" onclick="blockPhoto('${prayerId}', ${photo.id}, event)" title="Block this photo (admin)">&#10005;</button>
       <img src="${src}" loading="lazy" alt="${photo.caption}" onerror="this.closest('.img-card').style.display='none'">
       <div class="img-caption">
         <span class="cap-text">${captionText}</span>
@@ -1613,6 +1799,7 @@ async function findImages() {
 
 loadMyFavorites();
 loadFavorites();
+loadBlocked();
 updateKeyUI();
 loadCuratedJson();
 
