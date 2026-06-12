@@ -640,7 +640,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.2</span></p>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.3</span></p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
   For more information on Visual T&#x2019;filah&trade;, see the
   <a href="https://www.ccarpress.org/search-grid/?category=CCARVT" target="_blank" rel="noopener">CCAR Press VT collection</a>.</p>
@@ -1186,17 +1186,20 @@ function photoCardHtml(prayerId, photo, isLive) {
     ? photo.src
     : `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=520`;
   const pageUrl = isLive ? photo.pexelsUrl : `https://www.pexels.com/photo/${photo.id}/`;
-  const captionExtra = isLive && photo.photographer
-    ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`
+  // Curated captions are unreliable (IDs may not match intended photos), so omit them
+  const captionText = isLive
+    ? photo.caption + (photo.photographer
+        ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`
+        : '')
     : '';
   const srcAttr = isLive ? `data-src="${photo.src}"` : '';
   return `
     <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
          onclick="selectPhoto('${prayerId}', ${photo.id}, '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${isLive ? photo.src : ''}')">
       <input type="radio" name="${prayerId}" value="${photo.id}">
-      <img src="${src}" loading="lazy" alt="${photo.caption}">
+      <img src="${src}" loading="lazy" alt="${photo.caption}" onerror="this.closest('.img-card').style.display='none'">
       <div class="img-caption">
-        <span class="cap-text">${photo.caption}${captionExtra}</span>
+        <span class="cap-text">${captionText}</span>
         <a class="pexels-link" href="${pageUrl}" target="_blank" rel="noopener" title="View on Pexels">&#8599;</a>
       </div>
     </div>`;
