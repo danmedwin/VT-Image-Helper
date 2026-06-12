@@ -644,7 +644,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.4</span></p>
+  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v1.5</span></p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
   For more information on Visual T&#x2019;filah&trade;, see the
   <a href="https://www.ccarpress.org/search-grid/?category=CCARVT" target="_blank" rel="noopener">CCAR Press VT collection</a>.</p>
@@ -1073,7 +1073,8 @@ function updateKeyUI() {
     const hasCurated = !!localStorage.getItem(CURATED_STORAGE);
     status.textContent = 'No key saved';
     status.className = 'apikey-status inactive';
-    badge.textContent = hasCurated ? 'Using verified library' : 'Using curated photos';
+    const hasJson = !!(curatedJson && curatedJson.prayers);
+    badge.textContent = (hasCurated || hasJson) ? 'Using verified library' : 'Using curated photos';
     badge.className = 'mode-badge curated';
     toggle.textContent = 'Set up';
     clearBtn.style.display = 'none';
@@ -1081,7 +1082,8 @@ function updateKeyUI() {
     if (refreshBar) refreshBar.style.display = 'none';
   }
   if (refreshStatus && !refreshStatus.textContent) {
-    const lastDate = localStorage.getItem(CURATED_DATE_STORAGE);
+    const lastDate = localStorage.getItem(CURATED_DATE_STORAGE)
+      || (curatedJson && curatedJson.refreshed);
     if (lastDate) refreshStatus.textContent = `Last updated ${lastDate}`;
   }
 }
@@ -1124,11 +1126,29 @@ function showKeyMsg(text, color) {
 }
 
 function getCuratedPhotos(prayerId) {
+  // localStorage takes priority (user's personal refresh)
   try {
     const stored = localStorage.getItem(CURATED_STORAGE);
-    if (!stored) return null;
-    return JSON.parse(stored)[prayerId] || null;
-  } catch (e) { return null; }
+    if (stored) {
+      const data = JSON.parse(stored)[prayerId];
+      if (data && data.length) return data;
+    }
+  } catch (e) {}
+  // Fall back to curated.json maintained by the GitHub Action
+  if (curatedJson && curatedJson.prayers && curatedJson.prayers[prayerId]) {
+    return curatedJson.prayers[prayerId];
+  }
+  return null;
+}
+
+async function loadCuratedJson() {
+  try {
+    const res = await fetch('./curated.json');
+    if (res.ok) {
+      curatedJson = await res.json();
+      updateKeyUI();
+    }
+  } catch (e) { /* offline or local file — hardcoded fallback */ }
 }
 
 async function refreshCuratedLibrary() {
@@ -1218,6 +1238,7 @@ async function fetchLivePhotos(prayer, context, apiKey) {
 // ─── RENDERING ─────────────────────────────────────────────────────────────────
 
 const selections = {};
+let curatedJson = null;
 
 function selectPhoto(prayerId, photoId, caption, srcUrl) {
   selections[prayerId] = { photoId, caption, srcUrl };
@@ -1475,6 +1496,7 @@ async function findImages() {
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 
 updateKeyUI();
+loadCuratedJson();
 
 // Scroll-to-top button
 window.addEventListener('scroll', () => {
