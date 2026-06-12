@@ -1128,14 +1128,7 @@ function parsePrayers(outline) {
 
 function buildSearchQuery(prayer, context) {
   let q = prayer.searchTerms;
-  if (context) {
-    const ctx = context.toLowerCase();
-    if (ctx.includes('high holiday') || ctx.includes('rosh hashanah') || ctx.includes('yom kippur'))
-      q += ' solemn meaningful';
-    else if (ctx.includes('shabbat')) q += ' warm gentle';
-    else if (ctx.includes('nature')) q += ' outdoor natural';
-    else if (ctx.includes('artistic') || ctx.includes('art')) q += ' artistic';
-  }
+  if (context) q += ' ' + context.trim().slice(0, 80);
   return q;
 }
 
