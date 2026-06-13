@@ -212,7 +212,9 @@
     margin-bottom: 0;
   }
   .setup-hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
-  .setup-section-label { font-size: 13px; font-weight: 600; color: var(--navy); margin: 0 0 10px; }
+  .setup-section-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 10px; }
+  .setup-two-col { display: grid; grid-template-columns: 1fr 3fr; gap: 20px; align-items: start; }
+  @media (max-width: 700px) { .setup-two-col { grid-template-columns: 1fr; } }
   .field input[type="text"] {
     width: 100%; border: 1px solid var(--border); border-radius: var(--radius);
     padding: 10px 13px; font-size: 14px; font-family: inherit; color: var(--text);
@@ -782,11 +784,29 @@
 
   .terms-row {
     display: grid;
-    grid-template-columns: 140px 1fr auto;
+    grid-template-columns: 140px 1fr auto auto;
     gap: 8px;
     align-items: center;
     margin-bottom: 7px;
   }
+  .terms-remove-btn {
+    font-size: 11px; padding: 3px 8px; background: none; border: 1px solid #ccc;
+    border-radius: 5px; cursor: pointer; color: var(--text-muted); white-space: nowrap;
+  }
+  .terms-remove-btn:hover { border-color: #c0392b; color: #c0392b; }
+  .terms-restore-btn {
+    font-size: 11px; padding: 3px 8px; background: none; border: 1px solid var(--teal);
+    border-radius: 5px; cursor: pointer; color: var(--teal); white-space: nowrap;
+  }
+  .add-prayer-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 18px; }
+  .add-prayer-form h4 { font-size: 12px; font-weight: 700; margin: 0 0 10px; color: var(--navy); }
+  .add-prayer-grid { display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 8px; align-items: end; }
+  @media (max-width: 700px) { .add-prayer-grid { grid-template-columns: 1fr 1fr; } }
+  .add-prayer-input { font-size: 12px; padding: 5px 8px; border: 1px solid #cde; border-radius: 5px; width: 100%; font-family: inherit; }
+  .add-prayer-btn { font-size: 11px; padding: 5px 12px; background: var(--navy); color: #fff; border: none; border-radius: 5px; cursor: pointer; white-space: nowrap; }
+  .add-prayer-btn:hover { opacity: 0.85; }
+  .hidden-prayers-section { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .hidden-prayers-section h4 { font-size: 12px; font-weight: 700; color: var(--text-muted); margin: 0 0 8px; }
   .terms-prayer-name { font-size: 12px; font-weight: 600; }
   .terms-input {
     font-size: 12px;
@@ -888,48 +908,56 @@
     <h2>Find images for your service</h2>
     <hr class="setup-hr">
 
-    <p class="setup-section-label">Optional: Select keywords</p>
-    <div class="keyword-filters">
-      <div class="filter-group">
-        <span class="filter-label">Style</span>
-        <label class="filter-chip"><input type="checkbox" value="nature"> Nature</label>
-        <label class="filter-chip"><input type="checkbox" value="artistic"> Artistic</label>
-        <label class="filter-chip"><input type="checkbox" value="abstract"> Abstract</label>
-        <label class="filter-chip"><input type="checkbox" value="minimalist"> Minimalist</label>
-        <label class="filter-chip"><input type="checkbox" value="cinematic"> Cinematic</label>
-        <label class="filter-chip"><input type="checkbox" value="vintage"> Vintage</label>
+    <p class="setup-section-label">Prayers</p>
+    <div class="setup-two-col">
+      <div class="field">
+        <label for="outline">Service outline or prayers</label>
+        <div class="hint">Paste your service order or prayer names &mdash; one per line or as a paragraph. Hebrew or English both work.</div>
+        <textarea id="outline" rows="6" placeholder="e.g.&#10;Mah Tovu&#10;Barchu&#10;Shema&#10;Amidah&#10;Oseh Shalom&#10;Aleinu&#10;Kaddish"></textarea>
       </div>
-      <div class="filter-group">
-        <span class="filter-label">Tone</span>
-        <label class="filter-chip"><input type="checkbox" value="joyful"> Joyful</label>
-        <label class="filter-chip"><input type="checkbox" value="solemn"> Solemn</label>
-        <label class="filter-chip"><input type="checkbox" value="serene"> Serene</label>
-        <label class="filter-chip"><input type="checkbox" value="hopeful"> Hopeful</label>
-        <label class="filter-chip"><input type="checkbox" value="contemplative"> Contemplative</label>
-        <label class="filter-chip"><input type="checkbox" value="warm"> Warm</label>
-        <label class="filter-chip"><input type="checkbox" value="dramatic"> Dramatic</label>
-        <label class="filter-chip"><input type="checkbox" value="ethereal"> Ethereal</label>
+      <div class="field">
+        <label>Select prayers</label>
+        <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
       </div>
-    </div>
-
-    <div class="field" style="margin-bottom:0;">
-      <label for="ctx">Optional: Additional keywords</label>
-      <div class="hint">Any other words added to every search &mdash; holiday, color, setting, etc.</div>
-      <input type="text" id="ctx" placeholder="e.g. Rosh Hashanah, autumn, candlelight, blue tones">
     </div>
 
     <hr class="setup-hr">
 
-    <div class="field">
-      <label>Select prayers</label>
-      <div id="prayerChips" class="prayer-chips-row"></div>
+    <p class="setup-section-label">Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></p>
+    <div class="setup-two-col">
+      <div class="field">
+        <label for="ctx">Keywords for all images</label>
+        <div class="hint">Added to every search &mdash; holiday, color, setting, etc.</div>
+        <input type="text" id="ctx" placeholder="e.g. Rosh Hashanah, autumn, candlelight">
+      </div>
+      <div class="field">
+        <label>Thematic</label>
+        <div class="keyword-filters" style="margin-bottom:0;">
+          <div class="filter-group">
+            <span class="filter-label">Style</span>
+            <label class="filter-chip"><input type="checkbox" value="nature"> Nature</label>
+            <label class="filter-chip"><input type="checkbox" value="artistic"> Artistic</label>
+            <label class="filter-chip"><input type="checkbox" value="abstract"> Abstract</label>
+            <label class="filter-chip"><input type="checkbox" value="minimalist"> Minimalist</label>
+            <label class="filter-chip"><input type="checkbox" value="cinematic"> Cinematic</label>
+            <label class="filter-chip"><input type="checkbox" value="vintage"> Vintage</label>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Tone</span>
+            <label class="filter-chip"><input type="checkbox" value="joyful"> Joyful</label>
+            <label class="filter-chip"><input type="checkbox" value="solemn"> Solemn</label>
+            <label class="filter-chip"><input type="checkbox" value="serene"> Serene</label>
+            <label class="filter-chip"><input type="checkbox" value="hopeful"> Hopeful</label>
+            <label class="filter-chip"><input type="checkbox" value="contemplative"> Contemplative</label>
+            <label class="filter-chip"><input type="checkbox" value="warm"> Warm</label>
+            <label class="filter-chip"><input type="checkbox" value="dramatic"> Dramatic</label>
+            <label class="filter-chip"><input type="checkbox" value="ethereal"> Ethereal</label>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="field" style="margin-bottom:18px;">
-      <label for="outline">Service outline or prayers</label>
-      <div class="hint">Paste your service order or list prayers by name &mdash; one per line or as a paragraph. Hebrew or English names both work.</div>
-      <textarea id="outline" rows="4" placeholder="e.g.&#10;Mah Tovu&#10;Barchu&#10;Shema and V'ahavta&#10;Amidah&#10;Torah service&#10;Oseh Shalom&#10;Aleinu&#10;Kaddish"></textarea>
-    </div>
+    <hr class="setup-hr">
 
     <button class="btn-find" onclick="findImages()">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -944,7 +972,7 @@
       <button class="admin-tab active" onclick="showAdminTab('review',this)">&#128247; Review</button>
       <button class="admin-tab" onclick="showAdminTab('blocked',this)">&#128683; Blocked</button>
       <button class="admin-tab" onclick="showAdminTab('blocklist',this)">&#128287; Blocklist</button>
-      <button class="admin-tab" onclick="showAdminTab('terms',this)">&#128269; Search Terms</button>
+      <button class="admin-tab" onclick="showAdminTab('terms',this)">&#128269; Prayers &amp; Terms</button>
       <button class="admin-tab" onclick="showAdminTab('apikey',this)">&#128273; API Key</button>
       <button class="admin-tab" id="reportsTab" onclick="showAdminTab('reports',this)">&#128681; Reports</button>
       <div style="margin-left:auto;margin-right:10px;display:flex;flex-direction:column;align-items:flex-end;align-self:center;gap:2px;">
@@ -997,12 +1025,37 @@
     </div>
 
     <div class="admin-tab-panel" id="adminTab-terms">
-      <h3 style="color:#1a6aaa;">&#128269; Prayer search terms</h3>
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
-        Keywords sent to Pexels for each prayer (before chip filters). Saved to Firebase &mdash; affects all users and the monthly auto-refresh.
+      <h3 style="color:#1a6aaa;">&#128269; Prayers &amp; Terms</h3>
+
+      <div class="add-prayer-form">
+        <h4>Add a prayer</h4>
+        <div class="add-prayer-grid">
+          <div>
+            <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Name</div>
+            <input class="add-prayer-input" id="newPrayerName" type="text" placeholder="e.g. Havdalah">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Theme</div>
+            <input class="add-prayer-input" id="newPrayerTheme" type="text" placeholder="e.g. Separation &amp; rest">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Search terms</div>
+            <input class="add-prayer-input" id="newPrayerTerms" type="text" placeholder="e.g. candle flame spices twilight">
+          </div>
+          <div>
+            <button class="add-prayer-btn" onclick="addCustomPrayer()">Add prayer</button>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">
+        Search terms sent to Pexels for each prayer. Saved to Firebase &mdash; affects all users and the monthly refresh.
       </p>
       <div id="termsList"></div>
-
+      <div class="hidden-prayers-section" id="hiddenPrayersSection" style="display:none;">
+        <h4>Hidden prayers</h4>
+        <div id="hiddenPrayersList"></div>
+      </div>
     </div>
 
     <div class="admin-tab-panel" id="adminTab-apikey">
@@ -1088,7 +1141,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.17</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.18</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1102,7 +1155,7 @@
 // Photos: { id, caption } — Pexels photo ID + short descriptive caption
 // Multiple photo sets keyed by context hints (default, highholidays, shabbat, nature, etc.)
 
-const PRAYERS = [
+let PRAYERS = [
   {
     id: 'mahtovu',
     names: ['mah tovu', 'ma tovu', 'מה טובו', 'how goodly'],
@@ -1489,6 +1542,39 @@ const PRAYERS = [
   },
 ];
 
+const _defaultPrayers = PRAYERS.map(p => ({ ...p, names: [...p.names] }));
+let _customPrayers   = [];
+let _hiddenPrayerIds = new Set();
+
+function applyPrayerLibrary() {
+  PRAYERS = [
+    ..._defaultPrayers.filter(p => !_hiddenPrayerIds.has(p.id)),
+    ..._customPrayers,
+  ];
+  for (const p of PRAYERS) {
+    if (customSearchTerms[p.id]) p.searchTerms = customSearchTerms[p.id];
+  }
+}
+
+async function loadPrayerLibrary() {
+  try {
+    const [customRes, hiddenRes] = await Promise.all([
+      fetch(`${FIREBASE_URL}/customPrayers.json`),
+      fetch(`${FIREBASE_URL}/hiddenPrayers.json`),
+    ]);
+    if (customRes.ok) {
+      const data = await customRes.json();
+      if (data && typeof data === 'object') _customPrayers = Object.values(data).filter(Boolean);
+    }
+    if (hiddenRes.ok) {
+      const data = await hiddenRes.json();
+      if (data && typeof data === 'object') _hiddenPrayerIds = new Set(Object.keys(data).filter(k => data[k]));
+    }
+  } catch(e) {}
+  applyPrayerLibrary();
+  renderPrayerChips();
+}
+
 // ─── API KEY MANAGEMENT ────────────────────────────────────────────────────────
 
 const KEY_STORAGE          = 'vtImageHelper_pexelsKey';
@@ -1763,9 +1849,11 @@ async function saveKeywordsToFirebase() {
 
 // ─── ADMIN PHOTO REVIEW ────────────────────────────────────────────────────────
 
-function renderAdminReviewPanel() {
+function renderAdminReviewPanel(force) {
   const select = document.getElementById('reviewPrayerSelect');
-  if (!select || select.options.length > 1) return;
+  if (!select) return;
+  if (!force && select.options.length > 1) return;
+  while (select.options.length > 1) select.remove(1);
   for (const p of PRAYERS) {
     const opt = document.createElement('option');
     opt.value = p.id;
@@ -1833,17 +1921,83 @@ async function loadCustomSearchTerms() {
 function renderSearchTermsEditor() {
   const list = document.getElementById('termsList');
   if (!list) return;
-  list.innerHTML = PRAYERS.map(p => `
-    <div class="terms-row">
-      <span class="terms-prayer-name">${p.names[0]}</span>
-      <input class="terms-input" id="terms-input-${p.id}" type="text"
-             value="${p.searchTerms.replace(/"/g, '&quot;')}">
+  list.innerHTML = PRAYERS.map(p => {
+    const isCustom = _customPrayers.some(cp => cp.id === p.id);
+    const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
+    const badge = isCustom ? ' <span style="font-size:10px;background:#e8f0ff;color:#1a5aaa;border-radius:8px;padding:1px 5px;">custom</span>' : '';
+    return `<div class="terms-row">
+      <span class="terms-prayer-name">${label}${badge}</span>
+      <input class="terms-input" id="terms-input-${p.id}" type="text" value="${(p.searchTerms||'').replace(/"/g,'&quot;')}">
       <div style="display:flex;align-items:center;gap:6px;">
         <button class="terms-save-btn" onclick="saveSearchTerm('${p.id}')">Save</button>
         <span class="terms-saved-ok" id="terms-ok-${p.id}">&#10003;</span>
       </div>
-    </div>
-  `).join('');
+      <button class="terms-remove-btn" onclick="removePrayer('${p.id}',${isCustom})">Remove</button>
+    </div>`;
+  }).join('');
+
+  const hiddenSection = document.getElementById('hiddenPrayersSection');
+  const hiddenList    = document.getElementById('hiddenPrayersList');
+  if (!hiddenSection || !hiddenList) return;
+  const hidden = _defaultPrayers.filter(p => _hiddenPrayerIds.has(p.id));
+  hiddenSection.style.display = hidden.length ? '' : 'none';
+  hiddenList.innerHTML = hidden.map(p => {
+    const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
+    return `<div class="terms-row">
+      <span class="terms-prayer-name" style="color:var(--text-muted);">${label}</span>
+      <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Hidden</span>
+      <span></span>
+      <button class="terms-restore-btn" onclick="restorePrayer('${p.id}')">Restore</button>
+    </div>`;
+  }).join('');
+}
+
+function _refreshPrayerUI() {
+  applyPrayerLibrary();
+  renderPrayerChips();
+  renderSearchTermsEditor();
+  renderAdminReviewPanel(true);
+}
+
+async function addCustomPrayer() {
+  const name  = document.getElementById('newPrayerName').value.trim();
+  const theme = document.getElementById('newPrayerTheme').value.trim();
+  const terms = document.getElementById('newPrayerTerms').value.trim();
+  if (!name || !terms) { alert('Name and search terms are required.'); return; }
+  const id = 'custom_' + name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+  const prayer = { id, names: [name.toLowerCase()], theme: theme||'', searchTerms: terms };
+  try {
+    const res = await fetch(`${FIREBASE_URL}/customPrayers/${id}.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
+    });
+    if (!res.ok) throw new Error(res.status);
+    _customPrayers.push(prayer);
+    _refreshPrayerUI();
+    document.getElementById('newPrayerName').value = '';
+    document.getElementById('newPrayerTheme').value = '';
+    document.getElementById('newPrayerTerms').value = '';
+  } catch(e) { alert(`Save failed: ${e.message}. You may need to add customPrayers to Firebase rules.`); }
+}
+
+async function removePrayer(prayerId, isCustom) {
+  const label = (PRAYERS.find(p => p.id === prayerId)||{}).names?.[0] || prayerId;
+  if (!confirm(`Remove "${label}" from the prayer list?`)) return;
+  if (isCustom) {
+    await fetch(`${FIREBASE_URL}/customPrayers/${prayerId}.json`, { method: 'DELETE' });
+    _customPrayers = _customPrayers.filter(p => p.id !== prayerId);
+  } else {
+    await fetch(`${FIREBASE_URL}/hiddenPrayers/${prayerId}.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: 'true',
+    });
+    _hiddenPrayerIds.add(prayerId);
+  }
+  _refreshPrayerUI();
+}
+
+async function restorePrayer(prayerId) {
+  await fetch(`${FIREBASE_URL}/hiddenPrayers/${prayerId}.json`, { method: 'DELETE' });
+  _hiddenPrayerIds.delete(prayerId);
+  _refreshPrayerUI();
 }
 
 async function saveSearchTerm(prayerId) {
@@ -2612,6 +2766,7 @@ async function findImages() {
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 
 renderPrayerChips();
+loadPrayerLibrary();
 loadMyFavorites();
 loadFavorites();
 loadBlocked();
