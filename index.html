@@ -947,10 +947,6 @@
     <div class="admin-tab-panel" id="adminTab-blocked">
       <h3 style="color:#c0392b;">&#128683; Blocked photos</h3>
       <div id="blockedList" style="font-size:13px;color:var(--text-muted);">Loading&hellip;</div>
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn-save-key" style="background:var(--teal);font-size:12px;padding:7px 14px;"
-                onclick="copyFeedbackForClaude()">&#128203; Copy feedback for Claude</button>
-      </div>
     </div>
 
     <div class="admin-tab-panel" id="adminTab-blocklist">
@@ -1051,7 +1047,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.7</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.8</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1658,7 +1654,7 @@ function toggleAdmin() {
       if (firstTab) showAdminTab('review', firstTab);
       renderAdminReviewPanel();
       renderBlockedPanel();
-      loadNegativeKeywords().then(renderKeywordsPanel);
+      renderKeywordsPanel();
       renderSearchTermsEditor();
       loadReports().then(renderReportsPanel);
     } else if (pass !== null) {
@@ -1684,7 +1680,8 @@ async function loadNegativeKeywords() {
   } catch (e) {}
 }
 
-function renderKeywordsPanel() {
+async function renderKeywordsPanel() {
+  await loadNegativeKeywords();
   const container = document.getElementById('keywordTags');
   if (!container) return;
   container.innerHTML = negativeKeywords.length
@@ -2053,21 +2050,6 @@ function renderBlockedPanel() {
   }).join('');
 }
 
-function copyFeedbackForClaude() {
-  const items = [];
-  for (const [prayerId, photos] of Object.entries(blockedData)) {
-    for (const [photoId, val] of Object.entries(photos || {})) {
-      if (!isBlockedValue(val)) continue;
-      const reasons = val && val.reasons && val.reasons.length ? `\n    Reasons: ${val.reasons.join(', ')}` : '';
-      const notes   = val && val.notes ? `\n    Notes: ${val.notes}` : '';
-      items.push(`- ${prayerId}: photo ${photoId} (https://www.pexels.com/photo/${photoId}/)${reasons}${notes}`);
-    }
-  }
-  const text = items.length
-    ? `Blocked photos in VT Image Helper:\n${items.join('\n')}\n\nPlease suggest refined search terms for the affected prayers.`
-    : 'No photos are currently blocked.';
-  navigator.clipboard.writeText(text).then(() => alert('Copied! Paste this into your Claude conversation.'));
-}
 
 async function refreshCuratedLibrary() {
   const apiKey = getKey();
@@ -2440,7 +2422,7 @@ if (sessionStorage.getItem('vtAdmin')) {
   setTimeout(() => {
     renderAdminReviewPanel();
     renderBlockedPanel();
-    loadNegativeKeywords().then(renderKeywordsPanel);
+    renderKeywordsPanel();
     renderSearchTermsEditor();
     loadReports().then(renderReportsPanel);
   }, 600);
