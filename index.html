@@ -784,11 +784,18 @@
 
   .terms-row {
     display: grid;
-    grid-template-columns: 140px 1fr auto auto;
+    grid-template-columns: 16px 140px 1fr auto auto;
     gap: 8px;
     align-items: center;
     margin-bottom: 7px;
+    border-radius: 4px;
   }
+  .terms-drag-handle {
+    cursor: grab; color: var(--text-muted); opacity: 0.35; font-size: 15px;
+    user-select: none; line-height: 1; text-align: center;
+  }
+  .terms-drag-handle:active { cursor: grabbing; }
+  .terms-row.drag-over { background: var(--teal-light); }
   .terms-pencil-btn {
     background: none; border: none; cursor: pointer; font-size: 11px;
     color: var(--text-muted); opacity: 0.45; padding: 1px 3px; margin-left: 3px; vertical-align: middle;
@@ -1150,7 +1157,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.19</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.20</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1555,12 +1562,18 @@ const _defaultPrayers    = PRAYERS.map(p => ({ ...p, names: [...p.names] }));
 let _customPrayers       = [];
 let _hiddenPrayerIds     = new Set();
 let _prayerDisplayNames  = {};
+let _prayerOrder         = [];
 
 function applyPrayerLibrary() {
-  PRAYERS = [
+  let prayers = [
     ..._defaultPrayers.filter(p => !_hiddenPrayerIds.has(p.id)),
     ..._customPrayers,
   ];
+  if (_prayerOrder.length) {
+    const rank = new Map(_prayerOrder.map((id, i) => [id, i]));
+    prayers.sort((a, b) => (rank.has(a.id) ? rank.get(a.id) : 9999) - (rank.has(b.id) ? rank.get(b.id) : 9999));
+  }
+  PRAYERS = prayers;
   for (const p of PRAYERS) {
     if (_prayerDisplayNames[p.id]) p.names[0] = _prayerDisplayNames[p.id];
     if (customSearchTerms[p.id])   p.searchTerms = customSearchTerms[p.id];
@@ -1569,10 +1582,11 @@ function applyPrayerLibrary() {
 
 async function loadPrayerLibrary() {
   try {
-    const [customRes, hiddenRes, namesRes] = await Promise.all([
+    const [customRes, hiddenRes, namesRes, orderRes] = await Promise.all([
       fetch(`${FIREBASE_URL}/customPrayers.json`),
       fetch(`${FIREBASE_URL}/hiddenPrayers.json`),
       fetch(`${FIREBASE_URL}/prayerDisplayNames.json`),
+      fetch(`${FIREBASE_URL}/prayerOrder.json`),
     ]);
     if (customRes.ok) {
       const data = await customRes.json();
@@ -1585,6 +1599,10 @@ async function loadPrayerLibrary() {
     if (namesRes.ok) {
       const data = await namesRes.json();
       if (data && typeof data === 'object') _prayerDisplayNames = data;
+    }
+    if (orderRes.ok) {
+      const data = await orderRes.json();
+      if (Array.isArray(data)) _prayerOrder = data;
     }
   } catch(e) {}
   applyPrayerLibrary();
@@ -1937,11 +1955,17 @@ async function loadCustomSearchTerms() {
 function renderSearchTermsEditor() {
   const list = document.getElementById('termsList');
   if (!list) return;
-  list.innerHTML = PRAYERS.map(p => {
+  list.innerHTML = PRAYERS.map((p, idx) => {
     const isCustom = _customPrayers.some(cp => cp.id === p.id);
     const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
     const badge = isCustom ? ' <span style="font-size:10px;background:#e8f0ff;color:#1a5aaa;border-radius:8px;padding:1px 5px;">custom</span>' : '';
-    return `<div class="terms-row">
+    return `<div class="terms-row" draggable="true"
+      ondragstart="onTermsDragStart(event,${idx})"
+      ondragover="onTermsDragOver(event,${idx})"
+      ondragleave="onTermsDragLeave(event)"
+      ondrop="onTermsDrop(event,${idx})"
+      ondragend="onTermsDragEnd()">
+      <span class="terms-drag-handle">&#8942;&#8942;</span>
       <span class="terms-prayer-name" id="name-display-${p.id}">${label}${badge}<button class="terms-pencil-btn" onclick="editPrayerName('${p.id}')" title="Edit name">&#9998;</button></span>
       <input class="terms-input" id="terms-input-${p.id}" type="text" value="${(p.searchTerms||'').replace(/"/g,'&quot;')}">
       <div style="display:flex;align-items:center;gap:6px;">
@@ -1960,12 +1984,51 @@ function renderSearchTermsEditor() {
   hiddenList.innerHTML = hidden.map(p => {
     const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
     return `<div class="terms-row">
+      <span></span>
       <span class="terms-prayer-name" style="color:var(--text-muted);">${label}</span>
       <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Hidden</span>
       <span></span>
       <button class="terms-restore-btn" onclick="restorePrayer('${p.id}')">Restore</button>
     </div>`;
   }).join('');
+}
+
+let _dragSrcIdx = null;
+
+function onTermsDragStart(e, idx) {
+  _dragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onTermsDragOver(e, idx) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('#termsList .terms-row').forEach((r, i) => {
+    r.classList.toggle('drag-over', i === idx && i !== _dragSrcIdx);
+  });
+}
+function onTermsDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function onTermsDragEnd() {
+  document.querySelectorAll('#termsList .terms-row').forEach(r => r.classList.remove('drag-over'));
+  _dragSrcIdx = null;
+}
+function onTermsDrop(e, idx) {
+  e.preventDefault();
+  if (_dragSrcIdx === null || _dragSrcIdx === idx) { onTermsDragEnd(); return; }
+  const moved = PRAYERS.splice(_dragSrcIdx, 1)[0];
+  PRAYERS.splice(idx, 0, moved);
+  _prayerOrder = PRAYERS.map(p => p.id);
+  savePrayerOrder();
+  renderSearchTermsEditor();
+  renderPrayerChips();
+}
+async function savePrayerOrder() {
+  try {
+    await fetch(`${FIREBASE_URL}/prayerOrder.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(_prayerOrder),
+    });
+  } catch(e) {}
 }
 
 function editPrayerName(prayerId) {
