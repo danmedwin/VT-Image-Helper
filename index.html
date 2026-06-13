@@ -1047,7 +1047,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.10</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.11</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2076,8 +2076,13 @@ async function refreshCuratedLibrary() {
       if (!res.ok) throw new Error('API ' + res.status);
       const data = await res.json();
       const prayerBlocked = blockedData[prayer.id] || {};
+      const blocklistLower = negativeKeywords.map(k => k.toLowerCase());
       curated[prayer.id] = (data.photos || [])
         .filter(p => !isBlockedValue(prayerBlocked[String(p.id)]))
+        .filter(p => {
+          const text = (p.alt || '').toLowerCase();
+          return !blocklistLower.some(kw => text.includes(kw));
+        })
         .map(p => ({
           id: p.id,
           caption: p.alt || p.photographer,
