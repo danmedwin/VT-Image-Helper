@@ -1047,7 +1047,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.9</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.10</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2070,18 +2070,21 @@ async function refreshCuratedLibrary() {
       const ctx = document.getElementById('ctx') ? document.getElementById('ctx').value.trim() : '';
       const q = encodeURIComponent(buildSearchQuery(prayer, ctx));
       const res = await fetch(
-        `https://api.pexels.com/v1/search?query=${q}&per_page=12&orientation=landscape`,
+        `https://api.pexels.com/v1/search?query=${q}&per_page=20&orientation=landscape`,
         { headers: { Authorization: apiKey } }
       );
       if (!res.ok) throw new Error('API ' + res.status);
       const data = await res.json();
-      curated[prayer.id] = (data.photos || []).map(p => ({
-        id: p.id,
-        caption: p.alt || p.photographer,
-        src: p.src.large2x || p.src.large,
-        pexelsUrl: p.url,
-        photographer: p.photographer,
-      }));
+      const prayerBlocked = blockedData[prayer.id] || {};
+      curated[prayer.id] = (data.photos || [])
+        .filter(p => !isBlockedValue(prayerBlocked[String(p.id)]))
+        .map(p => ({
+          id: p.id,
+          caption: p.alt || p.photographer,
+          src: p.src.large2x || p.src.large,
+          pexelsUrl: p.url,
+          photographer: p.photographer,
+        }));
     } catch (e) {
       curated[prayer.id] = [];
     }
