@@ -363,14 +363,30 @@
     flex: 1;
   }
   .img-caption .pexels-link {
+    display: inline-flex;
+    align-items: center;
     font-size: 11px;
     color: var(--navy-mid);
     text-decoration: none;
     white-space: nowrap;
-    opacity: 0.7;
+    opacity: 0.6;
     flex-shrink: 0;
   }
   .img-caption .pexels-link:hover { opacity: 1; }
+  .img-caption .pexels-link svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  .btn-report {
+    background: none; border: none; padding: 2px 3px; cursor: pointer;
+    color: var(--text-muted); opacity: 0.45; flex-shrink: 0; line-height: 1;
+  }
+  .btn-report:hover { opacity: 1; color: #c0392b; }
+  .btn-report svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 2; display: block; }
+
+  .report-dot {
+    display: inline-block; width: 6px; height: 6px;
+    background: #c0392b; border-radius: 50%;
+    margin-left: 4px; vertical-align: middle;
+  }
 
   /* SELECTED CHECKMARK */
   .img-card.selected::after {
@@ -919,6 +935,7 @@
       <button class="admin-tab" onclick="showAdminTab('blocklist',this)">&#128287; Blocklist</button>
       <button class="admin-tab" onclick="showAdminTab('terms',this)">&#128269; Search Terms</button>
       <button class="admin-tab" onclick="showAdminTab('apikey',this)">&#128273; API Key</button>
+      <button class="admin-tab" id="reportsTab" onclick="showAdminTab('reports',this)">&#128681; Reports</button>
     </div>
 
     <div class="admin-tab-panel active" id="adminTab-review">
@@ -1000,6 +1017,14 @@
         </div>
       </div>
     </div>
+
+    <div class="admin-tab-panel" id="adminTab-reports">
+      <h3 style="color:#c0392b;">&#128681; User Reports</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">
+        Photos flagged by users as problematic. Click &#10005; to dismiss a report after reviewing.
+      </p>
+      <div id="reportsList"></div>
+    </div>
   </div>
 </main>
 
@@ -1026,10 +1051,33 @@
   </div>
 </div>
 
+<!-- Report modal -->
+<div class="block-modal-overlay" id="reportModalOverlay" onclick="closeReportModal()">
+  <div class="block-modal" onclick="event.stopPropagation()">
+    <h3>&#128681; Report this photo</h3>
+    <img class="block-modal-thumb" id="reportModalThumb" src="" alt="">
+    <p>What&rsquo;s the issue?</p>
+    <div class="block-reason-list">
+      <label><input type="checkbox" value="inappropriate"> Inappropriate content</label>
+      <label><input type="checkbox" value="no_clear_space"> No clear space for text overlay</label>
+      <label><input type="checkbox" value="too_distracting"> Too distracting / busy composition</label>
+      <label><input type="checkbox" value="wrong_tone"> Wrong tone for this prayer</label>
+      <label><input type="checkbox" value="poor_quality"> Poor image quality (blurry or dark)</label>
+      <label><input type="checkbox" value="too_commercial"> Too commercial / stock-photo feel</label>
+      <label><input type="checkbox" value="off_topic"> Off-topic for this prayer</label>
+    </div>
+    <textarea class="block-notes" id="reportModalNotes" rows="2" placeholder="Additional notes (optional)&hellip;"></textarea>
+    <div class="block-modal-actions">
+      <button class="btn-modal-cancel" onclick="closeReportModal()">Cancel</button>
+      <button class="btn-modal-block" onclick="confirmReport()">Report photo</button>
+    </div>
+  </div>
+</div>
+
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.4</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.5</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1654,6 +1702,7 @@ function toggleAdmin() {
       renderBlockedPanel();
       renderKeywordsPanel();
       renderSearchTermsEditor();
+      loadReports().then(renderReportsPanel);
     } else if (pass !== null) {
       alert('Incorrect passcode.');
     }
@@ -1879,6 +1928,120 @@ async function confirmBlock() {
   if (reviewSelect && reviewSelect.value === prayerId) loadReviewPhotos();
 }
 
+// ─── REPORT MODAL ─────────────────────────────────────────────────────────────
+
+let _pendingReport = null;
+let reportsData    = {};
+
+function showReportModal(prayerId, photoId, evt) {
+  evt.stopPropagation();
+  _pendingReport = { prayerId, photoId };
+  const card  = document.querySelector(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`);
+  const imgEl = card ? card.querySelector('img') : null;
+  const thumb = document.getElementById('reportModalThumb');
+  if (imgEl && imgEl.src) { thumb.src = imgEl.src; thumb.style.display = 'block'; }
+  else { thumb.style.display = 'none'; }
+  document.querySelectorAll('#reportModalOverlay input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.getElementById('reportModalNotes').value = '';
+  document.getElementById('reportModalOverlay').classList.add('open');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModalOverlay').classList.remove('open');
+  _pendingReport = null;
+}
+
+async function confirmReport() {
+  if (!_pendingReport) return;
+  const { prayerId, photoId } = _pendingReport;
+  const reasons = [...document.querySelectorAll('#reportModalOverlay input[type="checkbox"]:checked')]
+    .map(cb => cb.value);
+  const notes = document.getElementById('reportModalNotes').value.trim();
+  closeReportModal();
+  try {
+    await fetch(`${FIREBASE_URL}/reports/${prayerId}/${photoId}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reported: true, reasons, notes, ts: Date.now() }),
+    });
+    if (!reportsData[prayerId]) reportsData[prayerId] = {};
+    reportsData[prayerId][photoId] = { reported: true, reasons, notes, ts: Date.now() };
+    showReportBadge();
+  } catch(e) { console.warn('Report save failed', e); }
+  // Briefly tint the flag to confirm
+  const btn = document.querySelector(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"] .btn-report`);
+  if (btn) { btn.style.color = '#c0392b'; btn.style.opacity = '1'; btn.title = 'Reported — thank you'; }
+}
+
+function showReportBadge() {
+  const toggle = document.getElementById('adminToggle');
+  if (toggle && !toggle.querySelector('.report-dot')) {
+    const dot = document.createElement('span');
+    dot.className = 'report-dot';
+    toggle.appendChild(dot);
+  }
+  const tab = document.getElementById('reportsTab');
+  if (tab && !tab.querySelector('.report-dot')) {
+    const dot = document.createElement('span');
+    dot.className = 'report-dot';
+    tab.appendChild(dot);
+  }
+}
+
+async function loadReportCount() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/reports.json?shallow=true`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && Object.keys(data).length > 0) showReportBadge();
+  } catch(e) {}
+}
+
+async function loadReports() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/reports.json`);
+    reportsData = res.ok ? (await res.json() || {}) : {};
+  } catch(e) { reportsData = {}; }
+}
+
+function renderReportsPanel() {
+  const el = document.getElementById('reportsList');
+  if (!el) return;
+  const all = [];
+  for (const [prayerId, photos] of Object.entries(reportsData || {})) {
+    for (const [photoId, data] of Object.entries(photos || {})) {
+      if (data && data.reported) all.push({ prayerId, photoId, ...data });
+    }
+  }
+  if (!all.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">No reports yet.</p>';
+    return;
+  }
+  all.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  el.innerHTML = all.map(r => {
+    const src  = `https://images.pexels.com/photos/${r.photoId}/pexels-photo-${r.photoId}.jpeg?auto=compress&cs=tinysrgb&w=80&h=50&fit=crop`;
+    const when = r.ts ? new Date(r.ts).toLocaleDateString() : '';
+    const reasons = (r.reasons || []).join(', ') || 'No reason given';
+    return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);">
+      <img src="${src}" style="width:80px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none'">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:600;">${r.prayerId} &middot; photo ${r.photoId}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${reasons}</div>
+        ${r.notes ? `<div style="font-size:12px;font-style:italic;">&ldquo;${r.notes}&rdquo;</div>` : ''}
+        ${when ? `<div style="font-size:11px;color:var(--text-muted);">${when}</div>` : ''}
+      </div>
+      <button onclick="dismissReport('${r.prayerId}','${r.photoId}')" title="Dismiss"
+              style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:0;flex-shrink:0;">&#10005;</button>
+    </div>`;
+  }).join('');
+}
+
+async function dismissReport(prayerId, photoId) {
+  await fetch(`${FIREBASE_URL}/reports/${prayerId}/${photoId}.json`, { method: 'DELETE' });
+  if (reportsData[prayerId]) delete reportsData[prayerId][photoId];
+  renderReportsPanel();
+}
+
 async function unblockPhoto(prayerId, photoId) {
   await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false',
@@ -2083,7 +2246,8 @@ function photoCardHtml(prayerId, photo, isLive) {
           <button class="btn-fav" id="fav-btn-${photo.id}"
                   onclick="toggleFavorite('${prayerId}', ${photo.id}, event)" title="Favorite">&#9825;</button>
           <span class="fav-count" id="fav-count-${photo.id}"></span>
-          <a class="pexels-link" href="${pageUrl}" target="_blank" rel="noopener" title="View on Pexels">&#8599;</a>
+          <button class="btn-report" onclick="showReportModal('${prayerId}',${photo.id},event)" title="Report this photo"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></button>
+          <a class="pexels-link" href="${pageUrl}" target="_blank" rel="noopener" title="View on Pexels"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
         </div>
       </div>
     </div>`;
@@ -2288,6 +2452,7 @@ loadFavorites();
 loadBlocked();
 loadCustomSearchTerms();
 loadNegativeKeywords();
+loadReportCount();
 updateKeyUI();
 loadCuratedJson();
 
