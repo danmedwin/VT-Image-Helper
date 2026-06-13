@@ -129,10 +129,56 @@ async function getFirebase(fbPath) {
 
 // ─── CLAUDE VISION ───────────────────────────────────────────────────────────
 
-let claudeConsecutiveFailures = 0;
-const CLAUDE_FAILURE_THRESHOLD = 5; // stop trying after 5 consecutive errors
+const REASON_LABELS = {
+  inappropriate:   'inappropriate or offensive content',
+  too_distracting: 'busy or cluttered composition',
+  wrong_tone:      "tone that doesn't fit Jewish prayer context",
+  poor_quality:    'poor image quality (blurry, dark, or pixelated)',
+  too_commercial:  'commercial or generic stock-photo aesthetic',
+  off_topic:       'subject matter off-topic for a Jewish prayer service',
+};
 
-async function hasTextSpace(photoUrl, warnings) {
+function buildClaudePrompt(negativeKeywords, avoidCriteria) {
+  const rejectLines = [];
+  if (negativeKeywords.length) {
+    rejectLines.push(`- Visually contains any of: ${negativeKeywords.join(', ')}`);
+  }
+  avoidCriteria.forEach(c => rejectLines.push(`- Has ${c}`));
+
+  const lines = [
+    'Evaluate this image for a projected Jewish prayer service slide. Answer YES to include it, NO to reject it.',
+    '',
+    'INCLUDE if: The image has a clear, uncluttered area (open sky, simple background, or negative space) where prayer text can be legibly overlaid.',
+    '',
+  ];
+  if (rejectLines.length) {
+    lines.push('REJECT if any of these apply:');
+    rejectLines.forEach(l => lines.push(l));
+    lines.push('');
+  }
+  lines.push('Answer only YES or NO.');
+  return lines.join('\n');
+}
+
+function aggregateBlockReasons(blocked) {
+  const counts = {};
+  for (const photos of Object.values(blocked)) {
+    for (const val of Object.values(photos || {})) {
+      if (val && typeof val === 'object' && val.blocked) {
+        (val.reasons || []).forEach(r => { counts[r] = (counts[r] || 0) + 1; });
+      }
+    }
+  }
+  return Object.entries(counts)
+    .filter(([reason]) => reason !== 'no_clear_space' && REASON_LABELS[reason])
+    .sort(([, a], [, b]) => b - a)
+    .map(([reason]) => REASON_LABELS[reason]);
+}
+
+let claudeConsecutiveFailures = 0;
+const CLAUDE_FAILURE_THRESHOLD = 5;
+
+async function evaluatePhoto(photoUrl, claudePrompt, warnings) {
   if (!ANTHROPIC_KEY) return true;
   if (claudeConsecutiveFailures >= CLAUDE_FAILURE_THRESHOLD) return true;
 
@@ -142,14 +188,8 @@ async function hasTextSpace(photoUrl, warnings) {
     messages: [{
       role: 'user',
       content: [
-        {
-          type: 'image',
-          source: { type: 'url', url: photoUrl },
-        },
-        {
-          type: 'text',
-          text: 'Does this photo have a clear, uncluttered area — such as open sky, solid background, or negative space — where prayer text could be legibly overlaid on a projected slide? Answer only YES or NO.',
-        },
+        { type: 'image', source: { type: 'url', url: photoUrl } },
+        { type: 'text', text: claudePrompt },
       ],
     }],
   });
@@ -168,15 +208,13 @@ async function hasTextSpace(photoUrl, warnings) {
     );
 
     if (status === 429) {
-      const msg = 'Claude rate limit hit — including photo without analysis';
-      warnings.push(msg);
+      warnings.push('Claude rate limit hit — including photo without analysis');
       process.stdout.write(' [Claude rate-limited]');
       claudeConsecutiveFailures++;
       return true;
     }
     if (status !== 200) {
-      const msg = `Claude API error ${status} — including photo without analysis`;
-      warnings.push(msg);
+      warnings.push(`Claude API error ${status} — including photo without analysis`);
       process.stdout.write(` [Claude ${status}]`);
       claudeConsecutiveFailures++;
       return true;
@@ -187,11 +225,10 @@ async function hasTextSpace(photoUrl, warnings) {
     const answer = (parsed.content?.[0]?.text || '').trim().toUpperCase();
     return answer.startsWith('YES');
   } catch (e) {
-    const msg = `Claude network error: ${e.message}`;
-    warnings.push(msg);
+    warnings.push(`Claude network error: ${e.message}`);
     process.stdout.write(` [Claude err]`);
     claudeConsecutiveFailures++;
-    return true; // include on error — don't punish network blips
+    return true;
   }
 }
 
@@ -201,19 +238,27 @@ async function main() {
   const warnings = [];
   let pexelsFailures = 0;
 
-  console.log('Reading Firebase data (favorites, blocked, custom search terms)…');
-  const [favorites, blocked, customTerms] = await Promise.all([
+  console.log('Reading Firebase data…');
+  const [favorites, blocked, customTerms, blockedKeywordsRaw] = await Promise.all([
     getFirebase('favorites'),
     getFirebase('blocked'),
     getFirebase('searchTerms'),
+    getFirebase('blockedKeywords'),
   ]);
 
   for (const prayer of PRAYERS) {
     if (customTerms[prayer.id]) prayer.searchTerms = customTerms[prayer.id];
   }
 
+  // Build Claude evaluation prompt from visual blocklist + aggregated block reasons
+  const negativeKeywords = Array.isArray(blockedKeywordsRaw) ? blockedKeywordsRaw : [];
+  const avoidCriteria    = aggregateBlockReasons(blocked);
+  const claudePrompt     = buildClaudePrompt(negativeKeywords, avoidCriteria);
+
   if (ANTHROPIC_KEY) {
-    console.log(`Using Claude (${CLAUDE_MODEL}) to filter for text-overlay space.`);
+    console.log(`Using Claude (${CLAUDE_MODEL}) to evaluate photos.`);
+    if (negativeKeywords.length) console.log(`  Visual blocklist: ${negativeKeywords.join(', ')}`);
+    if (avoidCriteria.length)    console.log(`  Learned criteria: ${avoidCriteria.join('; ')}`);
   }
   console.log();
 
@@ -250,7 +295,7 @@ async function main() {
       process.stdout.write(' → filtering…');
       for (const photo of candidates) {
         await sleep(120); // avoid Claude rate limits
-        const passes = await hasTextSpace(photo.srcMedium || photo.src, warnings);
+        const passes = await evaluatePhoto(photo.srcMedium || photo.src, claudePrompt, warnings);
         if (passes) {
           freshPhotos.push(photo);
           if (freshPhotos.length >= TARGET_PER_PRAYER) break;
