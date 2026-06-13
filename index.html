@@ -1772,9 +1772,15 @@ function loadReviewPhotos() {
     photos = prayer ? prayer.photos : [];
   }
 
+  // Always exclude blocked photos from the review grid
+  const prayerBlocked = blockedData[prayerId] || {};
+  photos = photos.filter(ph => !isBlockedValue(prayerBlocked[String(ph.id)]));
+
   if (favoritesOnly) {
     photos = photos.filter(ph => ((favoritesData[prayerId] || {})[String(ph.id)] || 0) > 0);
   }
+
+  photos = photos.slice(0, 8);
 
   if (!photos.length) {
     container.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:10px 0;">No photos to show.</p>';
