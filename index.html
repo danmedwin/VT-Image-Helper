@@ -1064,9 +1064,12 @@
         </div>
       </div>
 
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">
-        Search terms sent to Pexels for each prayer. Saved to Firebase &mdash; affects all users and the monthly refresh.
-      </p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;">
+        <p style="font-size:12px;color:var(--text-muted);margin:0;">
+          Search terms sent to Pexels for each prayer. Saved to Firebase &mdash; affects all users and the monthly refresh.
+        </p>
+        <button class="terms-save-btn" onclick="resetToMTOrder()" style="white-space:nowrap;margin-left:12px;font-size:11px;">Reset to MT order</button>
+      </div>
       <div id="termsList"></div>
       <div class="hidden-prayers-section" id="hiddenPrayersSection" style="display:none;">
         <h4>Hidden prayers</h4>
@@ -1157,7 +1160,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.22</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.23</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2036,6 +2039,15 @@ async function savePrayerOrder() {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(_prayerOrder),
     });
   } catch(e) {}
+}
+
+async function resetToMTOrder() {
+  if (!confirm('Reset prayer order to Mishkan T\'filah sequence? This will clear any custom drag order.')) return;
+  try {
+    await fetch(`${FIREBASE_URL}/prayerOrder.json`, { method: 'DELETE' });
+  } catch(e) {}
+  _prayerOrder = [];
+  _refreshPrayerUI();
 }
 
 function editPrayerName(prayerId) {
