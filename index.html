@@ -789,6 +789,15 @@
     align-items: center;
     margin-bottom: 7px;
   }
+  .terms-pencil-btn {
+    background: none; border: none; cursor: pointer; font-size: 11px;
+    color: var(--text-muted); opacity: 0.45; padding: 1px 3px; margin-left: 3px; vertical-align: middle;
+  }
+  .terms-pencil-btn:hover { opacity: 1; color: var(--navy); }
+  .terms-name-input {
+    font-size: 12px; padding: 2px 6px; border: 1px solid var(--navy-mid); border-radius: 4px;
+    font-family: inherit; width: 110px;
+  }
   .terms-remove-btn {
     font-size: 11px; padding: 3px 8px; background: none; border: 1px solid #ccc;
     border-radius: 5px; cursor: pointer; color: var(--text-muted); white-space: nowrap;
@@ -969,10 +978,10 @@
 
   <div class="admin-area" id="adminArea">
     <div class="admin-tabs">
-      <button class="admin-tab active" onclick="showAdminTab('review',this)">&#128247; Review</button>
+      <button class="admin-tab active" onclick="showAdminTab('terms',this)">&#128269; Prayers &amp; Terms</button>
+      <button class="admin-tab" onclick="showAdminTab('review',this)">&#128247; Review</button>
       <button class="admin-tab" onclick="showAdminTab('blocked',this)">&#128683; Blocked</button>
       <button class="admin-tab" onclick="showAdminTab('blocklist',this)">&#128287; Blocklist</button>
-      <button class="admin-tab" onclick="showAdminTab('terms',this)">&#128269; Prayers &amp; Terms</button>
       <button class="admin-tab" onclick="showAdminTab('apikey',this)">&#128273; API Key</button>
       <button class="admin-tab" id="reportsTab" onclick="showAdminTab('reports',this)">&#128681; Reports</button>
       <div style="margin-left:auto;margin-right:10px;display:flex;flex-direction:column;align-items:flex-end;align-self:center;gap:2px;">
@@ -981,7 +990,7 @@
       </div>
     </div>
 
-    <div class="admin-tab-panel active" id="adminTab-review">
+    <div class="admin-tab-panel" id="adminTab-review">
       <h3 style="color:#1a7a4a;">&#128247; Browse &amp; review photos</h3>
       <p style="font-size:12px;color:var(--text-muted);margin:0;">
         Browse curated photos for any prayer. Block <svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:middle;display:inline-block;"><circle cx="12" cy="12" r="9"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> removes from future refreshes. &#9825; favorites are shared across users.
@@ -1024,7 +1033,7 @@
       </div>
     </div>
 
-    <div class="admin-tab-panel" id="adminTab-terms">
+    <div class="admin-tab-panel active" id="adminTab-terms">
       <h3 style="color:#1a6aaa;">&#128269; Prayers &amp; Terms</h3>
 
       <div class="add-prayer-form">
@@ -1141,7 +1150,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.18</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.19</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1542,9 +1551,10 @@ let PRAYERS = [
   },
 ];
 
-const _defaultPrayers = PRAYERS.map(p => ({ ...p, names: [...p.names] }));
-let _customPrayers   = [];
-let _hiddenPrayerIds = new Set();
+const _defaultPrayers    = PRAYERS.map(p => ({ ...p, names: [...p.names] }));
+let _customPrayers       = [];
+let _hiddenPrayerIds     = new Set();
+let _prayerDisplayNames  = {};
 
 function applyPrayerLibrary() {
   PRAYERS = [
@@ -1552,15 +1562,17 @@ function applyPrayerLibrary() {
     ..._customPrayers,
   ];
   for (const p of PRAYERS) {
-    if (customSearchTerms[p.id]) p.searchTerms = customSearchTerms[p.id];
+    if (_prayerDisplayNames[p.id]) p.names[0] = _prayerDisplayNames[p.id];
+    if (customSearchTerms[p.id])   p.searchTerms = customSearchTerms[p.id];
   }
 }
 
 async function loadPrayerLibrary() {
   try {
-    const [customRes, hiddenRes] = await Promise.all([
+    const [customRes, hiddenRes, namesRes] = await Promise.all([
       fetch(`${FIREBASE_URL}/customPrayers.json`),
       fetch(`${FIREBASE_URL}/hiddenPrayers.json`),
+      fetch(`${FIREBASE_URL}/prayerDisplayNames.json`),
     ]);
     if (customRes.ok) {
       const data = await customRes.json();
@@ -1569,6 +1581,10 @@ async function loadPrayerLibrary() {
     if (hiddenRes.ok) {
       const data = await hiddenRes.json();
       if (data && typeof data === 'object') _hiddenPrayerIds = new Set(Object.keys(data).filter(k => data[k]));
+    }
+    if (namesRes.ok) {
+      const data = await namesRes.json();
+      if (data && typeof data === 'object') _prayerDisplayNames = data;
     }
   } catch(e) {}
   applyPrayerLibrary();
@@ -1778,7 +1794,7 @@ function toggleAdmin() {
       btn.textContent = 'Exit admin';
       // reset to first tab
       const firstTab = document.querySelector('.admin-tab');
-      if (firstTab) showAdminTab('review', firstTab);
+      if (firstTab) showAdminTab('terms', firstTab);
       renderAdminReviewPanel();
       renderBlockedPanel();
       renderKeywordsPanel();
@@ -1926,7 +1942,7 @@ function renderSearchTermsEditor() {
     const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
     const badge = isCustom ? ' <span style="font-size:10px;background:#e8f0ff;color:#1a5aaa;border-radius:8px;padding:1px 5px;">custom</span>' : '';
     return `<div class="terms-row">
-      <span class="terms-prayer-name">${label}${badge}</span>
+      <span class="terms-prayer-name" id="name-display-${p.id}">${label}${badge}<button class="terms-pencil-btn" onclick="editPrayerName('${p.id}')" title="Edit name">&#9998;</button></span>
       <input class="terms-input" id="terms-input-${p.id}" type="text" value="${(p.searchTerms||'').replace(/"/g,'&quot;')}">
       <div style="display:flex;align-items:center;gap:6px;">
         <button class="terms-save-btn" onclick="saveSearchTerm('${p.id}')">Save</button>
@@ -1950,6 +1966,38 @@ function renderSearchTermsEditor() {
       <button class="terms-restore-btn" onclick="restorePrayer('${p.id}')">Restore</button>
     </div>`;
   }).join('');
+}
+
+function editPrayerName(prayerId) {
+  const nameEl = document.getElementById(`name-display-${prayerId}`);
+  const prayer = PRAYERS.find(p => p.id === prayerId);
+  if (!nameEl || !prayer) return;
+  const current = prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1);
+  nameEl.innerHTML = `<input class="terms-name-input" id="name-input-${prayerId}" type="text" value="${current.replace(/"/g,'&quot;')}"><button class="terms-save-btn" style="padding:2px 7px;" onclick="savePrayerName('${prayerId}')">&#10003;</button>`;
+  const inp = document.getElementById(`name-input-${prayerId}`);
+  inp.focus();
+  inp.select();
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') savePrayerName(prayerId);
+    if (e.key === 'Escape') renderSearchTermsEditor();
+  });
+}
+
+async function savePrayerName(prayerId) {
+  const inp = document.getElementById(`name-input-${prayerId}`);
+  const newName = inp ? inp.value.trim() : '';
+  if (!newName) { renderSearchTermsEditor(); return; }
+  try {
+    await fetch(`${FIREBASE_URL}/prayerDisplayNames/${prayerId}.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newName.toLowerCase()),
+    });
+    _prayerDisplayNames[prayerId] = newName.toLowerCase();
+    const prayer = PRAYERS.find(p => p.id === prayerId);
+    if (prayer) prayer.names[0] = newName.toLowerCase();
+  } catch(e) {}
+  renderSearchTermsEditor();
+  renderPrayerChips();
+  renderAdminReviewPanel(true);
 }
 
 function _refreshPrayerUI() {
