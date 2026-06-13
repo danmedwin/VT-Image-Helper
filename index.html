@@ -830,7 +830,7 @@
   }
   .add-prayer-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 18px; }
   .add-prayer-form h4 { font-size: 12px; font-weight: 700; margin: 0 0 10px; color: var(--navy); }
-  .add-prayer-grid { display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 8px; align-items: end; }
+  .add-prayer-grid { display: grid; grid-template-columns: 1fr 1fr auto 2fr auto; gap: 8px; align-items: end; }
   @media (max-width: 700px) { .add-prayer-grid { grid-template-columns: 1fr 1fr; } }
   .add-prayer-input { font-size: 12px; padding: 5px 8px; border: 1px solid #cde; border-radius: 5px; width: 100%; font-family: inherit; }
   .add-prayer-btn { font-size: 11px; padding: 5px 12px; background: var(--navy); color: #fff; border: none; border-radius: 5px; cursor: pointer; white-space: nowrap; }
@@ -944,6 +944,7 @@
         <label for="outline">Service outline or prayers</label>
         <div class="hint">Paste your service order or prayer names &mdash; one per line or as a paragraph. Hebrew or English both work.</div>
         <textarea id="outline" rows="6" placeholder="e.g.&#10;Shabbat Candles&#10;L'cha Dodi&#10;Barchu · Yotzer Or&#10;Shema · V'ahavta · Mi Chamocha&#10;Amidah · Kedushah&#10;Torah Service&#10;Oseh Shalom · Aleinu · Kaddish"></textarea>
+        <div id="unrecognizedPanel" style="display:none;margin-top:10px;border:1px solid var(--border);border-radius:8px;padding:12px 14px;background:var(--surface);"></div>
       </div>
       <div class="field">
         <label>Select prayers</label>
@@ -1063,47 +1064,67 @@
 
     <div class="admin-tab-panel active" id="adminTab-terms">
       <h3 style="color:#1a6aaa;">&#128269; Prayers &amp; Terms</h3>
+      <div class="report-sub-tab-bar" style="margin:0 0 14px;">
+        <button class="report-sub-tab active" id="termsSubtabPrayers" onclick="showTermsSubtab('prayers')">Prayers</button>
+        <button class="report-sub-tab" id="termsSubtabSubmissions" onclick="showTermsSubtab('submissions')">Submissions <span id="submissionsBadge" style="display:none;background:#e53e3e;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:3px;vertical-align:middle;"></span></button>
+      </div>
 
-      <div class="add-prayer-form">
-        <h4>Add a prayer</h4>
-        <div class="add-prayer-grid">
-          <div>
-            <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Name</div>
-            <input class="add-prayer-input" id="newPrayerName" type="text" placeholder="e.g. Havdalah">
+      <div id="termsSubtab-prayers">
+        <div class="add-prayer-form">
+          <h4>Add a prayer</h4>
+          <div class="add-prayer-grid">
+            <div>
+              <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Name</div>
+              <input class="add-prayer-input" id="newPrayerName" type="text" placeholder="e.g. Havdalah">
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Theme</div>
+              <input class="add-prayer-input" id="newPrayerTheme" type="text" placeholder="e.g. Separation &amp; rest">
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Tag</div>
+              <select class="tag-select" id="newPrayerTag" style="width:100%;padding:5px 4px;font-size:12px;border-radius:5px;">
+                <option value="">— none —</option>
+                <option value="morning">☀ Morning</option>
+                <option value="evening">☽ Evening</option>
+                <option value="shabbat">✡ Shabbat</option>
+                <option value="weekday">◇ Weekday</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Search terms</div>
+              <input class="add-prayer-input" id="newPrayerTerms" type="text" placeholder="e.g. candle flame spices twilight">
+            </div>
+            <div>
+              <button class="add-prayer-btn" onclick="addCustomPrayer()">Add prayer</button>
+            </div>
           </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Theme</div>
-            <input class="add-prayer-input" id="newPrayerTheme" type="text" placeholder="e.g. Separation &amp; rest">
-          </div>
-          <div>
-            <div style="font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text-muted);">Search terms</div>
-            <input class="add-prayer-input" id="newPrayerTerms" type="text" placeholder="e.g. candle flame spices twilight">
-          </div>
-          <div>
-            <button class="add-prayer-btn" onclick="addCustomPrayer()">Add prayer</button>
-          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 8px;">
+          <p style="font-size:12px;color:var(--text-muted);margin:0;">
+            Search terms sent to Pexels for each prayer. Saved to Firebase &mdash; affects all users and the monthly refresh.
+          </p>
+          <button class="terms-save-btn" onclick="resetToMTOrder()" style="white-space:nowrap;margin-left:12px;font-size:11px;">Reset to MT order</button>
+        </div>
+        <div class="svc-filter-bar">
+          <button class="svc-filter-btn terms-time-btn" data-svc-time="morning" onclick="toggleTermsTime('morning')">Morning ☀</button>
+          <button class="svc-filter-btn terms-time-btn" data-svc-time="evening" onclick="toggleTermsTime('evening')">Evening ☽</button>
+          <span style="color:var(--border);padding:0 2px;align-self:center;">|</span>
+          <button class="svc-filter-btn terms-day-btn" data-svc-day="shabbat" onclick="toggleTermsDay('shabbat')">Shabbat ✡</button>
+          <button class="svc-filter-btn terms-day-btn" data-svc-day="weekday" onclick="toggleTermsDay('weekday')">Weekday ◇</button>
+          <span style="color:var(--border);padding:0 2px;align-self:center;">|</span>
+          <button class="svc-filter-btn terms-untagged-btn" onclick="toggleTermsUntagged()">Untagged</button>
+        </div>
+        <div id="termsList"></div>
+        <div class="hidden-prayers-section" id="hiddenPrayersSection" style="display:none;">
+          <h4>Hidden prayers</h4>
+          <div id="hiddenPrayersList"></div>
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 8px;">
-        <p style="font-size:12px;color:var(--text-muted);margin:0;">
-          Search terms sent to Pexels for each prayer. Saved to Firebase &mdash; affects all users and the monthly refresh.
-        </p>
-        <button class="terms-save-btn" onclick="resetToMTOrder()" style="white-space:nowrap;margin-left:12px;font-size:11px;">Reset to MT order</button>
-      </div>
-      <div class="svc-filter-bar">
-        <button class="svc-filter-btn terms-time-btn" data-svc-time="morning" onclick="toggleTermsTime('morning')">Morning ☀</button>
-        <button class="svc-filter-btn terms-time-btn" data-svc-time="evening" onclick="toggleTermsTime('evening')">Evening ☽</button>
-        <span style="color:var(--border);padding:0 2px;align-self:center;">|</span>
-        <button class="svc-filter-btn terms-day-btn" data-svc-day="shabbat" onclick="toggleTermsDay('shabbat')">Shabbat ✡</button>
-        <button class="svc-filter-btn terms-day-btn" data-svc-day="weekday" onclick="toggleTermsDay('weekday')">Weekday ◇</button>
-        <span style="color:var(--border);padding:0 2px;align-self:center;">|</span>
-        <button class="svc-filter-btn terms-untagged-btn" onclick="toggleTermsUntagged()">Untagged</button>
-      </div>
-      <div id="termsList"></div>
-      <div class="hidden-prayers-section" id="hiddenPrayersSection" style="display:none;">
-        <h4>Hidden prayers</h4>
-        <div id="hiddenPrayersList"></div>
+      <div id="termsSubtab-submissions" style="display:none;">
+        <div id="submissionsPanel"></div>
       </div>
     </div>
 
@@ -1190,7 +1211,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.26</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.27</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1542,18 +1563,6 @@ let PRAYERS = [
     ]
   },
   {
-    id: 'kavanah',
-    names: ['kavanah', 'kavanot', 'כוונה', 'intention', 'mindfulness', 'rootedness'],
-    theme: 'Intention & rootedness',
-    searchTerms: 'tree roots grounded stillness meditation',
-    photos: [
-      { id: 17713087, caption: 'Large oak in open field' },
-      { id: 1182942,  caption: 'Ancient tree against blue sky' },
-      { id: 36983661, caption: 'Rooted tree in morning mist' },
-      { id: 2440009,  caption: 'Trees in still landscape' },
-    ]
-  },
-  {
     id: 'hashkivenu',
     names: ['hashkivenu', 'השכיבנו', 'lay us down in peace', 'evening prayer', 'maariv aravim'],
     theme: 'Evening & rest',
@@ -1589,18 +1598,6 @@ let PRAYERS = [
       { id: 1166209,  caption: 'Warm reading light' },
     ]
   },
-  {
-    id: 'wherever',
-    names: ['wherever you go', 'jewish world', 'am yisrael', 'עם ישראל', 'jewish community'],
-    theme: 'Jewish world & peoplehood',
-    searchTerms: 'globe world map wandering journey',
-    photos: [
-      { id: 3828834,  caption: 'Desk globe' },
-      { id: 30792661, caption: 'Vintage world globe' },
-      { id: 8828394,  caption: 'Globes on wooden table' },
-      { id: 4870334,  caption: 'Globe over open hand' },
-    ]
-  },
 ];
 
 // Default service tags per prayer (Firebase prayerTags overrides these)
@@ -1622,7 +1619,7 @@ const _defaultPrayerTags = {
 };
 
 // Mishkan T'filah canonical order
-const _mtOrder = ['shabbatcandles','kavanah','mahtovu','modehanee','asheryatzar','mahrabu','psalm150','lechadodi','barchu','yotzeior','ahavarabbah','ahavatoolam','shema','vahavta','michamocha','hashkivenu','amidah','avotimahot','gevurot','kedushah','veshamru','torahblessings','torahservice','hineimahtov','kiddushshabbat','motzi','oseishalom','einkelo','aleinu','kaddish','adonolam','yigdal','wherever'];
+const _mtOrder = ['shabbatcandles','mahtovu','modehanee','asheryatzar','mahrabu','psalm150','lechadodi','barchu','yotzeior','ahavarabbah','ahavatoolam','shema','vahavta','michamocha','hashkivenu','amidah','avotimahot','gevurot','kedushah','veshamru','torahblessings','torahservice','hineimahtov','kiddushshabbat','motzi','oseishalom','einkelo','aleinu','kaddish','adonolam','yigdal'];
 PRAYERS.sort((a, b) => {
   const ai = _mtOrder.indexOf(a.id); const bi = _mtOrder.indexOf(b.id);
   return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
@@ -1634,6 +1631,7 @@ let _hiddenPrayerIds     = new Set();
 let _prayerDisplayNames  = {};
 let _prayerOrder         = [];
 let _prayerTags      = {};
+let _pendingPrayers  = [];
 let _chipTimeFilter  = '';
 let _chipDayFilter   = '';
 let _termsTimeFilter = '';
@@ -1661,12 +1659,13 @@ function applyPrayerLibrary() {
 
 async function loadPrayerLibrary() {
   try {
-    const [customRes, hiddenRes, namesRes, orderRes, tagsRes] = await Promise.all([
+    const [customRes, hiddenRes, namesRes, orderRes, tagsRes, pendingRes] = await Promise.all([
       fetch(`${FIREBASE_URL}/customPrayers.json`),
       fetch(`${FIREBASE_URL}/hiddenPrayers.json`),
       fetch(`${FIREBASE_URL}/prayerDisplayNames.json`),
       fetch(`${FIREBASE_URL}/prayerOrder.json`),
       fetch(`${FIREBASE_URL}/prayerTags.json`),
+      fetch(`${FIREBASE_URL}/pendingPrayers.json`),
     ]);
     if (customRes.ok) {
       const data = await customRes.json();
@@ -1688,9 +1687,14 @@ async function loadPrayerLibrary() {
       const data = await tagsRes.json();
       if (data && typeof data === 'object') _prayerTags = data;
     }
+    if (pendingRes.ok) {
+      const data = await pendingRes.json();
+      if (data && typeof data === 'object') _pendingPrayers = Object.values(data).filter(Boolean);
+    }
   } catch(e) {}
   applyPrayerLibrary();
   renderPrayerChips();
+  updateSubmissionsBadge();
 }
 
 // ─── API KEY MANAGEMENT ────────────────────────────────────────────────────────
@@ -2202,6 +2206,186 @@ async function savePrayerTag(prayerId, tag) {
   renderSearchTermsEditor();
 }
 
+// ─── SUBMISSIONS & UNRECOGNIZED ───────────────────────────────────────────────
+
+function showTermsSubtab(tab) {
+  document.getElementById('termsSubtab-prayers').style.display     = tab === 'prayers'     ? '' : 'none';
+  document.getElementById('termsSubtab-submissions').style.display = tab === 'submissions' ? '' : 'none';
+  document.getElementById('termsSubtabPrayers').classList.toggle('active',     tab === 'prayers');
+  document.getElementById('termsSubtabSubmissions').classList.toggle('active', tab === 'submissions');
+  if (tab === 'submissions') renderSubmissionsPanel();
+}
+
+function updateSubmissionsBadge() {
+  const count = _pendingPrayers.filter(p => p.status === 'pending').length;
+  const badge = document.getElementById('submissionsBadge');
+  if (!badge) return;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? '' : 'none';
+}
+
+function renderSubmissionsPanel() {
+  const el = document.getElementById('submissionsPanel');
+  if (!el) return;
+  const pending  = _pendingPrayers.filter(p => p.status === 'pending');
+  const archived = _pendingPrayers.filter(p => p.status !== 'pending');
+  el.innerHTML = `
+    <h4 style="margin:0 0 10px;color:var(--navy);">Pending (${pending.length})</h4>
+    ${pending.length === 0
+      ? '<p style="font-size:12px;color:var(--text-muted);">No pending submissions.</p>'
+      : pending.map(p => _submissionRowHtml(p, false)).join('')}
+    ${archived.length > 0 ? `
+      <hr style="margin:16px 0 12px;">
+      <h4 style="margin:0 0 10px;color:var(--text-muted);">Archived</h4>
+      ${archived.map(p => _submissionRowHtml(p, true)).join('')}
+    ` : ''}
+  `;
+}
+
+function _submissionRowHtml(p, isArchived) {
+  const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
+  const icon  = tagIcon(p.tag && p.tag !== '_none_' ? p.tag : null);
+  const terms = p.searchTerms || '—';
+  const meta  = `<div style="font-size:13px;font-weight:600;">${label}${icon ? ' ' + icon : ''}</div>
+                 <div style="font-size:11px;color:var(--text-muted);">${terms}</div>`;
+  if (isArchived) return `
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:8px;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);">
+      <div>${meta}<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Status: ${p.status}</div></div>
+      <button class="terms-save-btn" onclick="reverseSubmission('${p.id}')">Reverse</button>
+    </div>`;
+  return `
+    <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-bottom:8px;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);">
+      <div>${meta}</div>
+      <button class="terms-save-btn" style="background:var(--teal);color:#fff;border-color:var(--teal);" onclick="approveSubmission('${p.id}')">Approve</button>
+      <button class="terms-remove-btn" onclick="dismissSubmission('${p.id}')">Dismiss</button>
+    </div>`;
+}
+
+async function approveSubmission(id) {
+  const s = _pendingPrayers.find(p => p.id === id);
+  if (!s) return;
+  const prayer = { id: s.id, names: s.names, theme: s.theme || '', searchTerms: s.searchTerms };
+  try {
+    await fetch(`${FIREBASE_URL}/customPrayers/${id}.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
+    });
+    if (s.tag && s.tag !== '_none_') {
+      await fetch(`${FIREBASE_URL}/prayerTags/${id}.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(s.tag),
+      });
+      _prayerTags[id] = s.tag;
+    }
+    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('approved'),
+    });
+    s.status = 'approved';
+    _customPrayers.push(prayer);
+    _refreshPrayerUI();
+    updateSubmissionsBadge();
+    renderSubmissionsPanel();
+  } catch(e) { alert('Could not approve: ' + e.message); }
+}
+
+async function dismissSubmission(id) {
+  try {
+    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('dismissed'),
+    });
+    const s = _pendingPrayers.find(p => p.id === id);
+    if (s) s.status = 'dismissed';
+    updateSubmissionsBadge();
+    renderSubmissionsPanel();
+  } catch(e) { alert('Could not dismiss: ' + e.message); }
+}
+
+async function reverseSubmission(id) {
+  try {
+    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('pending'),
+    });
+    const s = _pendingPrayers.find(p => p.id === id);
+    if (s) s.status = 'pending';
+    updateSubmissionsBadge();
+    renderSubmissionsPanel();
+  } catch(e) { alert('Could not reverse: ' + e.message); }
+}
+
+function getUnrecognizedTerms(outline) {
+  const tokens = outline
+    .split(/[\n\r]+/)
+    .flatMap(line => line.split(/\s*[·,;•\/]\s*/))
+    .map(s => s.replace(/^[-–—*\d.\s]+|[.\s]+$/g, '').trim())
+    .filter(s => s.length >= 4);
+  return tokens.filter(token => {
+    const lower = token.toLowerCase();
+    return !PRAYERS.some(p => p.names.some(n =>
+      lower.includes(n.toLowerCase()) || n.toLowerCase().includes(lower)
+    ));
+  });
+}
+
+function renderUnrecognizedPanel(terms) {
+  const panel = document.getElementById('unrecognizedPanel');
+  if (!panel) return;
+  const isAdmin = document.body.classList.contains('admin-mode');
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong style="font-size:13px;color:var(--navy);">Not recognized from your outline</strong>
+      <button onclick="document.getElementById('unrecognizedPanel').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1;">&times;</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">Add details to include in your search${isAdmin ? '' : ' — submitted for admin review'}:</p>
+    ${terms.map((t, i) => `
+      <div style="display:grid;grid-template-columns:1fr 80px 1fr auto auto;gap:6px;align-items:center;margin-bottom:6px;" id="unrec-row-${i}">
+        <input type="text" class="terms-input" id="unrec-name-${i}" value="${t.charAt(0).toUpperCase() + t.slice(1)}" placeholder="Name">
+        <select class="tag-select" id="unrec-tag-${i}" style="width:100%;">
+          <option value="">— none —</option>
+          <option value="morning">☀ Morning</option>
+          <option value="evening">☽ Evening</option>
+          <option value="shabbat">✡ Shabbat</option>
+          <option value="weekday">◇ Weekday</option>
+        </select>
+        <input type="text" class="terms-input" id="unrec-terms-${i}" placeholder="Pexels search terms">
+        <button class="terms-save-btn" onclick="saveUnrecognized(${i})">Save</button>
+        <button class="terms-remove-btn" onclick="document.getElementById('unrec-row-${i}').remove()">&times;</button>
+      </div>`).join('')}
+  `;
+  panel.style.display = '';
+}
+
+async function saveUnrecognized(idx) {
+  const name  = document.getElementById(`unrec-name-${idx}`).value.trim();
+  const tag   = document.getElementById(`unrec-tag-${idx}`).value;
+  const terms = document.getElementById(`unrec-terms-${idx}`).value.trim();
+  if (!name || !terms) { alert('Name and search terms are required.'); return; }
+  const id = 'custom_' + name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'') + '_' + Math.random().toString(36).slice(2,7);
+  const isAdmin = document.body.classList.contains('admin-mode');
+  try {
+    if (isAdmin) {
+      const prayer = { id, names: [name.toLowerCase()], theme: '', searchTerms: terms };
+      await fetch(`${FIREBASE_URL}/customPrayers/${id}.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
+      });
+      if (tag) {
+        await fetch(`${FIREBASE_URL}/prayerTags/${id}.json`, {
+          method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tag),
+        });
+        _prayerTags[id] = tag;
+      }
+      _customPrayers.push(prayer);
+      _refreshPrayerUI();
+    } else {
+      const submission = { id, names: [name.toLowerCase()], theme: '', searchTerms: terms, tag: tag || '_none_', status: 'pending' };
+      await fetch(`${FIREBASE_URL}/pendingPrayers/${id}.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(submission),
+      });
+      _pendingPrayers.push(submission);
+      updateSubmissionsBadge();
+    }
+    const row = document.getElementById(`unrec-row-${idx}`);
+    if (row) row.innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--teal);padding:4px 0;">&#10003; ${isAdmin ? 'Added' : 'Submitted for review'}: ${name}</div>`;
+  } catch(e) { alert('Save failed: ' + e.message); }
+}
+
 function editPrayerName(prayerId) {
   const nameEl = document.getElementById(`name-display-${prayerId}`);
   const prayer = PRAYERS.find(p => p.id === prayerId);
@@ -2244,6 +2428,7 @@ function _refreshPrayerUI() {
 async function addCustomPrayer() {
   const name  = document.getElementById('newPrayerName').value.trim();
   const theme = document.getElementById('newPrayerTheme').value.trim();
+  const tag   = document.getElementById('newPrayerTag').value;
   const terms = document.getElementById('newPrayerTerms').value.trim();
   if (!name || !terms) { alert('Name and search terms are required.'); return; }
   const id = 'custom_' + name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
@@ -2253,10 +2438,17 @@ async function addCustomPrayer() {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
     });
     if (!res.ok) throw new Error(res.status);
+    if (tag) {
+      await fetch(`${FIREBASE_URL}/prayerTags/${id}.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tag),
+      });
+      _prayerTags[id] = tag;
+    }
     _customPrayers.push(prayer);
     _refreshPrayerUI();
     document.getElementById('newPrayerName').value = '';
     document.getElementById('newPrayerTheme').value = '';
+    document.getElementById('newPrayerTag').value = '';
     document.getElementById('newPrayerTerms').value = '';
   } catch(e) { alert(`Save failed: ${e.message}. You may need to add customPrayers to Firebase rules.`); }
 }
@@ -2987,6 +3179,11 @@ async function findImages() {
 
   const outlineParsed = outline ? parsePrayers(outline) : [];
   const matched = [...chipPrayers, ...outlineParsed.filter(p => !selectedChipIds.has(p.id))];
+
+  // Show unrecognized outline terms
+  const _unrec = outline ? getUnrecognizedTerms(outline) : [];
+  if (_unrec.length) renderUnrecognizedPanel(_unrec);
+  else { const _up = document.getElementById('unrecognizedPanel'); if (_up) _up.style.display = 'none'; }
 
   if (matched.length === 0) {
     resultsEl.innerHTML = `
