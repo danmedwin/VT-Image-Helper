@@ -381,6 +381,13 @@
     background: #c0392b; border-radius: 50%;
     margin-left: 4px; vertical-align: middle;
   }
+  .report-sub-tabs { display:flex; gap:0; margin-bottom:14px; border-bottom:2px solid var(--border); }
+  .report-sub-tab { background:none; border:none; border-bottom:2px solid transparent; margin-bottom:-2px;
+    padding:6px 14px; font-size:12px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:color 0.15s; }
+  .report-sub-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .report-status-chip { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px; font-weight:600; }
+  .report-status-chip.approved { background:#e8f5e9; color:#2e7d32; }
+  .report-status-chip.dismissed { background:#f5f5f5; color:#888; }
 
   /* SELECTED CHECKMARK */
   .img-card.selected::after {
@@ -997,11 +1004,18 @@
     </div>
 
     <div class="admin-tab-panel" id="adminTab-reports">
-      <h3 style="color:#c0392b;">&#128681; User Reports</h3>
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">
-        Photos flagged by users as problematic. Click &#10005; to dismiss a report after reviewing.
-      </p>
-      <div id="reportsList"></div>
+      <div class="report-sub-tabs">
+        <button class="report-sub-tab active" onclick="showReportSubTab('pending',this)">&#128681; User Reports</button>
+        <button class="report-sub-tab" onclick="showReportSubTab('archived',this)">&#128466; Archived Reports</button>
+      </div>
+      <div id="reportSubPane-pending">
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">Approve to block the photo and add notes to the blocklist. Dismiss to archive without action.</p>
+        <div id="reportsList"></div>
+      </div>
+      <div id="reportSubPane-archived" style="display:none;">
+        <p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">All reviewed reports. Use Reverse to change a decision.</p>
+        <div id="archivedList"></div>
+      </div>
     </div>
   </div>
 </main>
@@ -1055,7 +1069,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.15</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.16</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1984,24 +1998,27 @@ async function confirmReport() {
 function showReportBadge() {
   const toggle = document.getElementById('adminToggle');
   if (toggle && !toggle.querySelector('.report-dot')) {
-    const dot = document.createElement('span');
-    dot.className = 'report-dot';
-    toggle.appendChild(dot);
+    const dot = document.createElement('span'); dot.className = 'report-dot'; toggle.appendChild(dot);
   }
   const tab = document.getElementById('reportsTab');
   if (tab && !tab.querySelector('.report-dot')) {
-    const dot = document.createElement('span');
-    dot.className = 'report-dot';
-    tab.appendChild(dot);
+    const dot = document.createElement('span'); dot.className = 'report-dot'; tab.appendChild(dot);
   }
+}
+
+function clearReportBadge() {
+  document.querySelectorAll('#adminToggle .report-dot, #reportsTab .report-dot').forEach(d => d.remove());
 }
 
 async function loadReportCount() {
   try {
-    const res = await fetch(`${FIREBASE_URL}/reports.json?shallow=true`);
+    const res = await fetch(`${FIREBASE_URL}/reports.json`);
     if (!res.ok) return;
-    const data = await res.json();
-    if (data && Object.keys(data).length > 0) showReportBadge();
+    const data = await res.json() || {};
+    const hasPending = Object.values(data).some(photos =>
+      Object.values(photos || {}).some(r => r && r.reported && (!r.status || r.status === 'pending'))
+    );
+    if (hasPending) showReportBadge();
   } catch(e) {}
 }
 
@@ -2012,41 +2029,149 @@ async function loadReports() {
   } catch(e) { reportsData = {}; }
 }
 
-function renderReportsPanel() {
-  const el = document.getElementById('reportsList');
-  if (!el) return;
-  const all = [];
-  for (const [prayerId, photos] of Object.entries(reportsData || {})) {
-    for (const [photoId, data] of Object.entries(photos || {})) {
-      if (data && data.reported) all.push({ prayerId, photoId, ...data });
-    }
-  }
-  if (!all.length) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">No reports yet.</p>';
-    return;
-  }
-  all.sort((a, b) => (b.ts || 0) - (a.ts || 0));
-  el.innerHTML = all.map(r => {
-    const src  = `https://images.pexels.com/photos/${r.photoId}/pexels-photo-${r.photoId}.jpeg?auto=compress&cs=tinysrgb&w=80&h=50&fit=crop`;
-    const when = r.ts ? new Date(r.ts).toLocaleDateString() : '';
-    const reasons = (r.reasons || []).join(', ') || 'No reason given';
+function showReportSubTab(id, btn) {
+  document.querySelectorAll('.report-sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['pending','archived'].forEach(s => {
+    const pane = document.getElementById('reportSubPane-' + s);
+    if (pane) pane.style.display = s === id ? '' : 'none';
+  });
+}
+
+function _reportCardHtml(r, isArchived) {
+  const src = `https://images.pexels.com/photos/${r.photoId}/pexels-photo-${r.photoId}.jpeg?auto=compress&cs=tinysrgb&w=80&h=50&fit=crop`;
+  const when = r.ts ? new Date(r.ts).toLocaleDateString() : '';
+  const reasons = (r.reasons || []).join(', ') || 'No reason given';
+  const pid = r.prayerId, phid = r.photoId;
+  if (isArchived) {
+    const chip = r.status === 'approved'
+      ? `<span class="report-status-chip approved">Approved</span>`
+      : `<span class="report-status-chip dismissed">Dismissed</span>`;
+    const reverseLabel = r.status === 'approved' ? 'Reverse (dismiss)' : 'Reverse (approve)';
     return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);">
       <img src="${src}" style="width:80px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none'">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:12px;font-weight:600;">${r.prayerId} &middot; photo ${r.photoId}</div>
+        <div style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;">${pid} &middot; photo ${phid} ${chip}</div>
         <div style="font-size:12px;color:var(--text-muted);">${reasons}</div>
         ${r.notes ? `<div style="font-size:12px;font-style:italic;">&ldquo;${r.notes}&rdquo;</div>` : ''}
         ${when ? `<div style="font-size:11px;color:var(--text-muted);">${when}</div>` : ''}
       </div>
-      <button onclick="dismissReport('${r.prayerId}','${r.photoId}')" title="Dismiss"
-              style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:0;flex-shrink:0;">&#10005;</button>
+      <button onclick="reverseReport('${pid}','${phid}')"
+              style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--accent);padding:2px 6px;border:1px solid var(--accent);border-radius:4px;white-space:nowrap;flex-shrink:0;">${reverseLabel}</button>
     </div>`;
-  }).join('');
+  }
+  return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);">
+    <img src="${src}" style="width:80px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none'">
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:12px;font-weight:600;">${pid} &middot; photo ${phid}</div>
+      <div style="font-size:12px;color:var(--text-muted);">${reasons}</div>
+      ${r.notes ? `<div style="font-size:12px;font-style:italic;">&ldquo;${r.notes}&rdquo;</div>` : ''}
+      ${when ? `<div style="font-size:11px;color:var(--text-muted);">${when}</div>` : ''}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+      <button onclick="approveReport('${pid}','${phid}')"
+              style="background:#2e7d32;color:#fff;border:none;cursor:pointer;font-size:11px;padding:3px 8px;border-radius:4px;">Approve</button>
+      <button onclick="dismissReport('${pid}','${phid}')"
+              style="background:none;border:1px solid var(--border);cursor:pointer;font-size:11px;padding:3px 8px;border-radius:4px;color:var(--text-muted);">Dismiss</button>
+    </div>
+  </div>`;
+}
+
+function renderReportsPanel() {
+  const pending = [], archived = [];
+  for (const [prayerId, photos] of Object.entries(reportsData || {})) {
+    for (const [photoId, data] of Object.entries(photos || {})) {
+      if (!data || !data.reported) continue;
+      const r = { prayerId, photoId, ...data };
+      if (!r.status || r.status === 'pending') pending.push(r);
+      else archived.push(r);
+    }
+  }
+  pending.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  archived.sort((a, b) => (b.actionTs || b.ts || 0) - (a.actionTs || a.ts || 0));
+
+  const pendingEl = document.getElementById('reportsList');
+  if (pendingEl) {
+    pendingEl.innerHTML = pending.length
+      ? pending.map(r => _reportCardHtml(r, false)).join('')
+      : '<p style="font-size:13px;color:var(--text-muted);">No pending reports.</p>';
+  }
+  const archiveEl = document.getElementById('archivedList');
+  if (archiveEl) {
+    archiveEl.innerHTML = archived.length
+      ? archived.map(r => _reportCardHtml(r, true)).join('')
+      : '<p style="font-size:13px;color:var(--text-muted);">No archived reports.</p>';
+  }
+
+  if (!pending.length) clearReportBadge();
+  else showReportBadge();
+}
+
+async function _saveReportStatus(prayerId, photoId, status) {
+  const existing = (reportsData[prayerId] || {})[photoId] || {};
+  const updated = { ...existing, status, actionTs: Date.now() };
+  await fetch(`${FIREBASE_URL}/reports/${prayerId}/${photoId}.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated),
+  });
+  if (!reportsData[prayerId]) reportsData[prayerId] = {};
+  reportsData[prayerId][photoId] = updated;
+}
+
+async function approveReport(prayerId, photoId) {
+  const r = (reportsData[prayerId] || {})[photoId] || {};
+  // Block the photo
+  const blockVal = { blocked: true, reasons: r.reasons || [], notes: r.notes || '', ts: Date.now() };
+  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockVal),
+  });
+  if (!blockedData[prayerId]) blockedData[prayerId] = {};
+  blockedData[prayerId][photoId] = blockVal;
+  document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
+    .forEach(c => c.classList.add('blocked'));
+  // Add notes to blocklist keywords if present
+  if (r.notes && r.notes.trim()) {
+    await loadNegativeKeywords();
+    const word = r.notes.trim();
+    if (!negativeKeywords.includes(word)) {
+      negativeKeywords.push(word);
+      await saveKeywordsToFirebase();
+    }
+  }
+  await _saveReportStatus(prayerId, photoId, 'approved');
+  renderReportsPanel();
+  renderBlockedPanel();
 }
 
 async function dismissReport(prayerId, photoId) {
-  await fetch(`${FIREBASE_URL}/reports/${prayerId}/${photoId}.json`, { method: 'DELETE' });
-  if (reportsData[prayerId]) delete reportsData[prayerId][photoId];
+  await _saveReportStatus(prayerId, photoId, 'dismissed');
+  renderReportsPanel();
+}
+
+async function reverseReport(prayerId, photoId) {
+  const r = (reportsData[prayerId] || {})[photoId] || {};
+  if (r.status === 'approved') {
+    // Reverse: unblock and dismiss
+    await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false',
+    });
+    if (blockedData[prayerId]) blockedData[prayerId][photoId] = false;
+    document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
+      .forEach(c => c.classList.remove('blocked'));
+    await _saveReportStatus(prayerId, photoId, 'dismissed');
+    renderBlockedPanel();
+  } else {
+    // Reverse: approve (block, don't re-add keywords to avoid duplicates)
+    const blockVal = { blocked: true, reasons: r.reasons || [], notes: r.notes || '', ts: Date.now() };
+    await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockVal),
+    });
+    if (!blockedData[prayerId]) blockedData[prayerId] = {};
+    blockedData[prayerId][photoId] = blockVal;
+    document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
+      .forEach(c => c.classList.add('blocked'));
+    await _saveReportStatus(prayerId, photoId, 'approved');
+    renderBlockedPanel();
+  }
   renderReportsPanel();
 }
 
