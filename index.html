@@ -918,6 +918,7 @@
       <button class="admin-tab" onclick="showAdminTab('blocked',this)">&#128683; Blocked</button>
       <button class="admin-tab" onclick="showAdminTab('blocklist',this)">&#128287; Blocklist</button>
       <button class="admin-tab" onclick="showAdminTab('terms',this)">&#128269; Search Terms</button>
+      <button class="admin-tab" onclick="showAdminTab('apikey',this)">&#128273; API Key</button>
     </div>
 
     <div class="admin-tab-panel active" id="adminTab-review">
@@ -966,7 +967,10 @@
       </p>
       <div id="termsList"></div>
 
-      <div class="apikey-panel" id="apikeyPanel" style="margin-top:24px;">
+    </div>
+
+    <div class="admin-tab-panel" id="adminTab-apikey">
+      <div class="apikey-panel" id="apikeyPanel">
         <div class="apikey-header">
           <h2>
             Pexels API key
