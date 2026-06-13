@@ -209,10 +209,26 @@
     font-size: 15px;
     font-weight: 600;
     color: var(--navy);
-    margin-bottom: 18px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
   }
+  .setup-hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+  .setup-section-label { font-size: 13px; font-weight: 600; color: var(--navy); margin: 0 0 10px; }
+  .field input[type="text"] {
+    width: 100%; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 13px; font-size: 14px; font-family: inherit; color: var(--text);
+    background: var(--surface); transition: border-color 0.15s; box-sizing: border-box;
+  }
+  .field input[type="text"]:focus { outline: none; border-color: var(--navy-mid); background: var(--white); }
+  .prayer-chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; margin-bottom: 16px; }
+  .prayer-chip {
+    display: inline-flex; align-items: center; background: var(--surface);
+    border: 1.5px solid var(--border); border-radius: 20px; padding: 4px 11px;
+    font-size: 12px; color: var(--text-muted); cursor: pointer;
+    transition: background 0.13s, border-color 0.13s, color 0.13s; user-select: none;
+  }
+  .prayer-chip input[type="checkbox"] { display: none; }
+  .prayer-chip:hover { border-color: var(--navy-mid); color: var(--navy); }
+  .prayer-chip:has(input:checked) { background: var(--navy); border-color: var(--navy); color: white; }
   .field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -607,8 +623,6 @@
   }
   .keyword-filters {
     margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
   }
 
   /* ADMIN MODE */
@@ -872,17 +886,15 @@
 
   <div class="setup-panel">
     <h2>Find images for your service</h2>
+    <hr class="setup-hr">
 
+    <p class="setup-section-label">Optional: Select keywords</p>
     <div class="keyword-filters">
-      <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
-        Select keywords to shape every image result. Your selections are added directly to each prayer&rsquo;s search &mdash; mix and match freely.
-      </p>
       <div class="filter-group">
         <span class="filter-label">Style</span>
         <label class="filter-chip"><input type="checkbox" value="nature"> Nature</label>
         <label class="filter-chip"><input type="checkbox" value="artistic"> Artistic</label>
         <label class="filter-chip"><input type="checkbox" value="abstract"> Abstract</label>
-        <label class="filter-chip"><input type="checkbox" value="illustration"> Illustrated</label>
         <label class="filter-chip"><input type="checkbox" value="minimalist"> Minimalist</label>
         <label class="filter-chip"><input type="checkbox" value="cinematic"> Cinematic</label>
         <label class="filter-chip"><input type="checkbox" value="vintage"> Vintage</label>
@@ -900,18 +912,25 @@
       </div>
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label for="ctx">Additional keywords <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
-        <div class="hint">Any other words added to every search &mdash; holiday, color, setting, etc. Combined with selections above.</div>
-        <textarea id="ctx" rows="2" placeholder="e.g. Rosh Hashanah, autumn, candlelight, blue tones"></textarea>
-      </div>
-      <div class="field">
-        <label for="outline">Service outline or prayers</label>
-        <div class="hint">Paste your service order or list prayers by name &mdash; one per line or as a paragraph. Hebrew or English names both work.</div>
-        <textarea id="outline" rows="4" placeholder="e.g.&#10;Mah Tovu&#10;Barchu&#10;Shema and V'ahavta&#10;Amidah&#10;Torah service&#10;Oseh Shalom&#10;Aleinu&#10;Kaddish"></textarea>
-      </div>
+    <div class="field" style="margin-bottom:0;">
+      <label for="ctx">Optional: Additional keywords</label>
+      <div class="hint">Any other words added to every search &mdash; holiday, color, setting, etc.</div>
+      <input type="text" id="ctx" placeholder="e.g. Rosh Hashanah, autumn, candlelight, blue tones">
     </div>
+
+    <hr class="setup-hr">
+
+    <div class="field">
+      <label>Select prayers</label>
+      <div id="prayerChips" class="prayer-chips-row"></div>
+    </div>
+
+    <div class="field" style="margin-bottom:18px;">
+      <label for="outline">Service outline or prayers</label>
+      <div class="hint">Paste your service order or list prayers by name &mdash; one per line or as a paragraph. Hebrew or English names both work.</div>
+      <textarea id="outline" rows="4" placeholder="e.g.&#10;Mah Tovu&#10;Barchu&#10;Shema and V'ahavta&#10;Amidah&#10;Torah service&#10;Oseh Shalom&#10;Aleinu&#10;Kaddish"></textarea>
+    </div>
+
     <button class="btn-find" onclick="findImages()">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       Find images
@@ -1069,7 +1088,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.16</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.17</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2268,6 +2287,14 @@ async function refreshCuratedLibrary() {
 
 // ─── MATCHING LOGIC ────────────────────────────────────────────────────────────
 
+function renderPrayerChips() {
+  const el = document.getElementById('prayerChips');
+  if (!el) return;
+  el.innerHTML = PRAYERS.map(p =>
+    `<label class="prayer-chip"><input type="checkbox" name="prayerChip" value="${p.id}"> ${p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1)}</label>`
+  ).join('');
+}
+
 function parsePrayers(outline) {
   const lower = outline.toLowerCase();
   const matched = [];
@@ -2509,13 +2536,17 @@ async function findImages() {
   const resultsEl = document.getElementById('results');
   const apiKey = getKey();
 
-  if (!outline) {
-    resultsEl.innerHTML = '<div class="prayer-section" style="padding:24px 20px;color:var(--text-muted);">Please enter your service outline or prayer names above.</div>';
+  const selectedChipIds = new Set([...document.querySelectorAll('#prayerChips input:checked')].map(cb => cb.value));
+  const chipPrayers = PRAYERS.filter(p => selectedChipIds.has(p.id));
+
+  if (!outline && selectedChipIds.size === 0) {
+    resultsEl.innerHTML = '<div class="prayer-section" style="padding:24px 20px;color:var(--text-muted);">Please select prayers above or paste your service outline.</div>';
     resultsEl.classList.add('visible');
     return;
   }
 
-  const matched = parsePrayers(outline);
+  const outlineParsed = outline ? parsePrayers(outline) : [];
+  const matched = [...chipPrayers, ...outlineParsed.filter(p => !selectedChipIds.has(p.id))];
 
   if (matched.length === 0) {
     resultsEl.innerHTML = `
@@ -2580,6 +2611,7 @@ async function findImages() {
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 
+renderPrayerChips();
 loadMyFavorites();
 loadFavorites();
 loadBlocked();
