@@ -595,8 +595,6 @@
   }
 
   /* ADMIN MODE */
-  #apikeyPanel { display: none; }
-  body.admin-mode #apikeyPanel { display: block; }
 
   .btn-block {
     position: absolute;
@@ -860,36 +858,6 @@
 </header>
 
 <main>
-  <div class="apikey-panel" id="apikeyPanel">
-    <div class="apikey-header">
-      <h2>
-        Pexels API key
-        <span class="mode-badge curated" id="modeBadge">Using curated photos</span>
-      </h2>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span class="apikey-status inactive" id="keyStatus">No key saved</span>
-        <button class="apikey-toggle" id="keyToggle" onclick="toggleKeyPanel()">Set up</button>
-      </div>
-    </div>
-    <div class="apikey-body" id="keyBody" style="display:none;">
-      <p>
-        A free Pexels API key lets this tool fetch fresh live photos instead of the built-in curated set.
-        Get one in about two minutes at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener" style="color:var(--navy-mid);">pexels.com/api</a> &mdash;
-        sign up, go to your profile, and copy the API key. It stays saved in your browser only; it is never sent anywhere except directly to Pexels.
-      </p>
-      <div class="apikey-row">
-        <input type="text" id="keyInput" placeholder="Paste your Pexels API key here&hellip;" autocomplete="off" spellcheck="false">
-        <button class="btn-save-key" onclick="saveKey()">Save key</button>
-        <button class="btn-clear-key" id="clearKeyBtn" style="display:none;" onclick="clearKey()">Remove</button>
-      </div>
-      <p id="keyMsg" style="margin-top:10px;display:none;"></p>
-      <div id="refreshBar" style="display:none;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px;">
-        <button class="btn-save-key" id="refreshCuratedBtn" onclick="refreshCuratedLibrary()" style="background:var(--teal);">&#8635; Refresh curated library</button>
-        <span id="refreshCuratedStatus" style="font-size:12px;color:var(--text-muted);"></span>
-      </div>
-    </div>
-  </div>
-
   <div class="info-box">
     This tool surfaces photos matched to common Jewish prayers &mdash; selected for beauty, thematic resonance, and clear space for text overlay. All photos are sourced from <a href="https://www.pexels.com" target="_blank" rel="noopener" style="color:#7a5c00;">Pexels</a> and are free to use. Click &#9825; to favorite a photo &mdash; favorites are shared across users and survive the monthly refresh.
   </div>
@@ -997,6 +965,36 @@
         Keywords sent to Pexels for each prayer (before chip filters). Saved to Firebase &mdash; affects all users and the monthly auto-refresh.
       </p>
       <div id="termsList"></div>
+
+      <div class="apikey-panel" id="apikeyPanel" style="margin-top:24px;">
+        <div class="apikey-header">
+          <h2>
+            Pexels API key
+            <span class="mode-badge curated" id="modeBadge">Using curated photos</span>
+          </h2>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="apikey-status inactive" id="keyStatus">No key saved</span>
+            <button class="apikey-toggle" id="keyToggle" onclick="toggleKeyPanel()">Set up</button>
+          </div>
+        </div>
+        <div class="apikey-body" id="keyBody" style="display:none;">
+          <p>
+            A free Pexels API key lets this tool fetch fresh live photos instead of the built-in curated set.
+            Get one in about two minutes at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener" style="color:var(--navy-mid);">pexels.com/api</a> &mdash;
+            sign up, go to your profile, and copy the API key. It stays saved in your browser only; it is never sent anywhere except directly to Pexels.
+          </p>
+          <div class="apikey-row">
+            <input type="text" id="keyInput" placeholder="Paste your Pexels API key here&hellip;" autocomplete="off" spellcheck="false">
+            <button class="btn-save-key" onclick="saveKey()">Save key</button>
+            <button class="btn-clear-key" id="clearKeyBtn" style="display:none;" onclick="clearKey()">Remove</button>
+          </div>
+          <p id="keyMsg" style="margin-top:10px;display:none;"></p>
+          <div id="refreshBar" style="display:none;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px;">
+            <button class="btn-save-key" id="refreshCuratedBtn" onclick="refreshCuratedLibrary()" style="background:var(--teal);">&#8635; Refresh curated library</button>
+            <span id="refreshCuratedStatus" style="font-size:12px;color:var(--text-muted);"></span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </main>
