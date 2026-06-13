@@ -1157,7 +1157,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.20</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.21</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1557,6 +1557,13 @@ let PRAYERS = [
     ]
   },
 ];
+
+// Mishkan T'filah canonical order
+const _mtOrder = ['shabbatcandles','kavanah','mahtovu','modehanee','asheryatzar','mahrabu','psalm150','lechadodi','barchu','yotzeior','ahavarabbah','shema','vahavta','michamocha','hashkivenu','amidah','avotimahot','gevurot','kedushah','veshamru','torahblessings','torahservice','hineimahtov','kiddushshabbat','motzi','oseishalom','einkelo','aleinu','kaddish','adonolam','yigdal','wherever'];
+PRAYERS.sort((a, b) => {
+  const ai = _mtOrder.indexOf(a.id); const bi = _mtOrder.indexOf(b.id);
+  return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
+});
 
 const _defaultPrayers    = PRAYERS.map(p => ({ ...p, names: [...p.names] }));
 let _customPrayers       = [];
