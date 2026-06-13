@@ -648,9 +648,7 @@
   .admin-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
   .admin-tab:hover { color: var(--navy); }
   .admin-tab-refresh {
-    margin-left: auto;
     align-self: center;
-    margin-right: 10px;
     background: none;
     border: 1px solid var(--teal);
     color: var(--teal);
@@ -923,7 +921,10 @@
       <button class="admin-tab" onclick="showAdminTab('terms',this)">&#128269; Search Terms</button>
       <button class="admin-tab" onclick="showAdminTab('apikey',this)">&#128273; API Key</button>
       <button class="admin-tab" id="reportsTab" onclick="showAdminTab('reports',this)">&#128681; Reports</button>
-      <button class="admin-tab-refresh" id="refreshCuratedBtn" onclick="refreshCuratedLibrary()" style="display:none;">&#8635; Refresh library</button>
+      <div style="margin-left:auto;margin-right:10px;display:flex;flex-direction:column;align-items:flex-end;align-self:center;gap:2px;">
+        <button class="admin-tab-refresh" id="refreshCuratedBtn" onclick="refreshCuratedLibrary()" style="display:none;">&#8635; Refresh library</button>
+        <span id="refreshCuratedStatus" style="font-size:10px;color:var(--text-muted);white-space:nowrap;"></span>
+      </div>
     </div>
 
     <div class="admin-tab-panel active" id="adminTab-review">
@@ -989,7 +990,6 @@
         <button class="btn-clear-key" id="clearKeyBtn" style="display:none;" onclick="clearKey()">Remove</button>
       </div>
       <p id="keyMsg" style="margin-top:10px;display:none;"></p>
-      <p id="refreshCuratedStatus" style="font-size:12px;color:var(--text-muted);margin:8px 0 0;"></p>
     </div>
 
     <div class="admin-tab-panel" id="adminTab-reports">
@@ -1051,7 +1051,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.6</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.7</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
