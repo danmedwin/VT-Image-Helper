@@ -1055,7 +1055,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.12</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.13</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1825,12 +1825,17 @@ async function saveSearchTerm(prayerId) {
   const prayer = PRAYERS.find(p => p.id === prayerId);
   if (prayer) prayer.searchTerms = terms;
   customSearchTerms[prayerId] = terms;
+  const reviewSel = document.getElementById('reviewPrayerSelect');
+  if (reviewSel && reviewSel.value === prayerId) {
+    const ri = document.getElementById('reviewTermsInput');
+    if (ri) ri.value = terms;
+  }
   const ok = document.getElementById(`terms-ok-${prayerId}`);
   if (ok) { ok.style.visibility = 'visible'; setTimeout(() => ok.style.visibility = 'hidden', 2000); }
 }
 
 async function saveReviewTerms() {
-  const sel = document.getElementById('reviewPrayer');
+  const sel = document.getElementById('reviewPrayerSelect');
   const prayerId = sel ? sel.value : '';
   if (!prayerId) return;
   const input = document.getElementById('reviewTermsInput');
