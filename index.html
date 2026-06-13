@@ -941,6 +941,14 @@
           Favorites only
         </label>
       </div>
+      <div id="reviewTermsRow" style="display:none;margin-top:10px;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap;flex-shrink:0;">Search terms:</span>
+        <input class="terms-input" id="reviewTermsInput" type="text" style="flex:1;"
+               placeholder="Search terms for this prayer&hellip;"
+               onkeydown="if(event.key==='Enter') saveReviewTerms()">
+        <button class="terms-save-btn" onclick="saveReviewTerms()">Save</button>
+        <span class="terms-saved-ok" id="reviewTermsOk">&#10003;</span>
+      </div>
       <div id="reviewGrid"></div>
     </div>
 
@@ -1047,7 +1055,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.11</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.12</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1738,6 +1746,11 @@ function loadReviewPhotos() {
   const favoritesOnly = document.getElementById('reviewFavoritesOnly').checked;
   const container = document.getElementById('reviewGrid');
   if (!container) return;
+  const prayer = PRAYERS.find(p => p.id === prayerId);
+  const reviewTermsRow   = document.getElementById('reviewTermsRow');
+  const reviewTermsInput = document.getElementById('reviewTermsInput');
+  if (reviewTermsRow) reviewTermsRow.style.display = prayerId ? 'flex' : 'none';
+  if (reviewTermsInput && prayer) reviewTermsInput.value = prayer.searchTerms || '';
   if (!prayerId) { container.innerHTML = ''; return; }
 
   let photos = getCuratedPhotos(prayerId);
@@ -1813,6 +1826,27 @@ async function saveSearchTerm(prayerId) {
   if (prayer) prayer.searchTerms = terms;
   customSearchTerms[prayerId] = terms;
   const ok = document.getElementById(`terms-ok-${prayerId}`);
+  if (ok) { ok.style.visibility = 'visible'; setTimeout(() => ok.style.visibility = 'hidden', 2000); }
+}
+
+async function saveReviewTerms() {
+  const sel = document.getElementById('reviewPrayer');
+  const prayerId = sel ? sel.value : '';
+  if (!prayerId) return;
+  const input = document.getElementById('reviewTermsInput');
+  const terms = input ? input.value.trim() : '';
+  if (!terms) return;
+  await fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(terms),
+  });
+  const prayer = PRAYERS.find(p => p.id === prayerId);
+  if (prayer) prayer.searchTerms = terms;
+  customSearchTerms[prayerId] = terms;
+  const syncInput = document.getElementById(`terms-input-${prayerId}`);
+  if (syncInput) syncInput.value = terms;
+  const ok = document.getElementById('reviewTermsOk');
   if (ok) { ok.style.visibility = 'visible'; setTimeout(() => ok.style.visibility = 'hidden', 2000); }
 }
 
