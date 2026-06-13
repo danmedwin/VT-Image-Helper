@@ -784,11 +784,25 @@
 
   .terms-row {
     display: grid;
-    grid-template-columns: 16px 140px 1fr auto auto;
+    grid-template-columns: 16px 130px 80px 1fr auto auto;
     gap: 8px;
     align-items: center;
     margin-bottom: 7px;
     border-radius: 4px;
+  }
+  .svc-filter-bar { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 8px; }
+  .svc-filter-btn {
+    padding: 3px 11px; border-radius: 12px; border: 1.5px solid var(--border);
+    background: var(--surface); cursor: pointer; font-size: 12px; color: var(--text-muted);
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+  }
+  .svc-filter-btn:hover { border-color: var(--navy-mid); color: var(--navy); }
+  .svc-filter-btn.active { background: var(--navy); border-color: var(--navy); color: white; }
+  .tag-icon { font-size: 10px; margin-right: 2px; opacity: 0.75; }
+  .tag-select {
+    font-size: 11px; padding: 2px 4px; border-radius: 4px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
+    width: 80px;
   }
   .terms-drag-handle {
     cursor: grab; color: var(--text-muted); opacity: 0.35; font-size: 15px;
@@ -933,6 +947,13 @@
       </div>
       <div class="field">
         <label>Select prayers</label>
+        <div class="svc-filter-bar">
+          <button class="svc-filter-btn active" data-svc="" onclick="setServiceFilter('')">All</button>
+          <button class="svc-filter-btn" data-svc="morning" onclick="setServiceFilter('morning')">☀ Morning</button>
+          <button class="svc-filter-btn" data-svc="evening" onclick="setServiceFilter('evening')">☽ Evening</button>
+          <button class="svc-filter-btn" data-svc="shabbat" onclick="setServiceFilter('shabbat')">✡ Shabbat</button>
+          <button class="svc-filter-btn" data-svc="weekday" onclick="setServiceFilter('weekday')">◇ Weekday</button>
+        </div>
         <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
       </div>
     </div>
@@ -1064,11 +1085,19 @@
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 8px;">
         <p style="font-size:12px;color:var(--text-muted);margin:0;">
           Search terms sent to Pexels for each prayer. Saved to Firebase &mdash; affects all users and the monthly refresh.
         </p>
         <button class="terms-save-btn" onclick="resetToMTOrder()" style="white-space:nowrap;margin-left:12px;font-size:11px;">Reset to MT order</button>
+      </div>
+      <div class="svc-filter-bar">
+        <button class="terms-filter-btn svc-filter-btn active" data-svc="" onclick="setTermsFilter('')">All</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="morning" onclick="setTermsFilter('morning')">☀ Morning</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="evening" onclick="setTermsFilter('evening')">☽ Evening</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="shabbat" onclick="setTermsFilter('shabbat')">✡ Shabbat</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="weekday" onclick="setTermsFilter('weekday')">◇ Weekday</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="untagged" onclick="setTermsFilter('untagged')">Untagged</button>
       </div>
       <div id="termsList"></div>
       <div class="hidden-prayers-section" id="hiddenPrayersSection" style="display:none;">
@@ -1160,7 +1189,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.23</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.24</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1561,6 +1590,23 @@ let PRAYERS = [
   },
 ];
 
+// Default service tags per prayer (Firebase prayerTags overrides these)
+const _defaultPrayerTags = {
+  shabbatcandles: 'shabbat',
+  mahtovu:        'morning',
+  modehanee:      'morning',
+  asheryatzar:    'morning',
+  mahrabu:        'morning',
+  psalm150:       'morning',
+  lechadodi:      'shabbat',
+  yotzeior:       'morning',
+  ahavarabbah:    'morning',
+  hashkivenu:     'evening',
+  veshamru:       'shabbat',
+  kiddushshabbat: 'shabbat',
+  motzi:          'shabbat',
+};
+
 // Mishkan T'filah canonical order
 const _mtOrder = ['shabbatcandles','kavanah','mahtovu','modehanee','asheryatzar','mahrabu','psalm150','lechadodi','barchu','yotzeior','ahavarabbah','shema','vahavta','michamocha','hashkivenu','amidah','avotimahot','gevurot','kedushah','veshamru','torahblessings','torahservice','hineimahtov','kiddushshabbat','motzi','oseishalom','einkelo','aleinu','kaddish','adonolam','yigdal','wherever'];
 PRAYERS.sort((a, b) => {
@@ -1568,11 +1614,14 @@ PRAYERS.sort((a, b) => {
   return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
 });
 
-const _defaultPrayers    = PRAYERS.map(p => ({ ...p, names: [...p.names] }));
+const _defaultPrayers    = PRAYERS.map(p => ({ ...p, names: [...p.names], tag: _defaultPrayerTags[p.id] || null }));
 let _customPrayers       = [];
 let _hiddenPrayerIds     = new Set();
 let _prayerDisplayNames  = {};
 let _prayerOrder         = [];
+let _prayerTags          = {};
+let _activeServiceFilter = '';
+let _activeTermsFilter   = '';
 
 function applyPrayerLibrary() {
   let prayers = [
@@ -1587,16 +1636,19 @@ function applyPrayerLibrary() {
   for (const p of PRAYERS) {
     if (_prayerDisplayNames[p.id]) p.names[0] = _prayerDisplayNames[p.id];
     if (customSearchTerms[p.id])   p.searchTerms = customSearchTerms[p.id];
+    const defaultTag = _defaultPrayers.find(dp => dp.id === p.id)?.tag || null;
+    p.tag = (_prayerTags[p.id] !== undefined) ? _prayerTags[p.id] : defaultTag;
   }
 }
 
 async function loadPrayerLibrary() {
   try {
-    const [customRes, hiddenRes, namesRes, orderRes] = await Promise.all([
+    const [customRes, hiddenRes, namesRes, orderRes, tagsRes] = await Promise.all([
       fetch(`${FIREBASE_URL}/customPrayers.json`),
       fetch(`${FIREBASE_URL}/hiddenPrayers.json`),
       fetch(`${FIREBASE_URL}/prayerDisplayNames.json`),
       fetch(`${FIREBASE_URL}/prayerOrder.json`),
+      fetch(`${FIREBASE_URL}/prayerTags.json`),
     ]);
     if (customRes.ok) {
       const data = await customRes.json();
@@ -1613,6 +1665,10 @@ async function loadPrayerLibrary() {
     if (orderRes.ok) {
       const data = await orderRes.json();
       if (Array.isArray(data)) _prayerOrder = data;
+    }
+    if (tagsRes.ok) {
+      const data = await tagsRes.json();
+      if (data && typeof data === 'object') _prayerTags = data;
     }
   } catch(e) {}
   applyPrayerLibrary();
@@ -1965,11 +2021,21 @@ async function loadCustomSearchTerms() {
 function renderSearchTermsEditor() {
   const list = document.getElementById('termsList');
   if (!list) return;
+  const tag2label = { morning:'☀ Morning', evening:'☽ Evening', shabbat:'✡ Shabbat', weekday:'◇ Weekday' };
   list.innerHTML = PRAYERS.map((p, idx) => {
     const isCustom = _customPrayers.some(cp => cp.id === p.id);
     const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
     const badge = isCustom ? ' <span style="font-size:10px;background:#e8f0ff;color:#1a5aaa;border-radius:8px;padding:1px 5px;">custom</span>' : '';
-    return `<div class="terms-row" draggable="true"
+    const pTag = p.tag || '';
+    const hidden = _activeTermsFilter === 'untagged' ? !!pTag : (_activeTermsFilter && pTag && pTag !== _activeTermsFilter);
+    const tagSelect = `<select class="tag-select" onchange="savePrayerTag('${p.id}',this.value)">
+      <option value="" ${!pTag?'selected':''}>— none —</option>
+      <option value="morning" ${pTag==='morning'?'selected':''}>☀ Morning</option>
+      <option value="evening" ${pTag==='evening'?'selected':''}>☽ Evening</option>
+      <option value="shabbat" ${pTag==='shabbat'?'selected':''}>✡ Shabbat</option>
+      <option value="weekday" ${pTag==='weekday'?'selected':''}>◇ Weekday</option>
+    </select>`;
+    return `<div class="terms-row"${hidden ? ' style="display:none;"' : ''} draggable="true"
       ondragstart="onTermsDragStart(event,${idx})"
       ondragover="onTermsDragOver(event,${idx})"
       ondragleave="onTermsDragLeave(event)"
@@ -1977,6 +2043,7 @@ function renderSearchTermsEditor() {
       ondragend="onTermsDragEnd()">
       <span class="terms-drag-handle">&#8942;&#8942;</span>
       <span class="terms-prayer-name" id="name-display-${p.id}">${label}${badge}<button class="terms-pencil-btn" onclick="editPrayerName('${p.id}')" title="Edit name">&#9998;</button></span>
+      ${tagSelect}
       <input class="terms-input" id="terms-input-${p.id}" type="text" value="${(p.searchTerms||'').replace(/"/g,'&quot;')}">
       <div style="display:flex;align-items:center;gap:6px;">
         <button class="terms-save-btn" onclick="saveSearchTerm('${p.id}')">Save</button>
@@ -1996,6 +2063,7 @@ function renderSearchTermsEditor() {
     return `<div class="terms-row">
       <span></span>
       <span class="terms-prayer-name" style="color:var(--text-muted);">${label}</span>
+      <span></span>
       <span style="font-size:12px;color:var(--text-muted);font-style:italic;">Hidden</span>
       <span></span>
       <button class="terms-restore-btn" onclick="restorePrayer('${p.id}')">Restore</button>
@@ -2048,6 +2116,45 @@ async function resetToMTOrder() {
   } catch(e) {}
   _prayerOrder = [];
   _refreshPrayerUI();
+}
+
+function tagIcon(tag) {
+  if (tag === 'morning')  return '☀';
+  if (tag === 'evening')  return '☽';
+  if (tag === 'shabbat')  return '✡';
+  if (tag === 'weekday')  return '◇';
+  return '';
+}
+
+function setServiceFilter(tag) {
+  _activeServiceFilter = tag;
+  document.querySelectorAll('.svc-filter-btn[data-svc]').forEach(b =>
+    b.classList.toggle('active', b.dataset.svc === tag));
+  renderPrayerChips();
+}
+
+function setTermsFilter(tag) {
+  _activeTermsFilter = tag;
+  document.querySelectorAll('.terms-filter-btn[data-svc]').forEach(b =>
+    b.classList.toggle('active', b.dataset.svc === tag));
+  renderSearchTermsEditor();
+}
+
+async function savePrayerTag(prayerId, tag) {
+  try {
+    if (tag) {
+      await fetch(`${FIREBASE_URL}/prayerTags/${prayerId}.json`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tag),
+      });
+      _prayerTags[prayerId] = tag;
+    } else {
+      await fetch(`${FIREBASE_URL}/prayerTags/${prayerId}.json`, { method: 'DELETE' });
+      delete _prayerTags[prayerId];
+    }
+  } catch(e) { alert('Could not save tag — check Firebase rules for prayerTags/'); return; }
+  applyPrayerLibrary();
+  renderPrayerChips();
+  renderSearchTermsEditor();
 }
 
 function editPrayerName(prayerId) {
@@ -2574,9 +2681,13 @@ async function refreshCuratedLibrary() {
 function renderPrayerChips() {
   const el = document.getElementById('prayerChips');
   if (!el) return;
-  el.innerHTML = PRAYERS.map(p =>
-    `<label class="prayer-chip"><input type="checkbox" name="prayerChip" value="${p.id}"> ${p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1)}</label>`
-  ).join('');
+  el.innerHTML = PRAYERS.map(p => {
+    const tag = p.tag || null;
+    const hidden = _activeServiceFilter && tag && tag !== _activeServiceFilter;
+    const icon = tagIcon(tag);
+    const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
+    return `<label class="prayer-chip"${hidden ? ' style="display:none;"' : ''}><input type="checkbox" name="prayerChip" value="${p.id}">${icon ? `<span class="tag-icon">${icon}</span>` : ''} ${label}</label>`;
+  }).join('');
 }
 
 function parsePrayers(outline) {
