@@ -1005,32 +1005,21 @@
     </div>
 
     <div class="admin-tab-panel" id="adminTab-apikey">
-      <div class="apikey-panel" id="apikeyPanel">
-        <div class="apikey-header">
-          <h2>
-            Pexels API key
-            <span class="mode-badge curated" id="modeBadge">Using curated photos</span>
-          </h2>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <span class="apikey-status inactive" id="keyStatus">No key saved</span>
-            <button class="apikey-toggle" id="keyToggle" onclick="toggleKeyPanel()">Set up</button>
-          </div>
-        </div>
-        <div class="apikey-body" id="keyBody" style="display:none;">
-          <p>
-            A free Pexels API key lets this tool fetch fresh live photos instead of the built-in curated set.
-            Get one in about two minutes at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener" style="color:var(--navy-mid);">pexels.com/api</a> &mdash;
-            sign up, go to your profile, and copy the API key. It stays saved in your browser only; it is never sent anywhere except directly to Pexels.
-          </p>
-          <div class="apikey-row">
-            <input type="text" id="keyInput" placeholder="Paste your Pexels API key here&hellip;" autocomplete="off" spellcheck="false">
-            <button class="btn-save-key" onclick="saveKey()">Save key</button>
-            <button class="btn-clear-key" id="clearKeyBtn" style="display:none;" onclick="clearKey()">Remove</button>
-          </div>
-          <p id="keyMsg" style="margin-top:10px;display:none;"></p>
-          <p id="refreshCuratedStatus" style="font-size:12px;color:var(--text-muted);margin:8px 0 0;"></p>
-        </div>
+      <h3 style="color:var(--navy);">&#128273; Pexels API key
+        <span class="mode-badge curated" id="modeBadge" style="margin-left:8px;font-size:11px;vertical-align:middle;">Using curated photos</span>
+      </h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
+        A free key lets this tool fetch live photos instead of the built-in curated set.
+        Get one at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener" style="color:var(--navy-mid);">pexels.com/api</a> &mdash;
+        sign up, go to your profile, and copy the key. Stays in your browser only; never sent anywhere except directly to Pexels.
+      </p>
+      <div class="apikey-row">
+        <input type="text" id="keyInput" placeholder="Paste your Pexels API key here&hellip;" autocomplete="off" spellcheck="false">
+        <button class="btn-save-key" onclick="saveKey()">Save key</button>
+        <button class="btn-clear-key" id="clearKeyBtn" style="display:none;" onclick="clearKey()">Remove</button>
       </div>
+      <p id="keyMsg" style="margin-top:10px;display:none;"></p>
+      <p id="refreshCuratedStatus" style="font-size:12px;color:var(--text-muted);margin:8px 0 0;"></p>
     </div>
 
     <div class="admin-tab-panel" id="adminTab-reports">
@@ -1510,32 +1499,24 @@ function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
 
 function updateKeyUI() {
   const key = getKey();
-  const status = document.getElementById('keyStatus');
-  const badge  = document.getElementById('modeBadge');
-  const toggle = document.getElementById('keyToggle');
-  const clearBtn = document.getElementById('clearKeyBtn');
-  const input  = document.getElementById('keyInput');
-  const refreshBtn   = document.getElementById('refreshCuratedBtn');
+  const badge     = document.getElementById('modeBadge');
+  const clearBtn  = document.getElementById('clearKeyBtn');
+  const input     = document.getElementById('keyInput');
+  const refreshBtn    = document.getElementById('refreshCuratedBtn');
   const refreshStatus = document.getElementById('refreshCuratedStatus');
   if (key) {
-    status.textContent = 'Key saved \u2713';
-    status.className = 'apikey-status active';
     badge.textContent = 'Live search active';
     badge.className = 'mode-badge live';
-    toggle.textContent = 'Change';
-    clearBtn.style.display = 'inline-block';
-    input.value = key;
+    if (clearBtn) clearBtn.style.display = 'inline-block';
+    if (input)   input.value = key;
     if (refreshBtn) refreshBtn.style.display = '';
   } else {
     const hasCurated = !!localStorage.getItem(CURATED_STORAGE);
-    status.textContent = 'No key saved';
-    status.className = 'apikey-status inactive';
     const hasJson = !!(curatedJson && curatedJson.prayers);
     badge.textContent = (hasCurated || hasJson) ? 'Using verified library' : 'Using curated photos';
     badge.className = 'mode-badge curated';
-    toggle.textContent = 'Set up';
-    clearBtn.style.display = 'none';
-    input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (input)   input.value = '';
     if (refreshBtn) refreshBtn.style.display = 'none';
   }
   if (refreshStatus && !refreshStatus.textContent) {
@@ -1543,14 +1524,6 @@ function updateKeyUI() {
       || (curatedJson && curatedJson.refreshed);
     if (lastDate) refreshStatus.textContent = `Last updated ${lastDate}`;
   }
-}
-
-function toggleKeyPanel() {
-  const body = document.getElementById('keyBody');
-  const toggle = document.getElementById('keyToggle');
-  const open = body.style.display === 'none';
-  body.style.display = open ? 'block' : 'none';
-  toggle.textContent = open ? 'Hide' : (getKey() ? 'Change' : 'Set up');
 }
 
 function saveKey() {
