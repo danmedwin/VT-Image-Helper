@@ -949,10 +949,10 @@
         <label>Select prayers</label>
         <div class="svc-filter-bar">
           <button class="svc-filter-btn active" data-svc="" onclick="setServiceFilter('')">All</button>
-          <button class="svc-filter-btn" data-svc="morning" onclick="setServiceFilter('morning')">☀ Morning</button>
-          <button class="svc-filter-btn" data-svc="evening" onclick="setServiceFilter('evening')">☽ Evening</button>
-          <button class="svc-filter-btn" data-svc="shabbat" onclick="setServiceFilter('shabbat')">✡ Shabbat</button>
-          <button class="svc-filter-btn" data-svc="weekday" onclick="setServiceFilter('weekday')">◇ Weekday</button>
+          <button class="svc-filter-btn" data-svc="morning" onclick="setServiceFilter('morning')">Morning ☀</button>
+          <button class="svc-filter-btn" data-svc="evening" onclick="setServiceFilter('evening')">Evening ☽</button>
+          <button class="svc-filter-btn" data-svc="shabbat" onclick="setServiceFilter('shabbat')">Shabbat ✡</button>
+          <button class="svc-filter-btn" data-svc="weekday" onclick="setServiceFilter('weekday')">Weekday ◇</button>
         </div>
         <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
       </div>
@@ -1093,10 +1093,10 @@
       </div>
       <div class="svc-filter-bar">
         <button class="terms-filter-btn svc-filter-btn active" data-svc="" onclick="setTermsFilter('')">All</button>
-        <button class="terms-filter-btn svc-filter-btn" data-svc="morning" onclick="setTermsFilter('morning')">☀ Morning</button>
-        <button class="terms-filter-btn svc-filter-btn" data-svc="evening" onclick="setTermsFilter('evening')">☽ Evening</button>
-        <button class="terms-filter-btn svc-filter-btn" data-svc="shabbat" onclick="setTermsFilter('shabbat')">✡ Shabbat</button>
-        <button class="terms-filter-btn svc-filter-btn" data-svc="weekday" onclick="setTermsFilter('weekday')">◇ Weekday</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="morning" onclick="setTermsFilter('morning')">Morning ☀</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="evening" onclick="setTermsFilter('evening')">Evening ☽</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="shabbat" onclick="setTermsFilter('shabbat')">Shabbat ✡</button>
+        <button class="terms-filter-btn svc-filter-btn" data-svc="weekday" onclick="setTermsFilter('weekday')">Weekday ◇</button>
         <button class="terms-filter-btn svc-filter-btn" data-svc="untagged" onclick="setTermsFilter('untagged')">Untagged</button>
       </div>
       <div id="termsList"></div>
@@ -1189,7 +1189,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.24</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.25</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1637,7 +1637,8 @@ function applyPrayerLibrary() {
     if (_prayerDisplayNames[p.id]) p.names[0] = _prayerDisplayNames[p.id];
     if (customSearchTerms[p.id])   p.searchTerms = customSearchTerms[p.id];
     const defaultTag = _defaultPrayers.find(dp => dp.id === p.id)?.tag || null;
-    p.tag = (_prayerTags[p.id] !== undefined) ? _prayerTags[p.id] : defaultTag;
+    const storedTag = _prayerTags[p.id];
+    p.tag = (storedTag !== undefined) ? (storedTag === '_none_' ? null : storedTag) : defaultTag;
   }
 }
 
@@ -2141,16 +2142,13 @@ function setTermsFilter(tag) {
 }
 
 async function savePrayerTag(prayerId, tag) {
+  // Store '_none_' as sentinel for "explicitly no tag" so the default doesn't re-apply
+  const stored = tag || '_none_';
   try {
-    if (tag) {
-      await fetch(`${FIREBASE_URL}/prayerTags/${prayerId}.json`, {
-        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tag),
-      });
-      _prayerTags[prayerId] = tag;
-    } else {
-      await fetch(`${FIREBASE_URL}/prayerTags/${prayerId}.json`, { method: 'DELETE' });
-      delete _prayerTags[prayerId];
-    }
+    await fetch(`${FIREBASE_URL}/prayerTags/${prayerId}.json`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(stored),
+    });
+    _prayerTags[prayerId] = stored;
   } catch(e) { alert('Could not save tag — check Firebase rules for prayerTags/'); return; }
   applyPrayerLibrary();
   renderPrayerChips();
@@ -2686,7 +2684,7 @@ function renderPrayerChips() {
     const hidden = _activeServiceFilter && tag && tag !== _activeServiceFilter;
     const icon = tagIcon(tag);
     const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
-    return `<label class="prayer-chip"${hidden ? ' style="display:none;"' : ''}><input type="checkbox" name="prayerChip" value="${p.id}">${icon ? `<span class="tag-icon">${icon}</span>` : ''} ${label}</label>`;
+    return `<label class="prayer-chip"${hidden ? ' style="display:none;"' : ''}><input type="checkbox" name="prayerChip" value="${p.id}"> ${label}${icon ? ` <span class="tag-icon">${icon}</span>` : ''}</label>`;
   }).join('');
 }
 
