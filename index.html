@@ -257,7 +257,9 @@
   .svc-item.drag-over { border-color: var(--navy-mid); background: rgba(0,60,120,0.05); }
   .svc-item-unknown { background: #fffbef; border-color: #e8c84a; }
   .svc-item-unknown .svc-item-name { color: #7a5800; }
-  .svc-unknown-tri { color: #c89010; font-size: 10px; flex-shrink: 0; line-height: 1; }
+  .svc-unknown-tri { color: #b07800; font-size: 11px; flex-shrink: 0; font-style: italic; }
+  .svc-item-btn-amber { color: #b07800 !important; }
+  .svc-item-btn-amber:hover { color: #7a5000 !important; }
   .svc-item-row { display: flex; align-items: center; gap: 5px; }
   .svc-drag-handle { cursor: grab; color: var(--text-muted); flex-shrink: 0; font-size: 15px; line-height: 1; }
   .svc-item-name { flex: 1; color: var(--text); font-size: 13px; }
@@ -1507,7 +1509,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.54</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.55</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3979,7 +3981,8 @@ function renderServiceList() {
     const defaultTerms = prayer ? (prayer.searchTerms || prayer.names[0]) : (custom ? custom.searchTerms : '');
     const expanded = _svcExpandedId === id;
     const unknownClass = isUnknown ? ' svc-item-unknown' : '';
-    const tri = isUnknown ? `<span class="svc-unknown-tri" title="Search terms needed">▸</span>` : '';
+    const unknownLabel = isUnknown ? `<span class="svc-unknown-tri" onclick="toggleSvcExpand('${id}')">add search terms</span>` : '';
+    const pencilClass = isUnknown ? 'svc-item-btn svc-item-btn-amber' : 'svc-item-btn';
     const expandedHtml = expanded ? `<div class="svc-terms">
         ${isUnknown ? `<div class="svc-terms-label">Display name:</div>
         <input id="svc-name-${id}" type="text" value="${name.replace(/"/g,'&quot;')}" placeholder="Prayer name…" style="margin-bottom:5px;">` : ''}
@@ -3992,8 +3995,8 @@ function renderServiceList() {
       <div class="svc-item-row">
         <span class="svc-drag-handle" title="Drag to reorder">≡</span>
         <span class="svc-item-name">${name}</span>
-        ${tri}
-        <button class="svc-item-btn" onclick="toggleSvcExpand('${id}')" title="Edit search terms">
+        ${unknownLabel}
+        <button class="${pencilClass}" onclick="toggleSvcExpand('${id}')" title="Edit search terms">
           <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="svc-item-btn" onclick="toggleServiceItem('${id}')" title="Remove">
