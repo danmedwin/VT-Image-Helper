@@ -724,6 +724,50 @@
     margin-top: 28px;
   }
   body.admin-mode .admin-area { display: block; }
+  .admin-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--navy);
+    padding: 10px 16px;
+    flex-wrap: wrap;
+  }
+  .admin-header-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    flex: 1;
+  }
+  .admin-header-refresh-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .admin-header-status {
+    font-size: 10px;
+    color: rgba(255,255,255,0.55);
+    white-space: nowrap;
+  }
+  .admin-header-close {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: rgba(255,255,255,0.88);
+    border-radius: var(--radius);
+    padding: 5px 13px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background 0.12s;
+  }
+  .admin-header-close:hover { background: rgba(255,255,255,0.2); }
   .admin-tabs {
     display: flex;
     background: #eef2f7;
@@ -1084,6 +1128,14 @@
   <div id="results"></div>
 
   <div class="admin-area" id="adminArea">
+    <div class="admin-header">
+      <span class="admin-header-label">&#9881; Admin Panel</span>
+      <div class="admin-header-refresh-wrap">
+        <button class="admin-tab-refresh" id="refreshCuratedBtn" onclick="refreshCuratedLibrary()" style="display:none;">&#8635; Refresh library</button>
+        <span id="refreshCuratedStatus" class="admin-header-status"></span>
+      </div>
+      <button class="admin-header-close" onclick="toggleAdmin()">&#10005; Exit admin</button>
+    </div>
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="showAdminTab('terms',this)">&#128269; Prayers &amp; Terms</button>
       <button class="admin-tab" onclick="showAdminTab('review',this)">&#128247; Review</button>
@@ -1091,10 +1143,6 @@
       <button class="admin-tab" onclick="showAdminTab('blocklist',this)">&#128287; Blocklist</button>
       <button class="admin-tab" onclick="showAdminTab('apikey',this)">&#128273; API Key</button>
       <button class="admin-tab" id="reportsTab" onclick="showAdminTab('reports',this)">&#128681; Reports</button>
-      <div style="margin-left:auto;margin-right:10px;display:flex;flex-direction:column;align-items:flex-end;align-self:center;gap:2px;">
-        <button class="admin-tab-refresh" id="refreshCuratedBtn" onclick="refreshCuratedLibrary()" style="display:none;">&#8635; Refresh library</button>
-        <span id="refreshCuratedStatus" style="font-size:10px;color:var(--text-muted);white-space:nowrap;"></span>
-      </div>
     </div>
 
     <div class="admin-tab-panel" id="adminTab-review">
@@ -1292,7 +1340,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.35</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.36</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
