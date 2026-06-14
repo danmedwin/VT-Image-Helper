@@ -255,6 +255,9 @@
   .svc-list { display: flex; flex-direction: column; gap: 3px; min-height: 36px; margin-bottom: 6px; }
   .svc-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 13px; cursor: default; transition: border-color 0.12s; }
   .svc-item.drag-over { border-color: var(--navy-mid); background: rgba(0,60,120,0.05); }
+  .svc-item-unknown { background: #fffbef; border-color: #e8c84a; }
+  .svc-item-unknown .svc-item-name { color: #7a5800; }
+  .svc-unknown-tri { color: #c89010; font-size: 10px; flex-shrink: 0; line-height: 1; }
   .svc-item-row { display: flex; align-items: center; gap: 5px; }
   .svc-drag-handle { cursor: grab; color: var(--text-muted); flex-shrink: 0; font-size: 15px; line-height: 1; }
   .svc-item-name { flex: 1; color: var(--text); font-size: 13px; }
@@ -1286,7 +1289,6 @@
       </div>
 
     </div>
-    <div id="unrecognizedPanel" style="display:none;margin-top:12px;border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--surface);"></div>
 
   </div>
 
@@ -1505,7 +1507,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.53</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.54</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1934,8 +1936,9 @@ let _termsDayFilter  = '';
 let _termsUntagged   = false;
 
 // Service builder state
-let _serviceOrder    = [];   // ordered array of prayer IDs for the current service
-let _svcExpandedId   = null; // prayer ID whose search terms are currently expanded
+let _serviceOrder       = [];  // ordered array of prayer IDs for the current service
+let _customServiceItems = {};  // id → { name, searchTerms } for user-entered unrecognized items
+let _svcExpandedId      = null; // prayer ID whose search terms are currently expanded
 // Note: _dragSrcIdx is already declared below (shared with search terms drag handler)
 
 function applyPrayerLibrary() {
@@ -3705,27 +3708,29 @@ async function findImages() {
     return;
   }
 
-  // Build ordered prayer list: service list first (preserving order), then any extra from pasted outline
+  // Build ordered prayer list from service list, then any extra from pasted outline
   const used = new Set();
   const matched = [];
   for (const id of _serviceOrder) {
+    if (used.has(id)) continue;
     const prayer = PRAYERS.find(p => p.id === id);
-    if (prayer && !used.has(id)) {
-      // Use inline search term override if the user edited it
-      const termsEl = document.getElementById('svc-terms-' + id);
+    const termsEl = document.getElementById('svc-terms-' + id);
+    if (prayer) {
       matched.push((termsEl && termsEl.value.trim()) ? { ...prayer, searchTerms: termsEl.value.trim() } : prayer);
-      used.add(id);
+    } else if (_customServiceItems[id]) {
+      const custom = _customServiceItems[id];
+      const nameEl = document.getElementById('svc-name-' + id);
+      const displayName = (nameEl && nameEl.value.trim()) || custom.name;
+      const searchTerms = (termsEl && termsEl.value.trim()) || custom.searchTerms || custom.name;
+      matched.push({ id, names: [displayName.toLowerCase()], searchTerms, theme: '' });
     }
+    used.add(id);
   }
   const outlineParsed = outline ? parsePrayers(outline) : [];
   for (const p of outlineParsed) {
     if (!used.has(p.id)) { matched.push(p); used.add(p.id); }
   }
-
-  // Show unrecognized outline terms
-  const _unrec = outline ? getUnrecognizedTerms(outline) : [];
-  if (_unrec.length) renderUnrecognizedPanel(_unrec);
-  else { const _up = document.getElementById('unrecognizedPanel'); if (_up) _up.style.display = 'none'; }
+  const _unrec = [];
 
   if (matched.length === 0) {
     resultsEl.innerHTML = `
@@ -3896,25 +3901,23 @@ function parseOutlineToService() {
   const outline = document.getElementById('outline').value.trim();
   if (!outline) return;
 
-  const parsed = parsePrayers(outline);
-  parsed.forEach(p => {
+  // Add recognized prayers
+  parsePrayers(outline).forEach(p => {
     if (!_serviceOrder.includes(p.id)) _serviceOrder.push(p.id);
   });
 
-  const unrec = getUnrecognizedTerms(outline);
-  if (unrec.length) renderUnrecognizedPanel(unrec);
-  else {
-    const panel = document.getElementById('unrecognizedPanel');
-    if (panel) panel.style.display = 'none';
-  }
+  // Add unrecognized terms inline as custom chips
+  getUnrecognizedTerms(outline).forEach(term => {
+    const id = '_custom_' + term.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    if (!_serviceOrder.includes(id)) {
+      _customServiceItems[id] = { name: term.charAt(0).toUpperCase() + term.slice(1), searchTerms: '' };
+      _serviceOrder.push(id);
+    }
+  });
 
   document.getElementById('outline').value = '';
   renderServiceList();
   renderPrayerChips();
-
-  if (unrec.length) {
-    document.getElementById('unrecognizedPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
 }
 
 const SERVICE_PRESETS = {
@@ -3938,6 +3941,7 @@ function loadServicePreset(key) {
 
 function clearService() {
   _serviceOrder = [];
+  _customServiceItems = {};
   _svcExpandedId = null;
   renderServiceList();
   renderPrayerChips();
@@ -3950,6 +3954,7 @@ function toggleServiceItem(id) {
   } else {
     _serviceOrder.splice(idx, 1);
     if (_svcExpandedId === id) _svcExpandedId = null;
+    delete _customServiceItems[id];
   }
   renderServiceList();
   renderPrayerChips();
@@ -3963,21 +3968,31 @@ function toggleSvcExpand(id) {
 function renderServiceList() {
   const el = document.getElementById('serviceList');
   if (!el) return;
-  if (_serviceOrder.length === 0) {
-    el.innerHTML = '';
-    return;
-  }
+  if (_serviceOrder.length === 0) { el.innerHTML = ''; return; }
   el.innerHTML = _serviceOrder.map((id, idx) => {
     const prayer = PRAYERS.find(p => p.id === id);
-    const name = prayer ? (prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1)) : id;
-    const defaultTerms = prayer ? (prayer.searchTerms || prayer.names[0]) : id;
+    const custom = _customServiceItems[id];
+    const isUnknown = !prayer && !!custom;
+    const name = prayer
+      ? (prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1))
+      : (custom ? custom.name : id);
+    const defaultTerms = prayer ? (prayer.searchTerms || prayer.names[0]) : (custom ? custom.searchTerms : '');
     const expanded = _svcExpandedId === id;
-    return `<div class="svc-item${expanded ? ' svc-item-open' : ''}" draggable="true"
+    const unknownClass = isUnknown ? ' svc-item-unknown' : '';
+    const tri = isUnknown ? `<span class="svc-unknown-tri" title="Search terms needed">▸</span>` : '';
+    const expandedHtml = expanded ? `<div class="svc-terms">
+        ${isUnknown ? `<div class="svc-terms-label">Display name:</div>
+        <input id="svc-name-${id}" type="text" value="${name.replace(/"/g,'&quot;')}" placeholder="Prayer name…" style="margin-bottom:5px;">` : ''}
+        <div class="svc-terms-label">${isUnknown ? 'Search terms:' : 'Search terms for this prayer:'}</div>
+        <input id="svc-terms-${id}" type="text" value="${defaultTerms.replace(/"/g,'&quot;')}" placeholder="Pexels search terms…">
+      </div>` : '';
+    return `<div class="svc-item${unknownClass}${expanded ? ' svc-item-open' : ''}" draggable="true"
       ondragstart="svcDragStart(event,${idx})" ondragend="svcDragEnd(event)"
       ondragover="svcDragOver(event,${idx})" ondrop="svcDrop(event,${idx})">
       <div class="svc-item-row">
         <span class="svc-drag-handle" title="Drag to reorder">≡</span>
         <span class="svc-item-name">${name}</span>
+        ${tri}
         <button class="svc-item-btn" onclick="toggleSvcExpand('${id}')" title="Edit search terms">
           <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
@@ -3985,10 +4000,7 @@ function renderServiceList() {
           <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      ${expanded ? `<div class="svc-terms">
-        <div class="svc-terms-label">Search terms for this prayer:</div>
-        <input id="svc-terms-${id}" type="text" value="${defaultTerms}" placeholder="Pexels search terms…">
-      </div>` : ''}
+      ${expandedHtml}
     </div>`;
   }).join('');
 }
