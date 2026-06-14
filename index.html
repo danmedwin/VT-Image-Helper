@@ -210,13 +210,10 @@
 
   /* SETUP PANEL */
   .setup-panel {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 24px 28px;
     margin-bottom: 28px;
-    box-shadow: 0 1px 4px rgba(11,45,94,0.07);
   }
+  .svc-input-row { display: flex; gap: 8px; align-items: flex-end; }
+  .svc-input-row .svc-paste { flex: 1; }
   .setup-panel h2 {
     font-size: 15px;
     font-weight: 600;
@@ -1214,7 +1211,22 @@
   <div class="setup-panel">
     <h2>Find images for your service</h2>
     <p class="setup-explainer">Choose the prayers in your service and search for images to accompany each one &mdash; drawn from <a href="https://www.pexels.com" target="_blank" rel="noopener">Pexels</a> and filtered for beauty, thematic resonance, and room for text overlay. Click &#9825; to save favorites across sessions.</p>
-    <hr class="setup-hr">
+    <!-- Full-width input box -->
+    <div class="svc-section-box" style="margin-bottom:16px;">
+      <div class="svc-quickstart">
+        Quick&nbsp;start:
+        <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
+        <a onclick="loadServicePreset('shabbat-morning')">Shabbat morning</a> &middot;
+        <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a> &middot;
+        <a onclick="loadServicePreset('weekday-evening')">Weekday evening</a>
+        &middot; <a class="svc-clear-link" onclick="clearService()">Clear all</a>
+      </div>
+      <div class="svc-input-row">
+        <textarea id="outline" class="svc-paste" rows="3"
+          placeholder="Type or paste in a prayer, multiple prayers, or a full service outline here."></textarea>
+        <button class="btn-add-to-list" onclick="parseOutlineToService()">Add to list</button>
+      </div>
+    </div>
 
     <div class="svc-builder-cols">
 
@@ -1222,18 +1234,7 @@
       <div class="svc-col-service">
         <div class="svc-section-box">
           <p class="setup-section-label">Your service</p>
-          <div class="svc-quickstart">
-            Quick&nbsp;start:
-            <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
-            <a onclick="loadServicePreset('shabbat-morning')">Shabbat morning</a> &middot;
-            <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a> &middot;
-            <a onclick="loadServicePreset('weekday-evening')">Weekday evening</a>
-            &middot; <a class="svc-clear-link" onclick="clearService()">Clear all</a>
-          </div>
           <div id="serviceList" class="svc-list"></div>
-          <textarea id="outline" class="svc-paste" rows="3"
-            placeholder="Type or paste in a prayer, multiple prayers, or a full service outline here."></textarea>
-          <button class="btn-add-to-list" onclick="parseOutlineToService()">Add to list</button>
         </div>
         <button class="btn-find" onclick="findImages()" style="width:100%;">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -1513,7 +1514,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.57</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.58</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
