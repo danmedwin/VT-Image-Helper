@@ -1032,7 +1032,7 @@
       <div class="field">
         <label for="ctx">Keywords for all images</label>
         <div class="hint">Added to every search &mdash; holiday, color, setting, etc.</div>
-        <input type="text" id="ctx" placeholder="e.g. Rosh Hashanah, autumn, candlelight">
+        <input type="text" id="ctx" placeholder="Keywords…">
       </div>
       <div class="field">
         <label>Thematic</label>
@@ -1280,7 +1280,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.33</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.34</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3049,12 +3049,14 @@ async function refreshCuratedLibrary() {
 function renderPrayerChips() {
   const el = document.getElementById('prayerChips');
   if (!el) return;
+  // Preserve checked state across re-renders (e.g. when filter is toggled)
+  const checked = new Set([...el.querySelectorAll('input:checked')].map(cb => cb.value));
   el.innerHTML = PRAYERS.map(p => {
     const tag = p.tag || null;
     const hidden = !_prayerMatchesFilters(p, _chipTimeFilter, _chipDayFilter);
     const icon = tagIcon(tag);
     const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
-    return `<label class="prayer-chip"${hidden ? ' style="display:none;"' : ''}><input type="checkbox" name="prayerChip" value="${p.id}"> ${label}${icon ? ` <span class="tag-icon">${icon}</span>` : ''}</label>`;
+    return `<label class="prayer-chip"${hidden ? ' style="display:none;"' : ''}><input type="checkbox" name="prayerChip" value="${p.id}"${checked.has(p.id) ? ' checked' : ''}> ${label}${icon ? ` <span class="tag-icon">${icon}</span>` : ''}</label>`;
   }).join('');
 }
 
