@@ -639,6 +639,70 @@
 
   .img-card.blocked { display: none !important; }
 
+  /* RESULTS FOOTER ACTION BAR */
+  .results-footer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 20px 0 6px;
+    margin-top: 8px;
+    border-top: 2px solid var(--border);
+  }
+  .btn-dl-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-dl-all:hover:not(:disabled) { background: var(--navy-mid); }
+  .btn-dl-all:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-dl-all svg { width: 15px; height: 15px; fill: none; stroke: white; stroke-width: 2.2; flex-shrink: 0; }
+  .rf-stat {
+    font-size: 13px;
+    color: var(--text-muted);
+    flex: 1;
+    min-width: 160px;
+  }
+  .rf-notfound {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .rf-notfound-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--teal);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .btn-clear-all {
+    display: inline-flex;
+    align-items: center;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s;
+    white-space: nowrap;
+  }
+  .btn-clear-all:hover { border-color: var(--navy-mid); color: var(--navy); }
+
   /* unified admin area with tabs */
   .admin-area {
     display: none;
@@ -1210,7 +1274,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.31</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.32</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2989,7 +3053,51 @@ async function fetchLivePhotos(prayer, context, apiKey) {
 // ─── RENDERING ─────────────────────────────────────────────────────────────────
 
 const selections = {};
+let _matchedCount = 0;
+let _unrecognizedCount = 0;
 let curatedJson = null;
+
+function updateResultsFooter() {
+  const selCount = Object.keys(selections).length;
+  const statEl = document.getElementById('rf-sel-count');
+  if (statEl) statEl.textContent = `${selCount} selected / ${_matchedCount} found`;
+  const dlBtn = document.getElementById('btn-dl-all');
+  if (dlBtn) dlBtn.disabled = selCount === 0;
+}
+
+function downloadAllSelected() {
+  const entries = Object.entries(selections);
+  if (!entries.length) return;
+  entries.forEach(([prayerId, sel], i) => {
+    setTimeout(() => {
+      const slug = sel.caption.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+      const filename = prayerId + '-' + slug + '.jpg';
+      const href = sel.srcUrl
+        ? sel.srcUrl + (sel.srcUrl.includes('?') ? '&' : '?') + `dl=${filename}&fm=jpg`
+        : `https://images.pexels.com/photos/${sel.photoId}/pexels-photo-${sel.photoId}.jpeg?cs=srgb&dl=${filename}&fm=jpg`;
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = filename;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, i * 400);
+  });
+}
+
+function clearAllSelections() {
+  for (const k of Object.keys(selections)) delete selections[k];
+  document.querySelectorAll('.img-card.selected').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('a[id^="dl-"]').forEach(dl => {
+    dl.className = 'btn-download disabled';
+    dl.removeAttribute('href');
+    dl.removeAttribute('download');
+    dl.onclick = null;
+    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Select a photo below&hellip;`;
+  });
+  updateResultsFooter();
+}
 
 function selectPhoto(prayerId, photoId, caption, srcUrl) {
   selections[prayerId] = { photoId, caption, srcUrl };
@@ -2997,6 +3105,8 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
   document.querySelectorAll(`.img-card[data-prayer="${prayerId}"]`).forEach(card => {
     card.classList.toggle('selected', card.dataset.photo == photoId);
   });
+
+  updateResultsFooter();
 
   const dl = document.getElementById('dl-' + prayerId);
   if (dl) {
@@ -3203,7 +3313,18 @@ async function findImages() {
     return;
   }
 
+  // Track counts for footer
+  _matchedCount = matched.length;
+  _unrecognizedCount = _unrec.length;
+  // Clear stale selections from a previous search
+  for (const k of Object.keys(selections)) delete selections[k];
+
   // Render shells immediately with curated or loading placeholders
+  const notFoundFooterHtml = _unrecognizedCount
+    ? `<span class="rf-notfound">${_unrecognizedCount} term${_unrecognizedCount !== 1 ? 's' : ''} not recognized &mdash;
+         <button class="rf-notfound-link" onclick="document.getElementById('unrecognizedPanel').scrollIntoView({behavior:'smooth'})">jump to box</button>
+       </span>`
+    : '';
   const html = `
     <div class="results-header">
       <h2>Image options for your service</h2>
@@ -3223,6 +3344,15 @@ async function findImages() {
           : prayerSectionHtml(p, context, p.photos, false);
       }
     }).join('')}
+    <div class="results-footer" id="results-footer">
+      <button class="btn-dl-all" id="btn-dl-all" onclick="downloadAllSelected()" disabled>
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download all
+      </button>
+      <span class="rf-stat" id="rf-sel-count">0 selected / ${matched.length} found</span>
+      ${notFoundFooterHtml}
+      <button class="btn-clear-all" onclick="clearAllSelections()">Clear all</button>
+    </div>
   `;
 
   resultsEl.innerHTML = html;
