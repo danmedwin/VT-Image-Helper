@@ -245,7 +245,7 @@
   /* ── Service builder 40/60 layout ── */
   .svc-builder-cols { display: grid; grid-template-columns: 40% minmax(0, 1fr); gap: 24px; align-items: start; }
   @media (max-width: 700px) { .svc-builder-cols { grid-template-columns: 1fr; } }
-  .svc-col-service { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .svc-col-service { display: flex; flex-direction: column; gap: 10px; }
   .svc-col-library { display: flex; flex-direction: column; gap: 12px; }
   .svc-section-box { border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
   .svc-quickstart { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; line-height: 2; }
@@ -1202,19 +1202,21 @@
 
       <!-- LEFT 40%: Your service -->
       <div class="svc-col-service">
-        <p class="setup-section-label">Your service</p>
-        <div class="svc-quickstart">
-          Quick&nbsp;start:
-          <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
-          <a onclick="loadServicePreset('shabbat-morning')">Shabbat morning</a> &middot;
-          <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a> &middot;
-          <a onclick="loadServicePreset('weekday-evening')">Weekday evening</a>
-          &middot; <a class="svc-clear-link" onclick="clearService()">Clear all</a>
+        <div class="svc-section-box">
+          <p class="setup-section-label">Your service</p>
+          <div class="svc-quickstart">
+            Quick&nbsp;start:
+            <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
+            <a onclick="loadServicePreset('shabbat-morning')">Shabbat morning</a> &middot;
+            <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a> &middot;
+            <a onclick="loadServicePreset('weekday-evening')">Weekday evening</a>
+            &middot; <a class="svc-clear-link" onclick="clearService()">Clear all</a>
+          </div>
+          <div id="serviceList" class="svc-list"></div>
+          <textarea id="outline" class="svc-paste" rows="3"
+            placeholder="Type or paste in a prayer, multiple prayers, or a full service outline here."></textarea>
         </div>
-        <div id="serviceList" class="svc-list"></div>
-        <textarea id="outline" class="svc-paste" rows="3"
-          placeholder="Type or paste in a prayer, multiple prayers, or a full service outline here."></textarea>
-        <button class="btn-find" onclick="findImages()" style="margin-top:10px;width:100%;">
+        <button class="btn-find" onclick="findImages()" style="width:100%;">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           Find images
         </button>
@@ -1493,7 +1495,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.51</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.52</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
