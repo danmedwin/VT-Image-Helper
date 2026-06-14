@@ -21,7 +21,7 @@ _Last updated: June 2026_
 
 ### High Priority
 
-- **Service presets (quick-select)** — One-click buttons for common service types: "Shabbat Morning," "Friday Evening," "High Holidays," etc. Pre-checks the right prayer chips and sets the service tag filter. Biggest usability win for the primary use case.
+- ✅ **Service builder redesign + presets** — *(Shipped v2.46, June 2026)* Full 40/60 two-column setup panel: left = ordered service list with drag-to-reorder, inline search-term editing, and quick-start presets (Friday evening / Shabbat morning / Weekday morning / Clear all); right = prayer library chips (button model) + keywords. `findImages()` reads from ordered `_serviceOrder` array.
 
 - ✅ **Photo lightbox / full-screen view** — *(Shipped v2.42, June 2026)* Expand button (⤡) on each card opens a full-screen overlay with large image, caption, photographer credit. ← / → buttons and keyboard arrows to browse all photos in a prayer; Esc to close, Enter to select. Select and Favorite actions available from within the lightbox.
 
