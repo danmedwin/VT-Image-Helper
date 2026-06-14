@@ -1513,7 +1513,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.56</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.57</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3516,6 +3516,14 @@ function clearAllSelections() {
 }
 
 function selectPhoto(prayerId, photoId, caption, srcUrl) {
+  if (selections[prayerId] && selections[prayerId].photoId == photoId) {
+    delete selections[prayerId];
+    document.querySelectorAll(`.img-card[data-prayer="${prayerId}"]`).forEach(c => c.classList.remove('selected'));
+    const dl = document.getElementById('dl-' + prayerId);
+    if (dl) { dl.removeAttribute('href'); dl.removeAttribute('download'); }
+    updateResultsFooter();
+    return;
+  }
   selections[prayerId] = { photoId, caption, srcUrl };
 
   document.querySelectorAll(`.img-card[data-prayer="${prayerId}"]`).forEach(card => {
