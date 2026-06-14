@@ -1340,7 +1340,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.40</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.41</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1839,7 +1839,13 @@ const CURATED_STORAGE      = 'vtImageHelper_curatedPhotos';
 const CURATED_DATE_STORAGE = 'vtImageHelper_curatedDate';
 const MY_FAVORITES_KEY     = 'vtMyFavorites';
 const FIREBASE_URL         = 'https://vt-image-helper-default-rtdb.firebaseio.com';
-const ADMIN_PASS           = 'vtadmin2026'; // change this in source to customize
+const FIREBASE_API_KEY     = 'AIzaSyC6QkjNg_k731ICmagN2tk-VjDSIQVA8Ng';
+const ADMIN_UID            = 'tizvHyzJ7PdsPvFpbEk4CdSPUk42';
+
+function authParam() {
+  const t = sessionStorage.getItem('vtAdminToken');
+  return t ? '?auth=' + t : '';
+}
 
 let favoritesData = {}; // { prayerId: { photoId: count } } — from Firebase
 let myFavorites   = new Set(); // 'prayerId:photoId' strings this browser has favorited
@@ -2022,28 +2028,75 @@ function showAdminTab(id, btn) {
 }
 
 function toggleAdmin() {
-  const btn = document.getElementById('adminToggle');
-  if (sessionStorage.getItem('vtAdmin')) {
-    sessionStorage.removeItem('vtAdmin');
+  if (sessionStorage.getItem('vtAdminToken')) {
+    sessionStorage.removeItem('vtAdminToken');
     document.body.classList.remove('admin-mode');
-    btn.textContent = 'Admin';
+    document.getElementById('adminToggle').textContent = 'Admin';
   } else {
-    const pass = prompt('Admin passcode:');
-    if (pass === ADMIN_PASS) {
-      sessionStorage.setItem('vtAdmin', '1');
-      document.body.classList.add('admin-mode');
-      btn.textContent = 'Exit admin';
-      // reset to first tab
-      const firstTab = document.querySelector('.admin-tab');
-      if (firstTab) showAdminTab('terms', firstTab);
-      renderAdminReviewPanel();
-      renderBlockedPanel();
-      renderKeywordsPanel();
-      renderSearchTermsEditor();
-      loadReports().then(renderReportsPanel);
-    } else if (pass !== null) {
-      alert('Incorrect passcode.');
+    showAdminLoginModal();
+  }
+}
+
+function showAdminLoginModal() {
+  const overlay = document.createElement('div');
+  overlay.id = 'adminLoginOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px 28px 22px;width:300px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+      <h3 style="margin:0 0 18px;font-size:15px;color:var(--text);">Admin Sign In</h3>
+      <input id="adminLoginEmail" type="email" placeholder="Email" autocomplete="username"
+        style="width:100%;box-sizing:border-box;padding:9px 10px;margin-bottom:10px;font-size:14px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;">
+      <input id="adminLoginPassword" type="password" placeholder="Password" autocomplete="current-password"
+        style="width:100%;box-sizing:border-box;padding:9px 10px;margin-bottom:18px;font-size:14px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;">
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="closeAdminLogin()" style="padding:7px 16px;font-size:13px;background:none;border:1px solid var(--border);color:var(--text);border-radius:5px;cursor:pointer;">Cancel</button>
+        <button onclick="submitAdminLogin()" style="padding:7px 16px;font-size:13px;background:var(--teal,#00827F);border:none;color:#fff;border-radius:5px;cursor:pointer;font-weight:600;">Sign in</button>
+      </div>
+      <div id="adminLoginError" style="color:#e55;font-size:12px;margin-top:10px;min-height:16px;"></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(function() { const el = document.getElementById('adminLoginEmail'); if (el) el.focus(); }, 50);
+  overlay.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') submitAdminLogin();
+    if (e.key === 'Escape') closeAdminLogin();
+  });
+}
+
+function closeAdminLogin() {
+  const overlay = document.getElementById('adminLoginOverlay');
+  if (overlay) overlay.remove();
+}
+
+async function submitAdminLogin() {
+  const email    = (document.getElementById('adminLoginEmail').value || '').trim();
+  const password = document.getElementById('adminLoginPassword').value || '';
+  const errEl    = document.getElementById('adminLoginError');
+  if (!email || !password) { errEl.textContent = 'Email and password are required.'; return; }
+  errEl.textContent = 'Signing in…';
+  try {
+    const res  = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+      { method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ email, password, returnSecureToken: true }) }
+    );
+    const data = await res.json();
+    if (!res.ok || data.localId !== ADMIN_UID) {
+      errEl.textContent = !res.ok ? 'Incorrect email or password.' : 'Account not authorized.';
+      return;
     }
+    sessionStorage.setItem('vtAdminToken', data.idToken);
+    closeAdminLogin();
+    document.body.classList.add('admin-mode');
+    document.getElementById('adminToggle').textContent = 'Exit admin';
+    const firstTab = document.querySelector('.admin-tab');
+    if (firstTab) showAdminTab('terms', firstTab);
+    renderAdminReviewPanel();
+    renderBlockedPanel();
+    renderKeywordsPanel();
+    renderSearchTermsEditor();
+    loadReports().then(renderReportsPanel);
+  } catch(e) {
+    errEl.textContent = 'Network error. Try again.';
   }
 }
 
@@ -2093,7 +2146,7 @@ async function removeNegativeKeyword(word) {
 }
 
 async function saveKeywordsToFirebase() {
-  const res = await fetch(`${FIREBASE_URL}/blockedKeywords.json`, {
+  const res = await fetch(`${FIREBASE_URL}/blockedKeywords.json${authParam()}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(negativeKeywords),
@@ -2260,7 +2313,7 @@ function onTermsDrop(e, idx) {
 }
 async function savePrayerOrder() {
   try {
-    await fetch(`${FIREBASE_URL}/prayerOrder.json`, {
+    await fetch(`${FIREBASE_URL}/prayerOrder.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(_prayerOrder),
     });
   } catch(e) {}
@@ -2276,22 +2329,22 @@ async function saveAsDefault() {
   try {
     const promotedIds = _customPrayers.map(p => p.id);
     const [res] = await Promise.all([
-      fetch(`${FIREBASE_URL}/siteDefaults.json`, {
+      fetch(`${FIREBASE_URL}/siteDefaults.json${authParam()}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ order, tags, terms })
       }),
-      fetch(`${FIREBASE_URL}/prayerTags.json`, {
+      fetch(`${FIREBASE_URL}/prayerTags.json${authParam()}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(tags)
       }),
-      fetch(`${FIREBASE_URL}/promotedPrayers.json`, {
+      fetch(`${FIREBASE_URL}/promotedPrayers.json${authParam()}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(promotedIds)
       }),
-      fetch(`${FIREBASE_URL}/prayerDisplayNames.json`, { method: 'DELETE' }),
+      fetch(`${FIREBASE_URL}/prayerDisplayNames.json${authParam()}`, { method: 'DELETE' }),
     ]);
     if (!res.ok) throw new Error(res.status);
     _promotedPrayerIds = new Set(promotedIds);
@@ -2314,25 +2367,25 @@ async function resetToDefault() {
     const defaults = await res.json();
     if (defaults && defaults.order) {
       await Promise.all([
-        fetch(`${FIREBASE_URL}/prayerOrder.json`, {
+        fetch(`${FIREBASE_URL}/prayerOrder.json${authParam()}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(defaults.order)
         }),
-        fetch(`${FIREBASE_URL}/prayerTags.json`, {
+        fetch(`${FIREBASE_URL}/prayerTags.json${authParam()}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(defaults.tags || {})
         }),
-        fetch(`${FIREBASE_URL}/searchTerms.json`, {
+        fetch(`${FIREBASE_URL}/searchTerms.json${authParam()}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(defaults.terms || {})
         }),
-        fetch(`${FIREBASE_URL}/prayerDisplayNames.json`, { method: 'DELETE' }),
+        fetch(`${FIREBASE_URL}/prayerDisplayNames.json${authParam()}`, { method: 'DELETE' }),
       ]);
     } else {
       // No saved default — fall back to MT order by clearing Firebase order
       await Promise.all([
-        fetch(`${FIREBASE_URL}/prayerOrder.json`, { method: 'DELETE' }),
-        fetch(`${FIREBASE_URL}/prayerDisplayNames.json`, { method: 'DELETE' }),
+        fetch(`${FIREBASE_URL}/prayerOrder.json${authParam()}`, { method: 'DELETE' }),
+        fetch(`${FIREBASE_URL}/prayerDisplayNames.json${authParam()}`, { method: 'DELETE' }),
       ]);
     }
     location.reload();
@@ -2409,7 +2462,7 @@ async function savePrayerTag(prayerId, tag) {
   // Store '_none_' as sentinel for "explicitly no tag" so the default doesn't re-apply
   const stored = tag || '_none_';
   try {
-    await fetch(`${FIREBASE_URL}/prayerTags/${prayerId}.json`, {
+    await fetch(`${FIREBASE_URL}/prayerTags/${prayerId}.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(stored),
     });
     _prayerTags[prayerId] = stored;
@@ -2479,16 +2532,16 @@ async function approveSubmission(id) {
   if (!s) return;
   const prayer = { id: s.id, names: s.names, theme: s.theme || '', searchTerms: s.searchTerms };
   try {
-    await fetch(`${FIREBASE_URL}/customPrayers/${id}.json`, {
+    await fetch(`${FIREBASE_URL}/customPrayers/${id}.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
     });
     if (s.tag && s.tag !== '_none_') {
-      await fetch(`${FIREBASE_URL}/prayerTags/${id}.json`, {
+      await fetch(`${FIREBASE_URL}/prayerTags/${id}.json${authParam()}`, {
         method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(s.tag),
       });
       _prayerTags[id] = s.tag;
     }
-    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json`, {
+    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('approved'),
     });
     s.status = 'approved';
@@ -2501,7 +2554,7 @@ async function approveSubmission(id) {
 
 async function dismissSubmission(id) {
   try {
-    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json`, {
+    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('dismissed'),
     });
     const s = _pendingPrayers.find(p => p.id === id);
@@ -2513,7 +2566,7 @@ async function dismissSubmission(id) {
 
 async function reverseSubmission(id) {
   try {
-    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json`, {
+    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('pending'),
     });
     const s = _pendingPrayers.find(p => p.id === id);
@@ -2575,11 +2628,11 @@ async function saveUnrecognized(idx) {
   try {
     if (isAdmin) {
       const prayer = { id, names: [name.toLowerCase()], theme: '', searchTerms: terms };
-      await fetch(`${FIREBASE_URL}/customPrayers/${id}.json`, {
+      await fetch(`${FIREBASE_URL}/customPrayers/${id}.json${authParam()}`, {
         method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
       });
       if (tag) {
-        await fetch(`${FIREBASE_URL}/prayerTags/${id}.json`, {
+        await fetch(`${FIREBASE_URL}/prayerTags/${id}.json${authParam()}`, {
           method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tag),
         });
         _prayerTags[id] = tag;
@@ -2628,7 +2681,7 @@ async function savePrayerName(prayerId) {
   const newName = inp ? inp.value.trim() : '';
   if (!newName) { renderSearchTermsEditor(); return; }
   try {
-    await fetch(`${FIREBASE_URL}/prayerDisplayNames/${prayerId}.json`, {
+    await fetch(`${FIREBASE_URL}/prayerDisplayNames/${prayerId}.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newName.toLowerCase()),
     });
     _prayerDisplayNames[prayerId] = newName.toLowerCase();
@@ -2656,12 +2709,12 @@ async function addCustomPrayer() {
   const id = 'custom_' + name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
   const prayer = { id, names: [name.toLowerCase()], theme: theme||'', searchTerms: terms };
   try {
-    const res = await fetch(`${FIREBASE_URL}/customPrayers/${id}.json`, {
+    const res = await fetch(`${FIREBASE_URL}/customPrayers/${id}.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
     });
     if (!res.ok) throw new Error(res.status);
     if (tag) {
-      await fetch(`${FIREBASE_URL}/prayerTags/${id}.json`, {
+      await fetch(`${FIREBASE_URL}/prayerTags/${id}.json${authParam()}`, {
         method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tag),
       });
       _prayerTags[id] = tag;
@@ -2679,10 +2732,10 @@ async function removePrayer(prayerId, isCustom) {
   const label = (PRAYERS.find(p => p.id === prayerId)||{}).names?.[0] || prayerId;
   if (!confirm(`Remove "${label}" from the prayer list?`)) return;
   if (isCustom) {
-    await fetch(`${FIREBASE_URL}/customPrayers/${prayerId}.json`, { method: 'DELETE' });
+    await fetch(`${FIREBASE_URL}/customPrayers/${prayerId}.json${authParam()}`, { method: 'DELETE' });
     _customPrayers = _customPrayers.filter(p => p.id !== prayerId);
   } else {
-    await fetch(`${FIREBASE_URL}/hiddenPrayers/${prayerId}.json`, {
+    await fetch(`${FIREBASE_URL}/hiddenPrayers/${prayerId}.json${authParam()}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'}, body: 'true',
     });
     _hiddenPrayerIds.add(prayerId);
@@ -2691,7 +2744,7 @@ async function removePrayer(prayerId, isCustom) {
 }
 
 async function restorePrayer(prayerId) {
-  await fetch(`${FIREBASE_URL}/hiddenPrayers/${prayerId}.json`, { method: 'DELETE' });
+  await fetch(`${FIREBASE_URL}/hiddenPrayers/${prayerId}.json${authParam()}`, { method: 'DELETE' });
   _hiddenPrayerIds.delete(prayerId);
   _refreshPrayerUI();
 }
@@ -2700,7 +2753,7 @@ async function saveSearchTerm(prayerId) {
   const input = document.getElementById(`terms-input-${prayerId}`);
   const terms = input.value.trim();
   if (!terms) return;
-  await fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json`, {
+  await fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json${authParam()}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(terms),
@@ -2724,7 +2777,7 @@ async function saveReviewTerms() {
   const input = document.getElementById('reviewTermsInput');
   const terms = input ? input.value.trim() : '';
   if (!terms) return;
-  await fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json`, {
+  await fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json${authParam()}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(terms),
@@ -2797,7 +2850,7 @@ async function confirmBlock() {
     ? { blocked: true, reasons, notes }
     : true;
 
-  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockData),
   });
   await fetch(`${FIREBASE_URL}/favorites/${prayerId}/${photoId}.json`, {
@@ -2881,7 +2934,7 @@ function clearReportBadge() {
 
 async function loadReportCount() {
   try {
-    const res = await fetch(`${FIREBASE_URL}/reports.json`);
+    const res = await fetch(`${FIREBASE_URL}/reports.json${authParam()}`);
     if (!res.ok) return;
     const data = await res.json() || {};
     const hasPending = Object.values(data).some(photos =>
@@ -2893,7 +2946,7 @@ async function loadReportCount() {
 
 async function loadReports() {
   try {
-    const res = await fetch(`${FIREBASE_URL}/reports.json`);
+    const res = await fetch(`${FIREBASE_URL}/reports.json${authParam()}`);
     reportsData = res.ok ? (await res.json() || {}) : {};
   } catch(e) { reportsData = {}; }
 }
@@ -2979,7 +3032,7 @@ function renderReportsPanel() {
 async function _saveReportStatus(prayerId, photoId, status) {
   const existing = (reportsData[prayerId] || {})[photoId] || {};
   const updated = { ...existing, status, actionTs: Date.now() };
-  await fetch(`${FIREBASE_URL}/reports/${prayerId}/${photoId}.json`, {
+  await fetch(`${FIREBASE_URL}/reports/${prayerId}/${photoId}.json${authParam()}`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated),
   });
   if (!reportsData[prayerId]) reportsData[prayerId] = {};
@@ -2990,7 +3043,7 @@ async function approveReport(prayerId, photoId) {
   const r = (reportsData[prayerId] || {})[photoId] || {};
   // Block the photo
   const blockVal = { blocked: true, reasons: r.reasons || [], notes: r.notes || '', ts: Date.now() };
-  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockVal),
   });
   if (!blockedData[prayerId]) blockedData[prayerId] = {};
@@ -3020,7 +3073,7 @@ async function reverseReport(prayerId, photoId) {
   const r = (reportsData[prayerId] || {})[photoId] || {};
   if (r.status === 'approved') {
     // Reverse: unblock and dismiss
-    await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+    await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false',
     });
     if (blockedData[prayerId]) blockedData[prayerId][photoId] = false;
@@ -3031,7 +3084,7 @@ async function reverseReport(prayerId, photoId) {
   } else {
     // Reverse: approve (block, don't re-add keywords to avoid duplicates)
     const blockVal = { blocked: true, reasons: r.reasons || [], notes: r.notes || '', ts: Date.now() };
-    await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+    await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockVal),
     });
     if (!blockedData[prayerId]) blockedData[prayerId] = {};
@@ -3045,7 +3098,7 @@ async function reverseReport(prayerId, photoId) {
 }
 
 async function unblockPhoto(prayerId, photoId) {
-  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json`, {
+  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false',
   });
   if (blockedData[prayerId]) blockedData[prayerId][photoId] = false;
@@ -3550,7 +3603,7 @@ updateKeyUI();
 loadCuratedJson();
 
 // Restore admin mode if it was active in this browser tab session
-if (sessionStorage.getItem('vtAdmin')) {
+if (sessionStorage.getItem('vtAdminToken')) {
   document.body.classList.add('admin-mode');
   const adminBtn = document.getElementById('adminToggle');
   if (adminBtn) adminBtn.textContent = 'Exit admin';

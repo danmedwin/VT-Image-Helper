@@ -41,6 +41,8 @@ _Last updated: June 2026_
 
 ### Lower Priority / Nice to Have
 
+- **Additional image sources** — Integrate sources beyond Pexels (e.g. Unsplash, Pixabay). Would give access to a broader photo library and reduce dependency on a single provider. Requires separate API key handling per source and adapting the image card/download flow to each provider's attribution rules.
+
 - **Keyboard navigation** — Arrow keys to move between images in a prayer section; Enter to select; Space to open lightbox.
 - **Slide export (PDF)** — Generate a simple PDF with one selected image per page, labeled with the prayer name.
 - **Multi-language support** — Hebrew prayer names as an alternate display mode.
@@ -80,9 +82,12 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 - `reports` read exposure: accepted for now (low-sensitivity — only contains photo URLs + user-entered flag reasons).
 - `pendingPrayers` public read: accepted for now — restricting it would break the admin Submissions tab without a server-side auth layer.
 
-**Medium-term (proper fix):**
-- Introduce [Firebase Anonymous Authentication](https://firebase.google.com/docs/auth/web/anonymous-auth). Give the admin passcode flow a corresponding Firebase custom token or a pre-shared secret stored as an environment variable in the GitHub Action — not in client JS.
-- Lock the high-risk write paths (`blocked`, `blockedKeywords`, `searchTerms`, `prayerOrder`, `prayerTags`, `prayerDisplayNames`, `customPrayers`, `hiddenPrayers`, `siteDefaults`, `promotedPrayers`) to authenticated admin users only.
+**Medium-term — ✅ Completed June 2026:**
+- ✅ Admin login now uses Firebase Email/Password Auth (Identity Toolkit REST API). Passcode prompt removed; email + password modal replaces it. ID token stored in `sessionStorage` as `vtAdminToken`.
+- ✅ All high-risk write paths (`blocked`, `blockedKeywords`, `searchTerms`, `prayerOrder`, `prayerTags`, `prayerDisplayNames`, `customPrayers`, `hiddenPrayers`, `siteDefaults`, `promotedPrayers`) locked to `auth.uid === adminUID` in `database.rules.json`.
+- ✅ `reports` reads locked to admin only.
+- ✅ `pendingPrayers` writes: admin has full access; public can only write new entries with `status: 'pending'`.
+- **Still needed:** Deploy `database.rules.json` to Firebase console (Realtime Database → Rules → Publish). Until deployed, the JS changes are live but the server-side enforcement is not.
 
 ---
 

@@ -14,7 +14,7 @@
       ".read": true,
       "$prayer": {
         "$photo": {
-          ".write": true,
+          ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
           "notes": {
             ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 1000)"
           }
@@ -24,7 +24,7 @@
 
     "blockedKeywords": {
       ".read": true,
-      ".write": true,
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
       "$index": {
         ".validate": "newData.isString() && newData.val().length <= 200"
       }
@@ -32,14 +32,14 @@
 
     "searchTerms": {
       ".read": true,
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
       "$prayer": {
-        ".write": true,
-        ".validate": "newData.isString() && newData.val().length <= 500"
+        ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
       }
     },
 
     "reports": {
-      ".read": true,
+      ".read": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
       "$prayer": {
         "$photo": {
           ".write": true,
@@ -53,7 +53,7 @@
     "customPrayers": {
       ".read": true,
       "$id": {
-        ".write": true,
+        ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
         "name": {
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
         },
@@ -66,28 +66,28 @@
     "hiddenPrayers": {
       ".read": true,
       "$id": {
-        ".write": true,
+        ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
         ".validate": "newData.isBoolean()"
       }
     },
 
     "prayerDisplayNames": {
       ".read": true,
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
       "$id": {
-        ".write": true,
         ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
       }
     },
 
     "prayerOrder": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
     },
 
     "prayerTags": {
       ".read": true,
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
       "$id": {
-        ".write": true,
         ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 50)"
       }
     },
@@ -95,7 +95,7 @@
     "pendingPrayers": {
       ".read": true,
       "$id": {
-        ".write": true,
+        ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42' || (!data.exists() && newData.child('status').val() === 'pending')",
         "name": {
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
         },
@@ -110,12 +110,12 @@
 
     "siteDefaults": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
     },
 
     "promotedPrayers": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
     }
   }
 }
