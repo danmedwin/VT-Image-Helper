@@ -1016,6 +1016,9 @@
           <span style="color:var(--border);padding:0 2px;align-self:center;">|</span>
           <button class="svc-filter-btn chip-day-btn" data-svc-day="shabbat" onclick="toggleChipDay('shabbat')">Shabbat ✡</button>
           <button class="svc-filter-btn chip-day-btn" data-svc-day="weekday" onclick="toggleChipDay('weekday')">Weekday ◇</button>
+          <span style="color:var(--border);padding:0 8px;align-self:center;">|</span>
+          <button class="svc-filter-btn" onclick="selectAllChips()">Select all</button>
+          <button class="svc-filter-btn" onclick="resetChips()">Reset</button>
         </div>
         <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
       </div>
@@ -1168,7 +1171,10 @@
           <p style="font-size:12px;color:var(--text-muted);margin:0;">
             Search terms sent to Pexels for each prayer. Saved to Firebase &mdash; affects all users and the monthly refresh.
           </p>
-          <button class="terms-save-btn" onclick="resetToMTOrder()" style="white-space:nowrap;margin-left:12px;font-size:11px;">Reset to MT order</button>
+          <div style="display:flex;gap:6px;flex-shrink:0;margin-left:12px;">
+            <button class="terms-save-btn" onclick="saveAsDefault()" style="white-space:nowrap;font-size:11px;">Save as default</button>
+            <button class="terms-save-btn" onclick="resetToDefault()" style="white-space:nowrap;font-size:11px;">Reset to Default</button>
+          </div>
         </div>
         <div class="svc-filter-bar">
           <button class="svc-filter-btn terms-time-btn" data-svc-time="morning" onclick="toggleTermsTime('morning')">Morning ☀</button>
@@ -1274,7 +1280,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.32</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.33</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2194,13 +2200,66 @@ async function savePrayerOrder() {
   } catch(e) {}
 }
 
-async function resetToMTOrder() {
-  if (!confirm('Reset prayer order to Mishkan T\'filah sequence? This will clear any custom drag order.')) return;
+async function saveAsDefault() {
+  if (!confirm('Save the current prayer list, order, tags, and search terms as the new site default?')) return;
+  const order = PRAYERS.map(p => p.id);
+  const tags = {};
+  PRAYERS.forEach(p => { tags[p.id] = p.tag || '_none_'; });
+  const terms = {};
+  PRAYERS.forEach(p => { terms[p.id] = p.searchTerms; });
   try {
-    await fetch(`${FIREBASE_URL}/prayerOrder.json`, { method: 'DELETE' });
-  } catch(e) {}
-  _prayerOrder = [];
-  _refreshPrayerUI();
+    const res = await fetch(`${FIREBASE_URL}/siteDefaults.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order, tags, terms })
+    });
+    if (!res.ok) throw new Error(res.status);
+    alert('Default saved.');
+  } catch(e) {
+    alert('Failed to save default. You may need to add siteDefaults to your Firebase rules.');
+  }
+}
+
+async function resetToDefault() {
+  if (!confirm('Reset prayers to the saved default? This overwrites the current order, tags, and search terms.')) return;
+  try {
+    const res = await fetch(`${FIREBASE_URL}/siteDefaults.json`);
+    const defaults = await res.json();
+    if (defaults && defaults.order) {
+      await Promise.all([
+        fetch(`${FIREBASE_URL}/prayerOrder.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(defaults.order)
+        }),
+        fetch(`${FIREBASE_URL}/prayerTags.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(defaults.tags || {})
+        }),
+        fetch(`${FIREBASE_URL}/searchTerms.json`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(defaults.terms || {})
+        }),
+      ]);
+    } else {
+      // No saved default — fall back to MT order by clearing Firebase order
+      await fetch(`${FIREBASE_URL}/prayerOrder.json`, { method: 'DELETE' });
+    }
+    location.reload();
+  } catch(e) {
+    alert('Failed to reset to default.');
+  }
+}
+
+function selectAllChips() {
+  document.querySelectorAll('#prayerChips label.prayer-chip').forEach(label => {
+    if (label.style.display === 'none') return;
+    const cb = label.querySelector('input[type="checkbox"]');
+    if (cb) cb.checked = true;
+  });
+}
+
+function resetChips() {
+  document.querySelectorAll('#prayerChips input[type="checkbox"]').forEach(cb => { cb.checked = false; });
 }
 
 function tagIcon(tag) {
