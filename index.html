@@ -1207,7 +1207,8 @@
           Quick&nbsp;start:
           <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
           <a onclick="loadServicePreset('shabbat-morning')">Shabbat morning</a> &middot;
-          <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a>
+          <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a> &middot;
+          <a onclick="loadServicePreset('weekday-evening')">Weekday evening</a>
           &middot; <a class="svc-clear-link" onclick="clearService()">Clear all</a>
         </div>
         <div id="serviceList" class="svc-list"></div>
@@ -1492,7 +1493,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.50</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.51</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3880,9 +3881,10 @@ document.addEventListener('keydown', e => {
 // ─── SERVICE BUILDER ───────────────────────────────────────────────────────────
 
 const SERVICE_PRESETS = {
-  'friday-evening':  ['shabbatcandles','lechadodi','mahrabu','hineimahtov','barchu','ahavatolam','shema','vahavta','michamocha','hashkivenu','veshamru','amidah','kedushah','osehshalom','aleinu','kaddish'],
-  'shabbat-morning': ['mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','kedushah','torahservice','torahblessings','einkeloheinu','adonolam','osehshalom','aleinu','kaddish'],
-  'weekday-morning': ['modehani','asheryatzar','mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','osehshalom','aleinu','kaddish'],
+  'friday-evening':   ['shabbatcandles','lechadodi','mahrabu','hineimahtov','barchu','ahavatolam','shema','vahavta','michamocha','hashkivenu','veshamru','amidah','kedushah','osehshalom','aleinu','kaddish'],
+  'shabbat-morning':  ['mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','kedushah','torahservice','torahblessings','einkeloheinu','adonolam','osehshalom','aleinu','kaddish'],
+  'weekday-morning':  ['modehani','asheryatzar','mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','osehshalom','aleinu','kaddish'],
+  'weekday-evening':  ['barchu','ahavatolam','shema','vahavta','michamocha','hashkivenu','amidah','osehshalom','aleinu','kaddish'],
 };
 
 function loadServicePreset(key) {
