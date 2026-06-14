@@ -1340,7 +1340,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.37</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.38</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2268,12 +2268,21 @@ async function saveAsDefault() {
   const terms = {};
   PRAYERS.forEach(p => { terms[p.id] = p.searchTerms; });
   try {
-    const res = await fetch(`${FIREBASE_URL}/siteDefaults.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order, tags, terms })
-    });
+    const [res] = await Promise.all([
+      fetch(`${FIREBASE_URL}/siteDefaults.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order, tags, terms })
+      }),
+      fetch(`${FIREBASE_URL}/prayerDisplayNames.json`, { method: 'DELETE' }),
+    ]);
     if (!res.ok) throw new Error(res.status);
+    _prayerDisplayNames = {};
+    PRAYERS.forEach(p => {
+      const def = _defaultPrayers.find(d => d.id === p.id);
+      if (def) p.names[0] = def.names[0];
+    });
+    renderSearchTermsEditor();
     alert('Default saved.');
   } catch(e) {
     alert('Failed to save default. You may need to add siteDefaults to your Firebase rules.');
@@ -2299,10 +2308,14 @@ async function resetToDefault() {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(defaults.terms || {})
         }),
+        fetch(`${FIREBASE_URL}/prayerDisplayNames.json`, { method: 'DELETE' }),
       ]);
     } else {
       // No saved default — fall back to MT order by clearing Firebase order
-      await fetch(`${FIREBASE_URL}/prayerOrder.json`, { method: 'DELETE' });
+      await Promise.all([
+        fetch(`${FIREBASE_URL}/prayerOrder.json`, { method: 'DELETE' }),
+        fetch(`${FIREBASE_URL}/prayerDisplayNames.json`, { method: 'DELETE' }),
+      ]);
     }
     location.reload();
   } catch(e) {
