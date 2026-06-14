@@ -246,7 +246,8 @@
   .svc-builder-cols { display: grid; grid-template-columns: 40% minmax(0, 1fr); gap: 24px; align-items: start; }
   @media (max-width: 700px) { .svc-builder-cols { grid-template-columns: 1fr; } }
   .svc-col-service { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .svc-col-library { border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .svc-col-library { display: flex; flex-direction: column; gap: 12px; }
+  .svc-section-box { border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
   .svc-quickstart { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; line-height: 2; }
   .svc-quickstart a { color: var(--navy-mid); cursor: pointer; text-decoration: none; }
   .svc-quickstart a:hover { text-decoration: underline; }
@@ -1217,50 +1218,52 @@
 
       <!-- RIGHT 60%: Prayer library + Keywords -->
       <div class="svc-col-library">
-        <p class="setup-section-label">Prayer library</p>
-        <div class="hint" style="margin-bottom:6px;">Click a prayer to add it to your service list.</div>
-        <div class="svc-filter-bar">
-          <button class="svc-filter-btn chip-time-btn" data-svc-time="morning" onclick="toggleChipTime('morning')">Morning ☀</button>
-          <button class="svc-filter-btn chip-time-btn" data-svc-time="evening" onclick="toggleChipTime('evening')">Evening ☽</button>
-          <span style="color:var(--border);padding:0 2px;align-self:center;">|</span>
-          <button class="svc-filter-btn chip-day-btn" data-svc-day="shabbat" onclick="toggleChipDay('shabbat')">Shabbat ✡</button>
-          <button class="svc-filter-btn chip-day-btn" data-svc-day="weekday" onclick="toggleChipDay('weekday')">Weekday ◇</button>
-          <span style="color:var(--border);padding:0 8px;align-self:center;">|</span>
-          <button class="svc-filter-btn" onclick="addAllVisibleToService()">Add all</button>
-          <button class="svc-filter-btn" onclick="clearService()">Reset</button>
+        <div class="svc-section-box">
+          <p class="setup-section-label">Prayer library</p>
+          <div class="hint" style="margin-bottom:6px;">Click a prayer to add it to your service list.</div>
+          <div class="svc-filter-bar">
+            <button class="svc-filter-btn chip-time-btn" data-svc-time="morning" onclick="toggleChipTime('morning')">Morning ☀</button>
+            <button class="svc-filter-btn chip-time-btn" data-svc-time="evening" onclick="toggleChipTime('evening')">Evening ☽</button>
+            <span style="color:var(--border);padding:0 2px;align-self:center;">|</span>
+            <button class="svc-filter-btn chip-day-btn" data-svc-day="shabbat" onclick="toggleChipDay('shabbat')">Shabbat ✡</button>
+            <button class="svc-filter-btn chip-day-btn" data-svc-day="weekday" onclick="toggleChipDay('weekday')">Weekday ◇</button>
+            <span style="color:var(--border);padding:0 8px;align-self:center;">|</span>
+            <button class="svc-filter-btn" onclick="addAllVisibleToService()">Add all</button>
+            <button class="svc-filter-btn" onclick="clearService()">Reset</button>
+          </div>
+          <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
         </div>
-        <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
 
-        <hr class="svc-section-divider">
-
-        <p class="setup-section-label">Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></p>
-        <div class="field" style="margin-bottom:10px;">
-          <label for="ctx">Keywords for all images</label>
-          <div class="hint">Added to every search &mdash; holiday, color, setting, etc.</div>
-          <input type="text" id="ctx" placeholder="Keywords…">
-        </div>
-        <div class="field">
-          <label>Thematic</label>
-          <div class="keyword-filters" style="margin-bottom:0;">
-            <div class="filter-group">
-              <span class="filter-label">Style</span>
-              <label class="filter-chip"><input type="checkbox" value="nature"> Nature</label>
-              <label class="filter-chip"><input type="checkbox" value="artistic"> Artistic</label>
-              <label class="filter-chip"><input type="checkbox" value="abstract"> Abstract</label>
-              <label class="filter-chip"><input type="checkbox" value="minimalist"> Minimalist</label>
-              <label class="filter-chip"><input type="checkbox" value="cinematic"> Cinematic</label>
-              <label class="filter-chip"><input type="checkbox" value="vintage"> Vintage</label>
-            </div>
-            <div class="filter-group">
-              <span class="filter-label">Tone</span>
-              <label class="filter-chip"><input type="checkbox" value="joyful"> Joyful</label>
-              <label class="filter-chip"><input type="checkbox" value="solemn"> Solemn</label>
-              <label class="filter-chip"><input type="checkbox" value="serene"> Serene</label>
-              <label class="filter-chip"><input type="checkbox" value="hopeful"> Hopeful</label>
-              <label class="filter-chip"><input type="checkbox" value="contemplative"> Contemplative</label>
-              <label class="filter-chip"><input type="checkbox" value="warm"> Warm</label>
-              <label class="filter-chip"><input type="checkbox" value="dramatic"> Dramatic</label>
-              <label class="filter-chip"><input type="checkbox" value="ethereal"> Ethereal</label>
+        <div class="svc-section-box">
+          <p class="setup-section-label">Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></p>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="ctx">Keywords for all images</label>
+            <div class="hint">Added to every search &mdash; holiday, color, setting, etc.</div>
+            <input type="text" id="ctx" placeholder="Keywords…">
+          </div>
+          <div class="field">
+            <label>Thematic</label>
+            <div class="keyword-filters" style="margin-bottom:0;">
+              <div class="filter-group">
+                <span class="filter-label">Style</span>
+                <label class="filter-chip"><input type="checkbox" value="nature"> Nature</label>
+                <label class="filter-chip"><input type="checkbox" value="artistic"> Artistic</label>
+                <label class="filter-chip"><input type="checkbox" value="abstract"> Abstract</label>
+                <label class="filter-chip"><input type="checkbox" value="minimalist"> Minimalist</label>
+                <label class="filter-chip"><input type="checkbox" value="cinematic"> Cinematic</label>
+                <label class="filter-chip"><input type="checkbox" value="vintage"> Vintage</label>
+              </div>
+              <div class="filter-group">
+                <span class="filter-label">Tone</span>
+                <label class="filter-chip"><input type="checkbox" value="joyful"> Joyful</label>
+                <label class="filter-chip"><input type="checkbox" value="solemn"> Solemn</label>
+                <label class="filter-chip"><input type="checkbox" value="serene"> Serene</label>
+                <label class="filter-chip"><input type="checkbox" value="hopeful"> Hopeful</label>
+                <label class="filter-chip"><input type="checkbox" value="contemplative"> Contemplative</label>
+                <label class="filter-chip"><input type="checkbox" value="warm"> Warm</label>
+                <label class="filter-chip"><input type="checkbox" value="dramatic"> Dramatic</label>
+                <label class="filter-chip"><input type="checkbox" value="ethereal"> Ethereal</label>
+              </div>
             </div>
           </div>
         </div>
@@ -1492,7 +1495,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.48</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.49</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
