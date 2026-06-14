@@ -1340,7 +1340,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.39</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.40</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1756,6 +1756,7 @@ PRAYERS.sort((a, b) => {
 
 const _defaultPrayers    = PRAYERS.map(p => ({ ...p, names: [...p.names], tag: _defaultPrayerTags[p.id] || null }));
 let _customPrayers       = [];
+let _promotedPrayerIds   = new Set();
 let _hiddenPrayerIds     = new Set();
 let _prayerDisplayNames  = {};
 let _prayerOrder         = [];
@@ -1788,17 +1789,22 @@ function applyPrayerLibrary() {
 
 async function loadPrayerLibrary() {
   try {
-    const [customRes, hiddenRes, namesRes, orderRes, tagsRes, pendingRes] = await Promise.all([
+    const [customRes, hiddenRes, namesRes, orderRes, tagsRes, pendingRes, promotedRes] = await Promise.all([
       fetch(`${FIREBASE_URL}/customPrayers.json`),
       fetch(`${FIREBASE_URL}/hiddenPrayers.json`),
       fetch(`${FIREBASE_URL}/prayerDisplayNames.json`),
       fetch(`${FIREBASE_URL}/prayerOrder.json`),
       fetch(`${FIREBASE_URL}/prayerTags.json`),
       fetch(`${FIREBASE_URL}/pendingPrayers.json`),
+      fetch(`${FIREBASE_URL}/promotedPrayers.json`),
     ]);
     if (customRes.ok) {
       const data = await customRes.json();
       if (data && typeof data === 'object') _customPrayers = Object.values(data).filter(Boolean);
+    }
+    if (promotedRes.ok) {
+      const data = await promotedRes.json();
+      if (Array.isArray(data)) _promotedPrayerIds = new Set(data);
     }
     if (hiddenRes.ok) {
       const data = await hiddenRes.json();
@@ -2174,7 +2180,7 @@ function renderSearchTermsEditor() {
   if (!list) return;
   const tag2label = { morning:'☀ Morning', evening:'☽ Evening', shabbat:'✡ Shabbat', weekday:'◇ Weekday' };
   list.innerHTML = PRAYERS.map((p, idx) => {
-    const isCustom = _customPrayers.some(cp => cp.id === p.id);
+    const isCustom = _customPrayers.some(cp => cp.id === p.id) && !_promotedPrayerIds.has(p.id);
     const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
     const badge = isCustom ? ' <span style="font-size:10px;background:#e8f0ff;color:#1a5aaa;border-radius:8px;padding:1px 5px;">custom</span>' : '';
     const pTag = p.tag || '';
@@ -2268,6 +2274,7 @@ async function saveAsDefault() {
   const terms = {};
   PRAYERS.forEach(p => { terms[p.id] = p.searchTerms; });
   try {
+    const promotedIds = _customPrayers.map(p => p.id);
     const [res] = await Promise.all([
       fetch(`${FIREBASE_URL}/siteDefaults.json`, {
         method: 'PUT',
@@ -2279,9 +2286,15 @@ async function saveAsDefault() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(tags)
       }),
+      fetch(`${FIREBASE_URL}/promotedPrayers.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(promotedIds)
+      }),
       fetch(`${FIREBASE_URL}/prayerDisplayNames.json`, { method: 'DELETE' }),
     ]);
     if (!res.ok) throw new Error(res.status);
+    _promotedPrayerIds = new Set(promotedIds);
     _prayerDisplayNames = {};
     PRAYERS.forEach(p => {
       const def = _defaultPrayers.find(d => d.id === p.id);
