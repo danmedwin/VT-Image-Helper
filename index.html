@@ -1456,7 +1456,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.43</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.44</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1520,7 +1520,7 @@ let PRAYERS = [
     ]
   },
   {
-    id: 'yotzeior',
+    id: 'yotzeror',
     names: ['yotzeir or', 'yotzer or', 'יוצר אור', 'creator of light', 'who creates light'],
     theme: 'Light & creation',
     searchTerms: 'sunrise golden light sky dawn radiant',
@@ -1544,7 +1544,7 @@ let PRAYERS = [
     ]
   },
   {
-    id: 'ahavatoolam',
+    id: 'ahavatolam',
     names: ['ahavat olam', 'אהבת עולם', 'everlasting love', 'evening love'],
     theme: 'Evening love & Torah',
     searchTerms: 'night stars love open book Torah evening candlelight',
@@ -1712,7 +1712,7 @@ let PRAYERS = [
     ]
   },
   {
-    id: 'oseishalom',
+    id: 'osehshalom',
     names: ['oseh shalom', 'עושה שלום', 'who makes peace', 'shalom rav'],
     theme: 'Peace',
     searchTerms: 'white dove peace sky serene blue',
@@ -1748,7 +1748,7 @@ let PRAYERS = [
     ]
   },
   {
-    id: 'einkelo',
+    id: 'einkeloheinu',
     names: ['ein keloheinu', 'ein kelohenu', 'אין כאלהינו', 'there is none like our god'],
     theme: 'Praise & celebration',
     searchTerms: 'joyful celebration music light festive',
@@ -1854,9 +1854,9 @@ const _defaultPrayerTags = {
   mahrabu:        'morning',
   psalm150:       'morning',
   lechadodi:      'shabbat',
-  yotzeior:       'morning',
+  yotzeror:       'morning',
   ahavarabbah:    'morning',
-  ahavatoolam:    'evening',
+  ahavatolam:    'evening',
   hashkivenu:     'evening',
   veshamru:       'shabbat',
   kiddushshabbat: 'shabbat',
@@ -1864,7 +1864,7 @@ const _defaultPrayerTags = {
 };
 
 // Mishkan T'filah canonical order
-const _mtOrder = ['shabbatcandles','mahtovu','modehani','asheryatzar','mahrabu','psalm150','lechadodi','barchu','yotzeior','ahavarabbah','ahavatoolam','shema','vahavta','michamocha','hashkivenu','amidah','avotimahot','gevurot','kedushah','veshamru','torahblessings','torahservice','hineimahtov','kiddushshabbat','motzi','oseishalom','einkelo','aleinu','kaddish','adonolam','yigdal'];
+const _mtOrder = ['shabbatcandles','mahtovu','modehani','asheryatzar','mahrabu','psalm150','lechadodi','barchu','yotzeror','ahavarabbah','ahavatolam','shema','vahavta','michamocha','hashkivenu','amidah','avotimahot','gevurot','kedushah','veshamru','torahblessings','torahservice','hineimahtov','kiddushshabbat','motzi','osehshalom','einkeloheinu','aleinu','kaddish','adonolam','yigdal'];
 PRAYERS.sort((a, b) => {
   const ai = _mtOrder.indexOf(a.id); const bi = _mtOrder.indexOf(b.id);
   return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
