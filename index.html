@@ -240,9 +240,33 @@
     font-size: 12px; color: var(--text-muted); cursor: pointer;
     transition: background 0.13s, border-color 0.13s, color 0.13s; user-select: none;
   }
-  .prayer-chip input[type="checkbox"] { display: none; }
   .prayer-chip:hover { border-color: var(--navy-mid); color: var(--navy); }
-  .prayer-chip:has(input:checked) { background: var(--navy); border-color: var(--navy); color: white; }
+  .prayer-chip.chip-selected { background: var(--navy); border-color: var(--navy); color: white; }
+  /* ── Service builder 40/60 layout ── */
+  .svc-builder-cols { display: grid; grid-template-columns: 40% minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 700px) { .svc-builder-cols { grid-template-columns: 1fr; } }
+  .svc-col-service { display: flex; flex-direction: column; gap: 0; }
+  .svc-quickstart { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; line-height: 2; }
+  .svc-quickstart a { color: var(--navy-mid); cursor: pointer; text-decoration: none; }
+  .svc-quickstart a:hover { text-decoration: underline; }
+  .svc-clear-link { color: var(--text-muted) !important; }
+  .svc-list { display: flex; flex-direction: column; gap: 3px; min-height: 36px; margin-bottom: 6px; }
+  .svc-item { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 13px; cursor: default; transition: border-color 0.12s; }
+  .svc-item.drag-over { border-color: var(--navy-mid); background: rgba(0,60,120,0.05); }
+  .svc-item-row { display: flex; align-items: center; gap: 5px; }
+  .svc-drag-handle { cursor: grab; color: var(--text-muted); flex-shrink: 0; font-size: 15px; line-height: 1; }
+  .svc-item-name { flex: 1; color: var(--text); font-size: 13px; }
+  .svc-item-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 2px 3px; flex-shrink: 0; display: flex; align-items: center; }
+  .svc-item-btn:hover { color: var(--text); }
+  .svc-item-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .svc-terms { padding-top: 6px; margin-top: 4px; border-top: 1px solid var(--border); }
+  .svc-terms-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .svc-terms input { width: 100%; font-size: 12px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 4px; padding: 4px 7px; font-family: inherit; background: var(--surface); }
+  .svc-terms input:focus { outline: none; border-color: var(--navy-mid); }
+  .svc-paste { width: 100%; box-sizing: border-box; font-size: 13px; resize: vertical; border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-family: inherit; background: var(--surface); color: var(--text); }
+  .svc-paste:focus { outline: none; border-color: var(--navy-mid); }
+  .svc-section-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0 12px; }
+  .svc-empty { font-size: 13px; color: var(--text-muted); padding: 6px 2px; font-style: italic; }
   .field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1173,16 +1197,27 @@
     <h2>Find images for your service</h2>
     <hr class="setup-hr">
 
-    <p class="setup-section-label">Prayers</p>
-    <div class="setup-two-col">
-      <div class="field">
-        <label for="outline">Service outline or prayers</label>
-        <div class="hint">Paste your service order or prayer names &mdash; one per line or as a paragraph. Hebrew or English both work.</div>
-        <textarea id="outline" rows="6" placeholder="e.g.&#10;Shabbat Candles&#10;L'cha Dodi&#10;Barchu · Yotzer Or&#10;Shema · V'ahavta · Mi Chamocha&#10;Amidah · Kedushah&#10;Torah Service&#10;Oseh Shalom · Aleinu · Kaddish"></textarea>
+    <div class="svc-builder-cols">
+
+      <!-- LEFT 40%: Your service -->
+      <div class="svc-col-service">
+        <p class="setup-section-label">Your service</p>
+        <div class="svc-quickstart">
+          Quick&nbsp;start:
+          <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
+          <a onclick="loadServicePreset('shabbat-morning')">Shabbat morning</a> &middot;
+          <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a>
+          &middot; <a class="svc-clear-link" onclick="clearService()">Clear all</a>
+        </div>
+        <div id="serviceList" class="svc-list"><span class="svc-empty">No prayers yet — select from the library or paste below.</span></div>
+        <textarea id="outline" class="svc-paste" rows="3"
+          placeholder="Or paste your full service outline&#10;(one prayer per line or a paragraph)…"></textarea>
       </div>
-      <div class="field">
-        <label>Select prayers</label>
-        <div class="hint">Select from saved prayers below, and/or add additional prayers in the text box.</div>
+
+      <!-- RIGHT 60%: Prayer library + Keywords -->
+      <div class="svc-col-library">
+        <p class="setup-section-label">Prayer library</p>
+        <div class="hint" style="margin-bottom:6px;">Click a prayer to add it to your service list.</div>
         <div class="svc-filter-bar">
           <button class="svc-filter-btn chip-time-btn" data-svc-time="morning" onclick="toggleChipTime('morning')">Morning ☀</button>
           <button class="svc-filter-btn chip-time-btn" data-svc-time="evening" onclick="toggleChipTime('evening')">Evening ☽</button>
@@ -1190,49 +1225,48 @@
           <button class="svc-filter-btn chip-day-btn" data-svc-day="shabbat" onclick="toggleChipDay('shabbat')">Shabbat ✡</button>
           <button class="svc-filter-btn chip-day-btn" data-svc-day="weekday" onclick="toggleChipDay('weekday')">Weekday ◇</button>
           <span style="color:var(--border);padding:0 8px;align-self:center;">|</span>
-          <button class="svc-filter-btn" onclick="selectAllChips()">Select all</button>
-          <button class="svc-filter-btn" onclick="resetChips()">Reset</button>
+          <button class="svc-filter-btn" onclick="addAllVisibleToService()">Add all</button>
+          <button class="svc-filter-btn" onclick="clearService()">Reset</button>
         </div>
         <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
-      </div>
-    </div>
-    <div id="unrecognizedPanel" style="display:none;margin-top:12px;border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--surface);"></div>
 
-    <hr class="setup-hr">
+        <hr class="svc-section-divider">
 
-    <p class="setup-section-label">Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></p>
-    <div class="setup-two-col">
-      <div class="field">
-        <label for="ctx">Keywords for all images</label>
-        <div class="hint">Added to every search &mdash; holiday, color, setting, etc.</div>
-        <input type="text" id="ctx" placeholder="Keywords…">
-      </div>
-      <div class="field">
-        <label>Thematic</label>
-        <div class="keyword-filters" style="margin-bottom:0;">
-          <div class="filter-group">
-            <span class="filter-label">Style</span>
-            <label class="filter-chip"><input type="checkbox" value="nature"> Nature</label>
-            <label class="filter-chip"><input type="checkbox" value="artistic"> Artistic</label>
-            <label class="filter-chip"><input type="checkbox" value="abstract"> Abstract</label>
-            <label class="filter-chip"><input type="checkbox" value="minimalist"> Minimalist</label>
-            <label class="filter-chip"><input type="checkbox" value="cinematic"> Cinematic</label>
-            <label class="filter-chip"><input type="checkbox" value="vintage"> Vintage</label>
-          </div>
-          <div class="filter-group">
-            <span class="filter-label">Tone</span>
-            <label class="filter-chip"><input type="checkbox" value="joyful"> Joyful</label>
-            <label class="filter-chip"><input type="checkbox" value="solemn"> Solemn</label>
-            <label class="filter-chip"><input type="checkbox" value="serene"> Serene</label>
-            <label class="filter-chip"><input type="checkbox" value="hopeful"> Hopeful</label>
-            <label class="filter-chip"><input type="checkbox" value="contemplative"> Contemplative</label>
-            <label class="filter-chip"><input type="checkbox" value="warm"> Warm</label>
-            <label class="filter-chip"><input type="checkbox" value="dramatic"> Dramatic</label>
-            <label class="filter-chip"><input type="checkbox" value="ethereal"> Ethereal</label>
+        <p class="setup-section-label">Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></p>
+        <div class="field" style="margin-bottom:10px;">
+          <label for="ctx">Keywords for all images</label>
+          <div class="hint">Added to every search &mdash; holiday, color, setting, etc.</div>
+          <input type="text" id="ctx" placeholder="Keywords…">
+        </div>
+        <div class="field">
+          <label>Thematic</label>
+          <div class="keyword-filters" style="margin-bottom:0;">
+            <div class="filter-group">
+              <span class="filter-label">Style</span>
+              <label class="filter-chip"><input type="checkbox" value="nature"> Nature</label>
+              <label class="filter-chip"><input type="checkbox" value="artistic"> Artistic</label>
+              <label class="filter-chip"><input type="checkbox" value="abstract"> Abstract</label>
+              <label class="filter-chip"><input type="checkbox" value="minimalist"> Minimalist</label>
+              <label class="filter-chip"><input type="checkbox" value="cinematic"> Cinematic</label>
+              <label class="filter-chip"><input type="checkbox" value="vintage"> Vintage</label>
+            </div>
+            <div class="filter-group">
+              <span class="filter-label">Tone</span>
+              <label class="filter-chip"><input type="checkbox" value="joyful"> Joyful</label>
+              <label class="filter-chip"><input type="checkbox" value="solemn"> Solemn</label>
+              <label class="filter-chip"><input type="checkbox" value="serene"> Serene</label>
+              <label class="filter-chip"><input type="checkbox" value="hopeful"> Hopeful</label>
+              <label class="filter-chip"><input type="checkbox" value="contemplative"> Contemplative</label>
+              <label class="filter-chip"><input type="checkbox" value="warm"> Warm</label>
+              <label class="filter-chip"><input type="checkbox" value="dramatic"> Dramatic</label>
+              <label class="filter-chip"><input type="checkbox" value="ethereal"> Ethereal</label>
+            </div>
           </div>
         </div>
       </div>
+
     </div>
+    <div id="unrecognizedPanel" style="display:none;margin-top:12px;border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--surface);"></div>
 
     <hr class="setup-hr">
 
@@ -1457,7 +1491,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.45</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.46</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1884,6 +1918,11 @@ let _chipDayFilter   = '';
 let _termsTimeFilter = '';
 let _termsDayFilter  = '';
 let _termsUntagged   = false;
+
+// Service builder state
+let _serviceOrder    = [];   // ordered array of prayer IDs for the current service
+let _svcExpandedId   = null; // prayer ID whose search terms are currently expanded
+let _dragSrcIdx      = null; // index being dragged during reorder
 
 function applyPrayerLibrary() {
   let prayers = [
@@ -2511,17 +2550,17 @@ async function resetToDefault() {
   }
 }
 
-function selectAllChips() {
-  document.querySelectorAll('#prayerChips label.prayer-chip').forEach(label => {
-    if (label.style.display === 'none') return;
-    const cb = label.querySelector('input[type="checkbox"]');
-    if (cb) cb.checked = true;
+function addAllVisibleToService() {
+  PRAYERS.forEach(p => {
+    if (_prayerMatchesFilters(p, _chipTimeFilter, _chipDayFilter) && !_serviceOrder.includes(p.id)) {
+      _serviceOrder.push(p.id);
+    }
   });
+  renderServiceList();
+  renderPrayerChips();
 }
 
-function resetChips() {
-  document.querySelectorAll('#prayerChips input[type="checkbox"]').forEach(cb => { cb.checked = false; });
-}
+function resetChips() { clearService(); }
 
 function tagIcon(tag) {
   if (tag === 'morning')  return '☀';
@@ -3310,14 +3349,12 @@ async function refreshCuratedLibrary() {
 function renderPrayerChips() {
   const el = document.getElementById('prayerChips');
   if (!el) return;
-  // Preserve checked state across re-renders (e.g. when filter is toggled)
-  const checked = new Set([...el.querySelectorAll('input:checked')].map(cb => cb.value));
   el.innerHTML = PRAYERS.map(p => {
-    const tag = p.tag || null;
     const hidden = !_prayerMatchesFilters(p, _chipTimeFilter, _chipDayFilter);
-    const icon = tagIcon(tag);
+    const selected = _serviceOrder.includes(p.id);
+    const icon = tagIcon(p.tag || null);
     const label = p.names[0].charAt(0).toUpperCase() + p.names[0].slice(1);
-    return `<label class="prayer-chip"${hidden ? ' style="display:none;"' : ''}><input type="checkbox" name="prayerChip" value="${p.id}"${checked.has(p.id) ? ' checked' : ''}> ${label}${icon ? ` <span class="tag-icon">${icon}</span>` : ''}</label>`;
+    return `<button class="prayer-chip${selected ? ' chip-selected' : ''}"${hidden ? ' style="display:none;"' : ''} onclick="toggleServiceItem('${p.id}')">${label}${icon ? ` <span class="tag-icon">${icon}</span>` : ''}</button>`;
   }).join('');
 }
 
@@ -3648,17 +3685,28 @@ async function findImages() {
   const resultsEl = document.getElementById('results');
   const apiKey = getKey();
 
-  const selectedChipIds = new Set([...document.querySelectorAll('#prayerChips input:checked')].map(cb => cb.value));
-  const chipPrayers = PRAYERS.filter(p => selectedChipIds.has(p.id));
-
-  if (!outline && selectedChipIds.size === 0) {
+  if (!outline && _serviceOrder.length === 0) {
     resultsEl.innerHTML = '<div class="prayer-section" style="padding:24px 20px;color:var(--text-muted);">Please select prayers above or paste your service outline.</div>';
     resultsEl.classList.add('visible');
     return;
   }
 
+  // Build ordered prayer list: service list first (preserving order), then any extra from pasted outline
+  const used = new Set();
+  const matched = [];
+  for (const id of _serviceOrder) {
+    const prayer = PRAYERS.find(p => p.id === id);
+    if (prayer && !used.has(id)) {
+      // Use inline search term override if the user edited it
+      const termsEl = document.getElementById('svc-terms-' + id);
+      matched.push((termsEl && termsEl.value.trim()) ? { ...prayer, searchTerms: termsEl.value.trim() } : prayer);
+      used.add(id);
+    }
+  }
   const outlineParsed = outline ? parsePrayers(outline) : [];
-  const matched = [...chipPrayers, ...outlineParsed.filter(p => !selectedChipIds.has(p.id))];
+  for (const p of outlineParsed) {
+    if (!used.has(p.id)) { matched.push(p); used.add(p.id); }
+  }
 
   // Show unrecognized outline terms
   const _unrec = outline ? getUnrecognizedTerms(outline) : [];
@@ -3827,6 +3875,109 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'Escape') closeLightbox();
   else if (e.key === 'Enter')  { e.preventDefault(); lbSelect(); }
 });
+
+// ─── SERVICE BUILDER ───────────────────────────────────────────────────────────
+
+const SERVICE_PRESETS = {
+  'friday-evening':  ['shabbatcandles','lechadodi','mahrabu','hineimahtov','barchu','ahavatolam','shema','vahavta','michamocha','hashkivenu','veshamru','amidah','kedushah','osehshalom','aleinu','kaddish'],
+  'shabbat-morning': ['mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','kedushah','torahservice','torahblessings','einkeloheinu','adonolam','osehshalom','aleinu','kaddish'],
+  'weekday-morning': ['modehani','asheryatzar','mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','osehshalom','aleinu','kaddish'],
+};
+
+function loadServicePreset(key) {
+  const ids = SERVICE_PRESETS[key];
+  if (!ids) return;
+  _serviceOrder = [];
+  ids.forEach(id => {
+    const found = PRAYERS.find(p => p.id === id || p.names.some(n => n.toLowerCase() === id.toLowerCase()));
+    if (found && !_serviceOrder.includes(found.id)) _serviceOrder.push(found.id);
+  });
+  renderServiceList();
+  renderPrayerChips();
+}
+
+function clearService() {
+  _serviceOrder = [];
+  _svcExpandedId = null;
+  renderServiceList();
+  renderPrayerChips();
+}
+
+function toggleServiceItem(id) {
+  const idx = _serviceOrder.indexOf(id);
+  if (idx === -1) {
+    _serviceOrder.push(id);
+  } else {
+    _serviceOrder.splice(idx, 1);
+    if (_svcExpandedId === id) _svcExpandedId = null;
+  }
+  renderServiceList();
+  renderPrayerChips();
+}
+
+function toggleSvcExpand(id) {
+  _svcExpandedId = (_svcExpandedId === id) ? null : id;
+  renderServiceList();
+}
+
+function renderServiceList() {
+  const el = document.getElementById('serviceList');
+  if (!el) return;
+  if (_serviceOrder.length === 0) {
+    el.innerHTML = '<span class="svc-empty">No prayers yet — select from the library or paste below.</span>';
+    return;
+  }
+  el.innerHTML = _serviceOrder.map((id, idx) => {
+    const prayer = PRAYERS.find(p => p.id === id);
+    const name = prayer ? (prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1)) : id;
+    const defaultTerms = prayer ? (prayer.searchTerms || prayer.names[0]) : id;
+    const expanded = _svcExpandedId === id;
+    return `<div class="svc-item${expanded ? ' svc-item-open' : ''}" draggable="true"
+      ondragstart="svcDragStart(event,${idx})" ondragend="svcDragEnd(event)"
+      ondragover="svcDragOver(event,${idx})" ondrop="svcDrop(event,${idx})">
+      <div class="svc-item-row">
+        <span class="svc-drag-handle" title="Drag to reorder">≡</span>
+        <span class="svc-item-name">${name}</span>
+        <button class="svc-item-btn" onclick="toggleSvcExpand('${id}')" title="Edit search terms">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="svc-item-btn" onclick="toggleServiceItem('${id}')" title="Remove">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      ${expanded ? `<div class="svc-terms">
+        <div class="svc-terms-label">Search terms for this prayer:</div>
+        <input id="svc-terms-${id}" type="text" value="${defaultTerms}" placeholder="Pexels search terms…">
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function svcDragStart(e, idx) {
+  _dragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function svcDragEnd(e) {
+  document.querySelectorAll('.svc-item').forEach(el => el.classList.remove('drag-over'));
+}
+
+function svcDragOver(e, idx) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.svc-item').forEach((el, i) => {
+    el.classList.toggle('drag-over', i === idx && i !== _dragSrcIdx);
+  });
+}
+
+function svcDrop(e, toIdx) {
+  e.preventDefault();
+  if (_dragSrcIdx === null || _dragSrcIdx === toIdx) return;
+  const moved = _serviceOrder.splice(_dragSrcIdx, 1)[0];
+  _serviceOrder.splice(toIdx, 0, moved);
+  _dragSrcIdx = null;
+  renderServiceList();
+}
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 
