@@ -1922,7 +1922,7 @@ let _termsUntagged   = false;
 // Service builder state
 let _serviceOrder    = [];   // ordered array of prayer IDs for the current service
 let _svcExpandedId   = null; // prayer ID whose search terms are currently expanded
-let _dragSrcIdx      = null; // index being dragged during reorder
+// Note: _dragSrcIdx is already declared below (shared with search terms drag handler)
 
 function applyPrayerLibrary() {
   let prayers = [
