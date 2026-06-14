@@ -245,7 +245,8 @@
   /* ── Service builder 40/60 layout ── */
   .svc-builder-cols { display: grid; grid-template-columns: 40% minmax(0, 1fr); gap: 24px; align-items: start; }
   @media (max-width: 700px) { .svc-builder-cols { grid-template-columns: 1fr; } }
-  .svc-col-service { display: flex; flex-direction: column; gap: 0; }
+  .svc-col-service { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .svc-col-library { border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
   .svc-quickstart { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; line-height: 2; }
   .svc-quickstart a { color: var(--navy-mid); cursor: pointer; text-decoration: none; }
   .svc-quickstart a:hover { text-decoration: underline; }
@@ -1209,7 +1210,7 @@
           <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a>
           &middot; <a class="svc-clear-link" onclick="clearService()">Clear all</a>
         </div>
-        <div id="serviceList" class="svc-list"><span class="svc-empty">No prayers yet — select from the library or paste below.</span></div>
+        <div id="serviceList" class="svc-list"><span class="svc-empty">Type or paste in a prayer, multiple prayers, or a full service outline below.</span></div>
         <textarea id="outline" class="svc-paste" rows="3"
           placeholder="Or paste your full service outline&#10;(one prayer per line or a paragraph)…"></textarea>
       </div>
@@ -1491,7 +1492,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.47</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.48</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3924,7 +3925,7 @@ function renderServiceList() {
   const el = document.getElementById('serviceList');
   if (!el) return;
   if (_serviceOrder.length === 0) {
-    el.innerHTML = '<span class="svc-empty">No prayers yet — select from the library or paste below.</span>';
+    el.innerHTML = '<span class="svc-empty">Type or paste in a prayer, multiple prayers, or a full service outline below.</span>';
     return;
   }
   el.innerHTML = _serviceOrder.map((id, idx) => {
