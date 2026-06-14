@@ -257,9 +257,13 @@
   .svc-item.drag-over { border-color: var(--navy-mid); background: rgba(0,60,120,0.05); }
   .svc-item-unknown { background: #fffbef; border-color: #e8c84a; }
   .svc-item-unknown .svc-item-name { color: #7a5800; }
-  .svc-unknown-tri { color: #b07800; font-size: 11px; flex-shrink: 0; font-style: italic; }
+  .svc-unknown-tri   { color: #b07800; font-size: 11px; flex-shrink: 0; font-style: italic; cursor: pointer; }
+  .svc-save-label    { color: #1a7a30; font-size: 11px; flex-shrink: 0; font-style: italic; cursor: pointer; }
+  .svc-custom-label  { color: var(--text-muted); font-size: 11px; flex-shrink: 0; font-style: italic; cursor: pointer; }
   .svc-item-btn-amber { color: #b07800 !important; }
   .svc-item-btn-amber:hover { color: #7a5000 !important; }
+  .svc-item-btn-green { color: #1a7a30 !important; }
+  .svc-item-btn-green:hover { color: #0d4d1e !important; }
   .svc-item-row { display: flex; align-items: center; gap: 5px; }
   .svc-drag-handle { cursor: grab; color: var(--text-muted); flex-shrink: 0; font-size: 15px; line-height: 1; }
   .svc-item-name { flex: 1; color: var(--text); font-size: 13px; }
@@ -1509,7 +1513,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.55</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.56</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3899,6 +3903,51 @@ document.addEventListener('keydown', e => {
 
 // ─── SERVICE BUILDER ───────────────────────────────────────────────────────────
 
+function onSvcTermsInput(id) {
+  const val = (document.getElementById('svc-terms-' + id) || {}).value?.trim() || '';
+  const label = document.getElementById('svc-label-' + id);
+  const pencil = document.getElementById('svc-pencil-' + id);
+  if (!label || !pencil) return;
+  const hasSaved = !!((_customServiceItems[id] || {}).searchTerms);
+  if (val) {
+    label.textContent = 'save search terms';
+    label.className = 'svc-save-label';
+    pencil.className = 'svc-item-btn svc-item-btn-green';
+  } else if (hasSaved) {
+    label.textContent = 'custom search terms';
+    label.className = 'svc-custom-label';
+    pencil.className = 'svc-item-btn';
+  } else {
+    label.textContent = 'add search terms';
+    label.className = 'svc-unknown-tri';
+    pencil.className = 'svc-item-btn svc-item-btn-amber';
+  }
+}
+
+function handleSvcUnknownAction(id) {
+  if (_svcExpandedId === id) {
+    const termsEl = document.getElementById('svc-terms-' + id);
+    if (termsEl && termsEl.value.trim()) {
+      saveSvcCustomTerms(id);
+      return;
+    }
+  }
+  toggleSvcExpand(id);
+}
+
+function saveSvcCustomTerms(id) {
+  const termsEl = document.getElementById('svc-terms-' + id);
+  const nameEl  = document.getElementById('svc-name-'  + id);
+  if (_customServiceItems[id]) {
+    const terms = termsEl ? termsEl.value.trim() : '';
+    const name  = nameEl  ? nameEl.value.trim()  : '';
+    if (terms) _customServiceItems[id].searchTerms = terms;
+    if (name)  _customServiceItems[id].name = name;
+  }
+  _svcExpandedId = null;
+  renderServiceList();
+}
+
 function parseOutlineToService() {
   const outline = document.getElementById('outline').value.trim();
   if (!outline) return;
@@ -3981,13 +4030,19 @@ function renderServiceList() {
     const defaultTerms = prayer ? (prayer.searchTerms || prayer.names[0]) : (custom ? custom.searchTerms : '');
     const expanded = _svcExpandedId === id;
     const unknownClass = isUnknown ? ' svc-item-unknown' : '';
-    const unknownLabel = isUnknown ? `<span class="svc-unknown-tri" onclick="toggleSvcExpand('${id}')">add search terms</span>` : '';
-    const pencilClass = isUnknown ? 'svc-item-btn svc-item-btn-amber' : 'svc-item-btn';
+    let unknownLabel = '', pencilClass = 'svc-item-btn';
+    if (isUnknown) {
+      const hasSaved = !!(custom && custom.searchTerms);
+      unknownLabel = hasSaved
+        ? `<span id="svc-label-${id}" class="svc-custom-label" onclick="handleSvcUnknownAction('${id}')">custom search terms</span>`
+        : `<span id="svc-label-${id}" class="svc-unknown-tri" onclick="handleSvcUnknownAction('${id}')">add search terms</span>`;
+      pencilClass = hasSaved ? 'svc-item-btn' : 'svc-item-btn svc-item-btn-amber';
+    }
     const expandedHtml = expanded ? `<div class="svc-terms">
         ${isUnknown ? `<div class="svc-terms-label">Display name:</div>
         <input id="svc-name-${id}" type="text" value="${name.replace(/"/g,'&quot;')}" placeholder="Prayer name…" style="margin-bottom:5px;">` : ''}
         <div class="svc-terms-label">${isUnknown ? 'Search terms:' : 'Search terms for this prayer:'}</div>
-        <input id="svc-terms-${id}" type="text" value="${defaultTerms.replace(/"/g,'&quot;')}" placeholder="Pexels search terms…">
+        <input id="svc-terms-${id}" type="text" value="${defaultTerms.replace(/"/g,'&quot;')}" placeholder="Pexels search terms…"${isUnknown ? ` oninput="onSvcTermsInput('${id}')"` : ''}>
       </div>` : '';
     return `<div class="svc-item${unknownClass}${expanded ? ' svc-item-open' : ''}" draggable="true"
       ondragstart="svcDragStart(event,${idx})" ondragend="svcDragEnd(event)"
@@ -3996,7 +4051,7 @@ function renderServiceList() {
         <span class="svc-drag-handle" title="Drag to reorder">≡</span>
         <span class="svc-item-name">${name}</span>
         ${unknownLabel}
-        <button class="${pencilClass}" onclick="toggleSvcExpand('${id}')" title="Edit search terms">
+        <button id="svc-pencil-${id}" class="${pencilClass}" onclick="${isUnknown ? `handleSvcUnknownAction('${id}')` : `toggleSvcExpand('${id}')`}" title="Edit search terms">
           <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="svc-item-btn" onclick="toggleServiceItem('${id}')" title="Remove">
