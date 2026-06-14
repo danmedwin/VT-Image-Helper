@@ -1039,7 +1039,123 @@
     z-index: 100;
   }
   .scroll-top.visible { display: flex; }
+
+  /* ── Expand (lightbox) button ────────────────────────────────────────────── */
+  .btn-expand {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+  }
+  .btn-expand:hover { opacity: 1; }
+  .btn-expand svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ── Lightbox overlay ─────────────────────────────────────────────────────── */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: rgba(0,0,0,0.92);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #lightbox.lb-open { display: flex; }
+  #lb-close {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 32px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    z-index: 9001;
+    transition: color 0.15s;
+  }
+  #lb-close:hover { color: #fff; }
+  #lb-img-wrap {
+    position: relative;
+    max-width: calc(100vw - 140px);
+    max-height: calc(100vh - 130px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #lb-img {
+    max-width: 100%;
+    max-height: calc(100vh - 170px);
+    border-radius: 6px;
+    display: block;
+    object-fit: contain;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  }
+  .lb-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    z-index: 1;
+    user-select: none;
+  }
+  .lb-nav-btn:hover { background: rgba(255,255,255,0.28); }
+  #lb-prev { left: -64px; }
+  #lb-next { right: -64px; }
+  #lb-bar {
+    width: 100%;
+    max-width: 920px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px 14px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  #lb-info { flex: 1; min-width: 0; }
+  #lb-prayer { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #lb-credit { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+  .lb-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 6px;
+    padding: 7px 15px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .lb-btn:hover { background: rgba(255,255,255,0.28); }
+  .lb-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .lb-btn.lb-selected { background: rgba(80,140,255,0.45); border-color: rgba(120,170,255,0.7); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body>
 
@@ -1340,7 +1456,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.41</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.42</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3270,25 +3386,59 @@ function updateResultsFooter() {
   if (dlBtn) dlBtn.disabled = selCount === 0;
 }
 
-function downloadAllSelected() {
+async function downloadAllSelected() {
   const entries = Object.entries(selections);
   if (!entries.length) return;
-  entries.forEach(([prayerId, sel], i) => {
-    setTimeout(() => {
+  const btn = document.getElementById('btn-dl-all');
+  const origHTML = btn ? btn.innerHTML : '';
+
+  if (typeof JSZip === 'undefined') {
+    // Fallback: staggered individual downloads if JSZip failed to load
+    entries.forEach(([prayerId, sel], i) => {
+      setTimeout(() => {
+        const slug = sel.caption.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+        const filename = prayerId + '-' + slug + '.jpg';
+        const href = sel.srcUrl
+          ? sel.srcUrl + (sel.srcUrl.includes('?') ? '&' : '?') + `dl=${filename}&fm=jpg`
+          : `https://images.pexels.com/photos/${sel.photoId}/pexels-photo-${sel.photoId}.jpeg?cs=srgb&dl=${filename}&fm=jpg`;
+        const a = document.createElement('a');
+        a.href = href; a.download = filename; a.target = '_blank';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }, i * 400);
+    });
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Building ZIP…'; }
+  try {
+    const zip = new JSZip();
+    let done = 0;
+    await Promise.all(entries.map(async ([prayerId, sel]) => {
       const slug = sel.caption.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
       const filename = prayerId + '-' + slug + '.jpg';
-      const href = sel.srcUrl
-        ? sel.srcUrl + (sel.srcUrl.includes('?') ? '&' : '?') + `dl=${filename}&fm=jpg`
-        : `https://images.pexels.com/photos/${sel.photoId}/pexels-photo-${sel.photoId}.jpeg?cs=srgb&dl=${filename}&fm=jpg`;
-      const a = document.createElement('a');
-      a.href = href;
-      a.download = filename;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }, i * 400);
-  });
+      const url = sel.srcUrl
+        ? sel.srcUrl + (sel.srcUrl.includes('?') ? '&' : '?') + 'fm=jpg'
+        : `https://images.pexels.com/photos/${sel.photoId}/pexels-photo-${sel.photoId}.jpeg?auto=compress&cs=tinysrgb&w=1920&fm=jpg`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('Could not fetch ' + filename);
+      const blob = await resp.blob();
+      zip.file(filename, blob);
+      done++;
+      if (btn) btn.textContent = `Fetching… ${done}/${entries.length}`;
+    }));
+    if (btn) btn.textContent = 'Creating ZIP…';
+    const content = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content);
+    a.download = 'vt-images.zip';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 1000);
+  } catch (err) {
+    alert('ZIP download failed: ' + err.message + '\nTry downloading images individually.');
+  } finally {
+    if (btn) { btn.innerHTML = origHTML; btn.disabled = Object.keys(selections).length === 0; }
+  }
 }
 
 function clearAllSelections() {
@@ -3342,14 +3492,20 @@ function photoCardHtml(prayerId, photo, isLive) {
         : '')
     : '';
   const srcAttr = isLive ? `data-src="${photo.src}"` : '';
+  const safeCaption = (photo.caption || '').replace(/"/g, '&quot;');
+  const safePhotog = (photo.photographer || '').replace(/"/g, '&quot;');
   return `
     <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
+         data-caption="${safeCaption}" data-photographer="${safePhotog}"
          onclick="selectPhoto('${prayerId}', ${photo.id}, '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${isLive ? photo.src : ''}')">
       <input type="radio" name="${prayerId}" value="${photo.id}">
       <img src="${src}" loading="lazy" alt="${photo.caption}" onerror="this.closest('.img-card').style.display='none'">
       <div class="img-caption">
         <span class="cap-text">${captionText}</span>
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;">
+          <button class="btn-expand" onclick="showLightbox('${prayerId}', ${photo.id}, event)" title="View full size">
+            <svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          </button>
           <button class="btn-fav" id="fav-btn-${photo.id}"
                   onclick="toggleFavorite('${prayerId}', ${photo.id}, event)" title="Favorite">
             <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -3552,7 +3708,7 @@ async function findImages() {
     <div class="results-footer" id="results-footer">
       <button class="btn-dl-all" id="btn-dl-all" onclick="downloadAllSelected()" disabled>
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download all
+        Download ZIP
       </button>
       <span class="rf-stat" id="rf-sel-count">0 selected / ${matched.length} found</span>
       ${notFoundFooterHtml}
@@ -3588,6 +3744,88 @@ async function findImages() {
     });
   }
 }
+
+// ─── LIGHTBOX ─────────────────────────────────────────────────────────────────
+
+let _lb = { prayerId: null, photoId: null, photos: [] };
+
+function showLightbox(prayerId, photoId, event) {
+  if (event) event.stopPropagation();
+  const grid = document.getElementById('grid-' + prayerId);
+  if (!grid) return;
+  _lb.photos = Array.from(grid.querySelectorAll('.img-card')).map(c => ({
+    prayerId: c.dataset.prayer,
+    photoId:  c.dataset.photo,
+    caption:  c.dataset.caption || '',
+    photographer: c.dataset.photographer || '',
+    src: c.dataset.src || '',
+  }));
+  _lb.prayerId = prayerId;
+  _lb.photoId  = String(photoId);
+  _lbRender();
+  document.getElementById('lightbox').classList.add('lb-open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('lb-open');
+  document.body.style.overflow = '';
+}
+
+function navigateLightbox(dir) {
+  const idx = _lb.photos.findIndex(p => p.photoId === _lb.photoId);
+  const next = _lb.photos[idx + dir];
+  if (!next) return;
+  _lb.prayerId = next.prayerId;
+  _lb.photoId  = next.photoId;
+  _lbRender();
+}
+
+function _lbRender() {
+  const photo = _lb.photos.find(p => p.photoId === _lb.photoId);
+  if (!photo) return;
+  const idx = _lb.photos.indexOf(photo);
+
+  const id = photo.photoId;
+  const largeSrc = photo.src
+    ? photo.src.replace(/\?.*$/, '') + '?auto=compress&cs=tinysrgb&w=1920'
+    : `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1920`;
+
+  document.getElementById('lb-img').src = largeSrc;
+  document.getElementById('lb-img').alt = photo.caption;
+  document.getElementById('lb-prayer').textContent = photo.caption || '—';
+  document.getElementById('lb-credit').textContent = photo.photographer ? 'Photo: ' + photo.photographer : '';
+
+  document.getElementById('lb-prev').style.visibility = idx > 0 ? '' : 'hidden';
+  document.getElementById('lb-next').style.visibility = idx < _lb.photos.length - 1 ? '' : 'hidden';
+
+  const sel = selections[photo.prayerId];
+  const isSelected = sel && String(sel.photoId) === photo.photoId;
+  const selBtn = document.getElementById('lb-btn-select');
+  selBtn.classList.toggle('lb-selected', isSelected);
+  document.getElementById('lb-select-label').textContent = isSelected ? 'Selected' : 'Select';
+}
+
+function lbSelect() {
+  const photo = _lb.photos.find(p => p.photoId === _lb.photoId);
+  if (!photo) return;
+  selectPhoto(photo.prayerId, photo.photoId, photo.caption, photo.src);
+  _lbRender();
+}
+
+function lbFavorite() {
+  const photo = _lb.photos.find(p => p.photoId === _lb.photoId);
+  if (!photo) return;
+  toggleFavorite(photo.prayerId, photo.photoId, null);
+}
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('lb-open')) return;
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateLightbox(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); navigateLightbox(1); }
+  else if (e.key === 'Escape') closeLightbox();
+  else if (e.key === 'Enter')  { e.preventDefault(); lbSelect(); }
+});
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 
@@ -3625,6 +3863,29 @@ document.getElementById('outline').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); findImages(); }
 });
 </script>
+
+<div id="lightbox">
+  <button id="lb-close" onclick="closeLightbox()" title="Close">&times;</button>
+  <div id="lb-img-wrap">
+    <button class="lb-nav-btn" id="lb-prev" onclick="navigateLightbox(-1)" title="Previous">&#8249;</button>
+    <img id="lb-img" src="" alt="">
+    <button class="lb-nav-btn" id="lb-next" onclick="navigateLightbox(1)" title="Next">&#8250;</button>
+  </div>
+  <div id="lb-bar">
+    <div id="lb-info">
+      <div id="lb-prayer"></div>
+      <div id="lb-credit"></div>
+    </div>
+    <button class="lb-btn" id="lb-btn-fav" onclick="lbFavorite()">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Favorite
+    </button>
+    <button class="lb-btn" id="lb-btn-select" onclick="lbSelect()">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      <span id="lb-select-label">Select</span>
+    </button>
+  </div>
+</div>
 
 </body>
 </html>
