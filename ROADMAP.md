@@ -23,9 +23,9 @@ _Last updated: June 2026_
 
 - **Service presets (quick-select)** — One-click buttons for common service types: "Shabbat Morning," "Friday Evening," "High Holidays," etc. Pre-checks the right prayer chips and sets the service tag filter. Biggest usability win for the primary use case.
 
-- **Photo lightbox / full-screen view** — Clicking a "expand" button on any image card opens it full-screen (or in a large modal overlay) on the page, without leaving for Pexels. Lets users judge image quality and composition before selecting/downloading. Should show photographer credit and keep the select/download/favorite actions available.
+- ✅ **Photo lightbox / full-screen view** — *(Shipped v2.42, June 2026)* Expand button (⤡) on each card opens a full-screen overlay with large image, caption, photographer credit. ← / → buttons and keyboard arrows to browse all photos in a prayer; Esc to close, Enter to select. Select and Favorite actions available from within the lightbox.
 
-- **ZIP download** — Replace the staggered individual-file downloads with a single ZIP of all selected images, generated client-side using a library like [JSZip](https://strimertul.github.io/jszip/). Much cleaner UX; avoids browser popup-blocker friction.
+- ✅ **ZIP download** — *(Shipped v2.42, June 2026)* "Download ZIP" button builds a single ZIP file of all selected images using JSZip (CDN), with parallel fetching and a staggered-download fallback if JSZip fails to load.
 
 - **Slide text preview overlay** — A toggle on each image card that shows what the image looks like with a prayer title overlaid (semi-transparent bar + white text). Essential for VT work — some beautiful photos fall apart when text is added.
 
