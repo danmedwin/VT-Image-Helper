@@ -75,10 +75,10 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 
 ### Recommendations
 
-**Short-term (low effort):**
-- Add `.validate` rules to string paths to enforce max length (e.g., search terms ≤ 500 chars, prayer names ≤ 100 chars). Prevents bulk data injection.
-- Change `reports` read to admin-only if possible (or accept the exposure for now — it's low-sensitivity).
-- Restrict `pendingPrayers` read to deny public read of the full list; individual writes remain open.
+**Short-term (low effort) — ✅ Completed June 2026:**
+- ✅ `.validate` rules for all string fields added to `database.rules.json` (committed to repo). **Needs to be deployed to Firebase:** open Firebase console → Realtime Database → Rules tab → paste the contents of `database.rules.json` → Publish.
+- `reports` read exposure: accepted for now (low-sensitivity — only contains photo URLs + user-entered flag reasons).
+- `pendingPrayers` public read: accepted for now — restricting it would break the admin Submissions tab without a server-side auth layer.
 
 **Medium-term (proper fix):**
 - Introduce [Firebase Anonymous Authentication](https://firebase.google.com/docs/auth/web/anonymous-auth). Give the admin passcode flow a corresponding Firebase custom token or a pre-shared secret stored as an environment variable in the GitHub Action — not in client JS.

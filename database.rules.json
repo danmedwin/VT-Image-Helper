@@ -1,0 +1,121 @@
+{
+  "rules": {
+    "favorites": {
+      ".read": true,
+      "$prayer": {
+        "$photo": {
+          ".write": true,
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9999"
+        }
+      }
+    },
+
+    "blocked": {
+      ".read": true,
+      "$prayer": {
+        "$photo": {
+          ".write": true,
+          "notes": {
+            ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 1000)"
+          }
+        }
+      }
+    },
+
+    "blockedKeywords": {
+      ".read": true,
+      ".write": true,
+      "$index": {
+        ".validate": "newData.isString() && newData.val().length <= 200"
+      }
+    },
+
+    "searchTerms": {
+      ".read": true,
+      "$prayer": {
+        ".write": true,
+        ".validate": "newData.isString() && newData.val().length <= 500"
+      }
+    },
+
+    "reports": {
+      ".read": true,
+      "$prayer": {
+        "$photo": {
+          ".write": true,
+          "notes": {
+            ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 1000)"
+          }
+        }
+      }
+    },
+
+    "customPrayers": {
+      ".read": true,
+      "$id": {
+        ".write": true,
+        "name": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+        },
+        "label": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+        }
+      }
+    },
+
+    "hiddenPrayers": {
+      ".read": true,
+      "$id": {
+        ".write": true,
+        ".validate": "newData.isBoolean()"
+      }
+    },
+
+    "prayerDisplayNames": {
+      ".read": true,
+      "$id": {
+        ".write": true,
+        ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+      }
+    },
+
+    "prayerOrder": {
+      ".read": true,
+      ".write": true
+    },
+
+    "prayerTags": {
+      ".read": true,
+      "$id": {
+        ".write": true,
+        ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 50)"
+      }
+    },
+
+    "pendingPrayers": {
+      ".read": true,
+      "$id": {
+        ".write": true,
+        "name": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+        },
+        "label": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+        },
+        "status": {
+          ".validate": "!newData.exists() || newData.val() === 'pending' || newData.val() === 'approved' || newData.val() === 'dismissed'"
+        }
+      }
+    },
+
+    "siteDefaults": {
+      ".read": true,
+      ".write": true
+    },
+
+    "promotedPrayers": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
