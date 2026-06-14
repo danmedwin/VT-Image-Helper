@@ -21,7 +21,7 @@ if (!ANTHROPIC_KEY) { console.warn('⚠ ANTHROPIC_API_KEY not set — skipping v
 
 const PRAYERS = [
   { id: 'mahtovu',        searchTerms: 'open tent morning light peaceful sunrise' },
-  { id: 'modehanee',      searchTerms: 'sunrise morning light awakening dawn' },
+  { id: 'modehani',       searchTerms: 'sunrise morning light awakening dawn' },
   { id: 'asheryatzar',    searchTerms: 'human hands healing light body nature' },
   { id: 'barchu',         searchTerms: 'morning horizon gathering nature sunrise meadow' },
   { id: 'yotzeior',       searchTerms: 'sunrise golden light sky dawn radiant' },
