@@ -269,6 +269,8 @@
   .svc-paste:focus { outline: none; border-color: var(--navy-mid); }
   .svc-section-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0 12px; }
   .svc-empty { font-size: 13px; color: var(--text-muted); padding: 6px 2px; font-style: italic; }
+  .setup-explainer { font-size: 13px; color: var(--text-muted); margin: 6px 0 0; line-height: 1.6; }
+  .setup-explainer a { color: var(--navy-mid); }
   .field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1191,12 +1193,9 @@
 </header>
 
 <main>
-  <div class="info-box">
-    This tool surfaces photos matched to common Jewish prayers &mdash; selected for beauty, thematic resonance, and clear space for text overlay. All photos are sourced from <a href="https://www.pexels.com" target="_blank" rel="noopener" style="color:#7a5c00;">Pexels</a> and are free to use. Click &#9825; to favorite a photo &mdash; favorites are shared across users and survive the monthly refresh.
-  </div>
-
   <div class="setup-panel">
     <h2>Find images for your service</h2>
+    <p class="setup-explainer">Choose the prayers in your service and search for images to accompany each one &mdash; drawn from <a href="https://www.pexels.com" target="_blank" rel="noopener">Pexels</a> and filtered for beauty, thematic resonance, and room for text overlay. Click &#9825; to save favorites across sessions.</p>
     <hr class="setup-hr">
 
     <div class="svc-builder-cols">
@@ -1211,9 +1210,13 @@
           <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a>
           &middot; <a class="svc-clear-link" onclick="clearService()">Clear all</a>
         </div>
-        <div id="serviceList" class="svc-list"><span class="svc-empty">Type or paste in a prayer, multiple prayers, or a full service outline below.</span></div>
+        <div id="serviceList" class="svc-list"></div>
         <textarea id="outline" class="svc-paste" rows="3"
-          placeholder="Or paste your full service outline&#10;(one prayer per line or a paragraph)…"></textarea>
+          placeholder="Type or paste in a prayer, multiple prayers, or a full service outline here."></textarea>
+        <button class="btn-find" onclick="findImages()" style="margin-top:10px;width:100%;">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          Find images
+        </button>
       </div>
 
       <!-- RIGHT 60%: Prayer library + Keywords -->
@@ -1272,12 +1275,6 @@
     </div>
     <div id="unrecognizedPanel" style="display:none;margin-top:12px;border:1px solid var(--border);border-radius:8px;padding:14px 16px;background:var(--surface);"></div>
 
-    <hr class="setup-hr">
-
-    <button class="btn-find" onclick="findImages()">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      Find images
-    </button>
   </div>
 
   <div id="results"></div>
@@ -1495,7 +1492,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.49</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.50</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3928,7 +3925,7 @@ function renderServiceList() {
   const el = document.getElementById('serviceList');
   if (!el) return;
   if (_serviceOrder.length === 0) {
-    el.innerHTML = '<span class="svc-empty">Type or paste in a prayer, multiple prayers, or a full service outline below.</span>';
+    el.innerHTML = '';
     return;
   }
   el.innerHTML = _serviceOrder.map((id, idx) => {
