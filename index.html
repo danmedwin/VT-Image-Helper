@@ -1211,7 +1211,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.29</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.30</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2373,6 +2373,8 @@ async function saveUnrecognized(idx) {
       }
       _customPrayers.push(prayer);
       _refreshPrayerUI();
+      const _cb1 = document.querySelector(`#prayerChips input[value="${id}"]`);
+      if (_cb1) _cb1.checked = true;
     } else {
       const submission = { id, names: [name.toLowerCase()], theme: '', searchTerms: terms, tag: tag || '_none_', status: 'pending' };
       await fetch(`${FIREBASE_URL}/pendingPrayers/${id}.json`, {
@@ -2385,6 +2387,8 @@ async function saveUnrecognized(idx) {
       if (tag) _prayerTags[id] = tag;
       _customPrayers.push(prayer);
       _refreshPrayerUI();
+      const _cb2 = document.querySelector(`#prayerChips input[value="${id}"]`);
+      if (_cb2) _cb2.checked = true;
     }
     const row = document.getElementById(`unrec-row-${idx}`);
     if (row) row.innerHTML = `<div style="grid-column:1/-1;font-size:12px;color:var(--teal);padding:4px 0;">&#10003; ${isAdmin ? 'Added' : 'Submitted for review'}: ${name}</div>`;
