@@ -31,20 +31,17 @@ _Last updated: June 2026_
 
 ### Medium Priority
 
-- **Pending prayer email notifications** — Notify the admin when a new prayer submission arrives, rather than relying on the badge in the admin panel. Could use a free tier of EmailJS or a simple Firebase Function trigger.
+- ✅ **Pending prayer email notifications** — *(Shipped v2.72, June 2026)* Admin receives email via EmailJS when a prayer is submitted or an image is flagged, with one-click Approve/Dismiss/Block action buttons in the email.
 
 - **Holiday image sets** — Curated Pexels search-term profiles for Rosh Hashanah, Yom Kippur, Sukkot, Hanukkah, Purim, Passover, Shavuot. Could surface as a secondary filter or preset alongside the service type filters.
 
 - **Image rating / quality flag** — Let admins mark individual photos as "preferred" (beyond favorites) so the best images surface first within a prayer's grid.
-
-- **Better mobile layout** — The current two-column setup panel and image grid aren't optimized for phones. Most usage is probably desktop, but worth a pass.
 
 ### Lower Priority / Nice to Have
 
 - **Additional image sources** — Integrate sources beyond Pexels (e.g. Unsplash, Pixabay). Would give access to a broader photo library and reduce dependency on a single provider. Requires separate API key handling per source and adapting the image card/download flow to each provider's attribution rules.
 
 - **Keyboard navigation** — Arrow keys to move between images in a prayer section; Enter to select; Space to open lightbox.
-- **Slide export (PDF)** — Generate a simple PDF with one selected image per page, labeled with the prayer name.
 - **Multi-language support** — Hebrew prayer names as an alternate display mode.
 
 ---
