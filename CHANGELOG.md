@@ -2,6 +2,13 @@
 
 ---
 
+## v2.72 — June 2026
+- EmailJS admin notifications: prayer submissions and image flags now send an email with action buttons
+- Approve/Dismiss links for prayer submissions; Block image/Dismiss links for reports
+- Clicking an action link opens the app, prompts admin login if needed, then executes automatically
+
+---
+
 ## v2.71 — June 2026
 Quick-start links (Friday evening · Shabbat morning · Weekday morning · Weekday evening) moved from the "Add prayers" input box to the top of the Prayer library box, just below the header.
 
