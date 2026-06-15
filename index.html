@@ -957,11 +957,11 @@
   }
   .svc-filter-bar { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 8px; }
   .svc-filter-btn {
-    padding: 3px 11px; border-radius: 12px; border: 1.5px solid var(--border);
-    background: var(--surface); cursor: pointer; font-size: 12px; color: var(--text-muted);
+    padding: 3px 11px; border-radius: 12px; border: 1.5px solid var(--teal);
+    background: var(--teal-light); cursor: pointer; font-size: 12px; color: var(--teal);
     transition: background 0.13s, border-color 0.13s, color 0.13s;
   }
-  .svc-filter-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .svc-filter-btn:hover { background: #d0ece7; }
   .svc-filter-btn.active { background: var(--teal); border-color: var(--teal); color: white; }
   .tag-icon { font-size: 10px; margin-right: 2px; opacity: 0.75; }
   .tag-select {
@@ -1523,7 +1523,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.69</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.70</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
