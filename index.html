@@ -1523,7 +1523,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.64</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.65</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3359,6 +3359,7 @@ async function refreshCuratedLibrary() {
           const text = (p.alt || '').toLowerCase();
           return !blocklistLower.some(kw => text.includes(kw));
         })
+        .filter(p => !isHolidayMismatch(p.alt, prayer.searchTerms))
         .map(p => ({
           id: p.id,
           caption: p.alt || p.photographer,
@@ -3413,6 +3414,27 @@ function getKeywordFilters() {
     .map(cb => cb.value).join(' ');
 }
 
+// Photos whose alt text mentions a holiday are excluded unless the search also mentions that holiday.
+// Prevents e.g. Hanukkah menorah photos from appearing in generic candle searches.
+const HOLIDAY_FILTER = [
+  ['hanukkah', 'chanukah', 'hanukah', 'channukah', 'hannukah', 'chanukkah', 'hanuka', 'chanuka'],
+  ['passover', 'pesach', 'seder'],
+  ['sukkot', 'sukkos', 'succot', 'succos', 'sukkah', 'succah'],
+  ['rosh hashanah', 'rosh hashana', 'rosh hashannah'],
+  ['yom kippur', 'yom kipper', 'yom kipur'],
+  ['purim', 'hamantash', 'hamantashen'],
+  ['shavuot', 'shavuos', 'shavuoth'],
+  ['simchat torah', 'simchas torah'],
+];
+
+function isHolidayMismatch(altText, searchTerms) {
+  const alt = (altText || '').toLowerCase();
+  const search = (searchTerms || '').toLowerCase();
+  return HOLIDAY_FILTER.some(spellings =>
+    spellings.some(s => alt.includes(s)) && !spellings.some(s => search.includes(s))
+  );
+}
+
 function buildSearchQuery(prayer, context) {
   let q = prayer.searchTerms;
   const keywords = getKeywordFilters();
@@ -3433,14 +3455,17 @@ async function fetchLivePhotos(prayer, context, apiKey) {
   const res = await fetch(url, { headers: { Authorization: apiKey } });
   if (!res.ok) throw new Error('Pexels API error: ' + res.status);
   const data = await res.json();
-  return (data.photos || []).map(p => ({
-    id: p.id,
-    caption: p.alt || p.photographer,
-    src: p.src.large2x || p.src.large,
-    pexelsUrl: p.url,
-    photographer: p.photographer,
-    photographerUrl: p.photographer_url,
-  }));
+  const query = buildSearchQuery(prayer, context);
+  return (data.photos || [])
+    .filter(p => !isHolidayMismatch(p.alt, query))
+    .map(p => ({
+      id: p.id,
+      caption: p.alt || p.photographer,
+      src: p.src.large2x || p.src.large,
+      pexelsUrl: p.url,
+      photographer: p.photographer,
+      photographerUrl: p.photographer_url,
+    }));
 }
 
 // ─── RENDERING ─────────────────────────────────────────────────────────────────

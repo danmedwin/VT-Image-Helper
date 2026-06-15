@@ -53,6 +53,27 @@ const PRAYERS = [
   { id: 'torahblessings', searchTerms: 'open book scroll learning light wisdom' },
 ];
 
+// ─── HOLIDAY FILTER ───────────────────────────────────────────────────────────
+
+const HOLIDAY_FILTER = [
+  ['hanukkah', 'chanukah', 'hanukah', 'channukah', 'hannukah', 'chanukkah', 'hanuka', 'chanuka'],
+  ['passover', 'pesach', 'seder'],
+  ['sukkot', 'sukkos', 'succot', 'succos', 'sukkah', 'succah'],
+  ['rosh hashanah', 'rosh hashana', 'rosh hashannah'],
+  ['yom kippur', 'yom kipper', 'yom kipur'],
+  ['purim', 'hamantash', 'hamantashen'],
+  ['shavuot', 'shavuos', 'shavuoth'],
+  ['simchat torah', 'simchas torah'],
+];
+
+function isHolidayMismatch(altText, searchTerms) {
+  const alt = (altText || '').toLowerCase();
+  const search = (searchTerms || '').toLowerCase();
+  return HOLIDAY_FILTER.some(spellings =>
+    spellings.some(s => alt.includes(s)) && !spellings.some(s => search.includes(s))
+  );
+}
+
 // ─── HTTP HELPERS ─────────────────────────────────────────────────────────────
 
 function httpGet(url, headers = {}) {
@@ -279,7 +300,8 @@ async function main() {
       const data = await pexelsSearch(searchTerms);
       candidates = (data.photos || [])
         .map(toPhotoObj)
-        .filter(p => !blockedInPrayer.has(String(p.id)));
+        .filter(p => !blockedInPrayer.has(String(p.id)))
+        .filter(p => !isHolidayMismatch(p.caption, searchTerms));
       process.stdout.write(`${candidates.length} candidates`);
     } catch (e) {
       const msg = `Pexels search failed for ${id}: ${e.message}`;
