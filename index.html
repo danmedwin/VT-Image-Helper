@@ -946,6 +946,22 @@
     padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
   }
   .keyword-add-btn:hover { opacity: 0.85; }
+  .filter-teal-tag { background: #d4f5f0; color: #0d5c55; border-color: #8ecfc8; }
+  .filter-teal-tag .chip-remove { color: #1d7a6b; }
+  .filter-jew-tag { background: #ede8f8; color: #4a2d82; border-color: #c4b0e8; }
+  .filter-jew-tag .chip-remove { color: #6a3eb0; }
+  .filter-group-row { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
+  .filter-group-header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface); cursor: pointer; font-size: 13px; user-select: none; }
+  .filter-group-header:hover { background: #f0eaf8; }
+  .filter-group-name { flex: 1; font-weight: 600; color: #4a2d82; }
+  .filter-group-count { color: var(--text-muted); font-size: 11px; }
+  .filter-group-toggle { font-size: 11px; color: var(--text-muted); min-width: 10px; }
+  .filter-group-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 0 2px; line-height: 1; }
+  .filter-group-del:hover { color: #c0392b; }
+  .filter-group-body { display: none; padding: 10px 10px 6px; border-top: 1px solid var(--border); }
+  .filter-group-body.open { display: block; }
+  .filter-group-spell-add { display: flex; gap: 6px; margin-top: 8px; }
+  .filter-section-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
   .terms-row {
     display: grid;
@@ -1325,6 +1341,7 @@
       <button class="admin-tab" onclick="showAdminTab('review',this)">&#128247; Review</button>
       <button class="admin-tab" onclick="showAdminTab('blocked',this)">&#128683; Blocked</button>
       <button class="admin-tab" onclick="showAdminTab('blocklist',this)">&#128287; Blocklist</button>
+      <button class="admin-tab" onclick="showAdminTab('filters',this)">&#128683; Filters</button>
       <button class="admin-tab" onclick="showAdminTab('apikey',this)">&#128273; API Key</button>
       <button class="admin-tab" id="reportsTab" onclick="showAdminTab('reports',this)">&#128681; Reports</button>
     </div>
@@ -1369,6 +1386,43 @@
         <input class="keyword-add-input" id="keywordAddInput" type="text" placeholder="e.g. crucifix, Arabic text&hellip;"
                onkeydown="if(event.key==='Enter') addNegativeKeyword()">
         <button class="keyword-add-btn" onclick="addNegativeKeyword()">Add</button>
+      </div>
+    </div>
+
+    <div class="admin-tab-panel" id="adminTab-filters">
+      <h3 style="color:#1d7a6b;margin:0 0 4px;">&#128683; Always excluded</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 2px;">
+        Any photo whose alt text contains these keywords is removed from results, no matter what prayer is being searched.
+      </p>
+      <div class="keyword-tags" id="filterNonJewishTags"></div>
+      <div class="keyword-add-row">
+        <input class="keyword-add-input" id="filterNonJewishInput" type="text"
+               placeholder="e.g. halloween, diwali&hellip;" style="border-color:#8ecfc8;"
+               onkeydown="if(event.key==='Enter') addFilterNonJewish()">
+        <button class="keyword-add-btn" style="background:#1d7a6b;" onclick="addFilterNonJewish()">Add</button>
+      </div>
+
+      <hr class="filter-section-divider">
+
+      <h3 style="color:#4a2d82;margin:0 0 4px;">&#10024; Jewish holidays (context-aware)</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">
+        Photos matching any spelling in a group are excluded <em>unless</em> that holiday appears in the prayer&rsquo;s search terms.
+        Each group holds all accepted spellings for one holiday.
+      </p>
+      <div id="filterJewishGroups"></div>
+      <button id="filterAddGroupBtn" onclick="showFilterAddGroupForm()"
+              style="margin-top:8px;font-size:12px;background:none;border:1px dashed #8a6ab8;color:#4a2d82;border-radius:5px;padding:5px 12px;cursor:pointer;">+ Add holiday group</button>
+      <div id="filterJewishAddForm" style="display:none;margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);">
+        <div style="font-size:11px;font-weight:600;margin-bottom:5px;color:var(--text-muted);">Spellings, comma-separated (first becomes the display name)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input class="keyword-add-input" id="filterJewishGroupInput" type="text"
+                 placeholder="e.g. lag baomer, lag b'omer, lag b&rsquo;omer"
+                 style="flex:1;min-width:180px;border-color:#c4b0e8;"
+                 onkeydown="if(event.key==='Enter') addFilterJewishGroup()">
+          <button class="keyword-add-btn" style="background:#4a2d82;" onclick="addFilterJewishGroup()">Add group</button>
+          <button onclick="hideFilterAddGroupForm()"
+                  style="font-size:12px;background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:5px;padding:5px 10px;cursor:pointer;">Cancel</button>
+        </div>
       </div>
     </div>
 
@@ -1524,7 +1578,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.76</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.77</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2341,6 +2395,7 @@ async function submitAdminLogin() {
     renderAdminReviewPanel();
     renderBlockedPanel();
     renderKeywordsPanel();
+    renderFiltersPanel();
     renderSearchTermsEditor();
     loadReports().then(renderReportsPanel);
     if (_vtPendingAction) setTimeout(_executeVtAction, 800);
@@ -2404,6 +2459,153 @@ async function saveKeywordsToFirebase() {
     const err = await res.json().catch(() => ({}));
     alert(`Blocklist save failed: ${err.error || res.status}. Check Firebase rules.`);
   }
+}
+
+// ─── HOLIDAY FILTERS ──────────────────────────────────────────────────────────
+
+async function loadFilters() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/filters.json`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data) {
+        if (Array.isArray(data.nonJewish)) _filterNonJewish = data.nonJewish.filter(Boolean);
+        if (Array.isArray(data.jewish))    _filterJewish    = data.jewish.filter(Array.isArray);
+      }
+    }
+  } catch(e) {}
+}
+
+async function saveFilters() {
+  const res = await fetch(`${FIREBASE_URL}/filters.json${authParam()}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nonJewish: _filterNonJewish, jewish: _filterJewish }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    alert(`Filter save failed: ${err.error || res.status}. Check Firebase rules.`);
+  }
+}
+
+function renderFiltersPanel() {
+  // Non-Jewish (always excluded) section
+  const njContainer = document.getElementById('filterNonJewishTags');
+  if (njContainer) {
+    njContainer.innerHTML = _filterNonJewish.length
+      ? _filterNonJewish.map(kw => `
+          <span class="keyword-tag filter-teal-tag">${kw}
+            <button class="chip-remove" onclick="removeFilterNonJewish('${kw.replace(/'/g, "\\'")}')">&#215;</button>
+          </span>`).join('')
+      : '<span style="font-size:12px;color:var(--text-muted);">No keywords yet.</span>';
+  }
+
+  // Jewish holiday groups section
+  const jewContainer = document.getElementById('filterJewishGroups');
+  if (jewContainer) {
+    jewContainer.innerHTML = _filterJewish.length
+      ? _filterJewish.map((group, gi) => {
+          const displayName = (group[0] || '').replace(/\b\w/g, c => c.toUpperCase());
+          const spellChips = group.map(s => `
+            <span class="keyword-tag filter-jew-tag">${s}
+              <button class="chip-remove" onclick="removeFilterJewishSpelling(${gi},'${s.replace(/'/g, "\\'")}')">&#215;</button>
+            </span>`).join('');
+          return `
+            <div class="filter-group-row">
+              <div class="filter-group-header" onclick="toggleFilterGroup(${gi})">
+                <span class="filter-group-name">${displayName}</span>
+                <span class="filter-group-count">${group.length} spelling${group.length !== 1 ? 's' : ''}</span>
+                <span class="filter-group-toggle" id="fgtog-${gi}">&#9660;</span>
+                <button class="filter-group-del" onclick="event.stopPropagation();removeFilterJewishGroup(${gi})" title="Remove group">&#128465;</button>
+              </div>
+              <div class="filter-group-body" id="fgbody-${gi}">
+                <div class="keyword-tags">${spellChips}</div>
+                <div class="filter-group-spell-add">
+                  <input class="keyword-add-input" id="fgspell-${gi}" type="text"
+                         placeholder="Add spelling variant&hellip;" style="max-width:220px;border-color:#c4b0e8;"
+                         onkeydown="if(event.key==='Enter') addFilterJewishSpelling(${gi})">
+                  <button class="keyword-add-btn" style="background:#4a2d82;" onclick="addFilterJewishSpelling(${gi})">Add</button>
+                </div>
+              </div>
+            </div>`;
+        }).join('')
+      : '<p style="font-size:12px;color:var(--text-muted);">No holiday groups yet.</p>';
+  }
+}
+
+function toggleFilterGroup(gi) {
+  const body = document.getElementById(`fgbody-${gi}`);
+  const tog  = document.getElementById(`fgtog-${gi}`);
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  if (tog) tog.innerHTML = open ? '&#9650;' : '&#9660;';
+}
+
+function showFilterAddGroupForm() {
+  document.getElementById('filterJewishAddForm').style.display = 'block';
+  document.getElementById('filterAddGroupBtn').style.display = 'none';
+  setTimeout(() => document.getElementById('filterJewishGroupInput').focus(), 50);
+}
+function hideFilterAddGroupForm() {
+  document.getElementById('filterJewishAddForm').style.display = 'none';
+  document.getElementById('filterAddGroupBtn').style.display = '';
+  document.getElementById('filterJewishGroupInput').value = '';
+}
+
+async function addFilterNonJewish() {
+  const input = document.getElementById('filterNonJewishInput');
+  const word  = input.value.trim().toLowerCase();
+  if (!word || _filterNonJewish.includes(word)) { input.value = ''; return; }
+  _filterNonJewish = [..._filterNonJewish, word];
+  input.value = '';
+  await saveFilters();
+  renderFiltersPanel();
+}
+
+async function removeFilterNonJewish(word) {
+  _filterNonJewish = _filterNonJewish.filter(k => k !== word);
+  await saveFilters();
+  renderFiltersPanel();
+}
+
+async function addFilterJewishGroup() {
+  const input    = document.getElementById('filterJewishGroupInput');
+  const spellings = input.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!spellings.length) return;
+  _filterJewish = [..._filterJewish, spellings];
+  hideFilterAddGroupForm();
+  await saveFilters();
+  renderFiltersPanel();
+}
+
+async function removeFilterJewishGroup(gi) {
+  const name = (_filterJewish[gi] || ['?'])[0];
+  if (!confirm(`Remove the "${name}" holiday group?`)) return;
+  _filterJewish = _filterJewish.filter((_, i) => i !== gi);
+  await saveFilters();
+  renderFiltersPanel();
+}
+
+async function addFilterJewishSpelling(gi) {
+  const input = document.getElementById(`fgspell-${gi}`);
+  const word  = (input.value || '').trim().toLowerCase();
+  if (!word || !_filterJewish[gi] || _filterJewish[gi].includes(word)) { if (input) input.value = ''; return; }
+  _filterJewish[gi] = [..._filterJewish[gi], word];
+  input.value = '';
+  await saveFilters();
+  renderFiltersPanel();
+}
+
+async function removeFilterJewishSpelling(gi, spelling) {
+  if (!_filterJewish[gi]) return;
+  const newGroup = _filterJewish[gi].filter(s => s !== spelling);
+  if (newGroup.length === 0) {
+    _filterJewish = _filterJewish.filter((_, i) => i !== gi);
+  } else {
+    _filterJewish[gi] = newGroup;
+  }
+  await saveFilters();
+  renderFiltersPanel();
 }
 
 // ─── ADMIN PHOTO REVIEW ────────────────────────────────────────────────────────
@@ -3498,9 +3700,9 @@ function getKeywordFilters() {
     .map(cb => cb.value).join(' ');
 }
 
-// Jewish holiday photos excluded unless the search also mentions that holiday.
-// Prevents e.g. Hanukkah menorah photos from appearing in generic candle searches.
-const HOLIDAY_FILTER = [
+// Default filter lists — live runtime copies (_filterNonJewish, _filterJewish) are loaded
+// from Firebase on init and may differ; editing in the Filters admin tab updates Firebase.
+const _HOLIDAY_FILTER_DEFAULT = [
   ['hanukkah', 'chanukah', 'hanukah', 'channukah', 'hannukah', 'chanukkah', 'hanuka', 'chanuka'],
   ['passover', 'pesach', 'seder'],
   ['sukkot', 'sukkos', 'succot', 'succos', 'sukkah', 'succah'],
@@ -3510,9 +3712,7 @@ const HOLIDAY_FILTER = [
   ['shavuot', 'shavuos', 'shavuoth'],
   ['simchat torah', 'simchas torah'],
 ];
-
-// Non-Jewish holiday photos always excluded — these will never be appropriate for synagogue use.
-const NON_JEWISH_HOLIDAY_FILTER = [
+const _NON_JEWISH_FILTER_DEFAULT = [
   'christmas', 'xmas', 'christmas tree', 'santa claus', 'santa', 'nativity', 'advent',
   'easter', 'easter egg', 'easter bunny',
   'ramadan', 'eid', 'eid al-fitr', 'eid al-adha', 'iftar',
@@ -3524,11 +3724,14 @@ const NON_JEWISH_HOLIDAY_FILTER = [
   'dussehra', 'holi',
 ];
 
+let _filterJewish    = _HOLIDAY_FILTER_DEFAULT.map(g => [...g]);
+let _filterNonJewish = [..._NON_JEWISH_FILTER_DEFAULT];
+
 function isHolidayMismatch(altText, searchTerms) {
   const alt = (altText || '').toLowerCase();
   const search = (searchTerms || '').toLowerCase();
-  if (NON_JEWISH_HOLIDAY_FILTER.some(s => alt.includes(s))) return true;
-  return HOLIDAY_FILTER.some(spellings =>
+  if (_filterNonJewish.some(s => alt.includes(s))) return true;
+  return _filterJewish.some(spellings =>
     spellings.some(s => alt.includes(s)) && !spellings.some(s => search.includes(s))
   );
 }
@@ -4284,6 +4487,7 @@ loadFavorites();
 loadBlocked();
 loadCustomSearchTerms();
 loadNegativeKeywords();
+loadFilters();
 loadReportCount();
 updateKeyUI();
 loadCuratedJson();
@@ -4297,6 +4501,7 @@ if (sessionStorage.getItem('vtAdminToken')) {
     renderAdminReviewPanel();
     renderBlockedPanel();
     renderKeywordsPanel();
+    renderFiltersPanel();
     renderSearchTermsEditor();
     loadReports().then(renderReportsPanel);
   }, 600);
