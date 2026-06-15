@@ -2,6 +2,11 @@
 
 ---
 
+## v2.76 — June 2026
+- Non-Jewish holidays (Christmas, Easter, Ramadan, Diwali, Halloween, Kwanzaa, etc.) always filtered from photo results — applies in live search, per-prayer refresh, and admin review
+
+---
+
 ## v2.75 — June 2026
 - Sim Shalom added to prayer library (morning tag, peaceful sunrise search terms)
 - Sim Shalom added to Weekday morning preset after Oseh Shalom
