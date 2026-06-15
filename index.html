@@ -1577,7 +1577,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.80</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.81</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3637,28 +3637,29 @@ async function refreshCuratedLibrary() {
     try {
       const ctx = document.getElementById('ctx') ? document.getElementById('ctx').value.trim() : '';
       const q = encodeURIComponent(buildSearchQuery(prayer, ctx));
-      const res = await fetch(
-        `https://api.pexels.com/v1/search?query=${q}&per_page=20&orientation=landscape`,
-        { headers: { Authorization: apiKey } }
-      );
-      if (!res.ok) throw new Error('API ' + res.status);
-      const data = await res.json();
       const prayerBlocked = blockedData[prayer.id] || {};
       const blocklistLower = negativeKeywords.map(k => k.toLowerCase());
-      curated[prayer.id] = (data.photos || [])
-        .filter(p => !isBlockedValue(prayerBlocked[String(p.id)]))
-        .filter(p => {
-          const text = (p.alt || '').toLowerCase();
-          return !blocklistLower.some(kw => text.includes(kw));
-        })
-        .filter(p => !isHolidayMismatch(p.alt, prayer.searchTerms))
-        .map(p => ({
-          id: p.id,
-          caption: p.alt || p.photographer,
-          src: p.src.large2x || p.src.large,
-          pexelsUrl: p.url,
-          photographer: p.photographer,
-        }));
+      const photos = [];
+      let page = 1;
+      while (photos.length < 8 && page <= 5) {
+        const res = await fetch(
+          `https://api.pexels.com/v1/search?query=${q}&per_page=15&page=${page}&orientation=landscape`,
+          { headers: { Authorization: apiKey } }
+        );
+        if (!res.ok) throw new Error('API ' + res.status);
+        const data = await res.json();
+        const batch = data.photos || [];
+        for (const p of batch) {
+          if (photos.length >= 8) break;
+          if (isBlockedValue(prayerBlocked[String(p.id)])) continue;
+          if (blocklistLower.some(kw => (p.alt || '').toLowerCase().includes(kw))) continue;
+          if (isHolidayMismatch(p.alt, prayer.searchTerms)) continue;
+          photos.push({ id: p.id, caption: p.alt || p.photographer, src: p.src.large2x || p.src.large, pexelsUrl: p.url, photographer: p.photographer });
+        }
+        if (batch.length < 15) break;
+        page++;
+      }
+      curated[prayer.id] = photos;
     } catch (e) {
       curated[prayer.id] = [];
     }
