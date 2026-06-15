@@ -19,9 +19,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Fetch curated photos from Pexels
+      - name: Fetch curated photos from Pexels and Unsplash
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node .github/scripts/refresh-curated.js
 

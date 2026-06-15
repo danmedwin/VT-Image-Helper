@@ -1590,7 +1590,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.83</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.84</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3968,24 +3968,24 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
 }
 
 function photoCardHtml(prayerId, photo, isLive) {
-  const src = isLive
-    ? photo.src
-    : `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=520`;
-  const sourceUrl = isLive ? (photo.sourceUrl || '') : `https://www.pexels.com/photo/${photo.id}/`;
-  const sourceLabel = (isLive && photo.source === 'unsplash') ? 'Unsplash' : 'Pexels';
+  const src = photo.src ||
+    `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=520`;
+  const sourceUrl = photo.sourceUrl || `https://www.pexels.com/photo/${photo.id}/`;
+  const sourceLabel = photo.source === 'unsplash' ? 'Unsplash' : 'Pexels';
   // Curated captions are unreliable (IDs may not match intended photos), so omit them
   const captionText = isLive
     ? photo.caption + (photo.photographer
         ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`
         : '')
     : '';
-  const srcAttr = isLive ? `data-src="${photo.src}"` : '';
+  const photoSrc = photo.src || '';
+  const srcAttr = photoSrc ? `data-src="${photoSrc}"` : '';
   const safeCaption = (photo.caption || '').replace(/"/g, '&quot;');
   const safePhotog = (photo.photographer || '').replace(/"/g, '&quot;');
   return `
     <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
          data-caption="${safeCaption}" data-photographer="${safePhotog}" data-source-url="${sourceUrl}"
-         onclick="selectPhoto('${prayerId}', '${photo.id}', '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${isLive ? photo.src : ''}')">
+         onclick="selectPhoto('${prayerId}', '${photo.id}', '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${photoSrc}')">
       <input type="radio" name="${prayerId}" value="${photo.id}">
       <img src="${src}" loading="lazy" alt="${photo.caption}" onerror="this.closest('.img-card').style.display='none'">
       <div class="img-caption">

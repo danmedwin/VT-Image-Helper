@@ -1,22 +1,28 @@
 #!/usr/bin/env node
-// Refreshes curated.json with Pexels photos filtered by Claude vision analysis.
-// Each prayer fetches up to 10 candidates from Pexels; Claude scores each for
-// "clear space suitable for text overlay on a projected slide." Favorited photos
-// are preserved regardless of Claude score; blocked photos are excluded entirely.
-// Requires: PEXELS_API_KEY (mandatory), ANTHROPIC_API_KEY (optional — skips analysis if absent)
+// Refreshes curated.json with photos from Pexels and/or Unsplash, filtered by Claude vision.
+// Each prayer fetches up to CANDIDATES_PER_PRAYER candidates from each active source;
+// Claude scores each for "clear space suitable for text overlay on a projected slide."
+// Favorited photos are preserved regardless of Claude score; blocked photos are excluded.
+// Requires at least one of: PEXELS_API_KEY, UNSPLASH_ACCESS_KEY
+// Optional: ANTHROPIC_API_KEY (skips Claude visual analysis if absent)
 
 const https = require('https');
 const fs    = require('fs');
 const path  = require('path');
 
 const PEXELS_KEY    = process.env.PEXELS_API_KEY;
+const UNSPLASH_KEY  = process.env.UNSPLASH_ACCESS_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const FIREBASE_URL  = 'https://vt-image-helper-default-rtdb.firebaseio.com';
 const CLAUDE_MODEL  = 'claude-haiku-4-5-20251001';
 const CANDIDATES_PER_PRAYER = 10;
 const TARGET_PER_PRAYER     = 4;
+const UTM = '?utm_source=vt_image_helper&utm_medium=referral';
 
-if (!PEXELS_KEY) { console.error('✗ PEXELS_API_KEY is not set'); process.exit(1); }
+if (!PEXELS_KEY && !UNSPLASH_KEY) {
+  console.error('✗ Neither PEXELS_API_KEY nor UNSPLASH_ACCESS_KEY is set');
+  process.exit(1);
+}
 if (!ANTHROPIC_KEY) { console.warn('⚠ ANTHROPIC_API_KEY not set — skipping visual analysis'); }
 
 const PRAYERS = [
@@ -41,6 +47,7 @@ const PRAYERS = [
   { id: 'kiddushshabbat', searchTerms: 'wine glass grapes vineyard kiddush' },
   { id: 'motzi',          searchTerms: 'challah bread golden loaf fresh baked' },
   { id: 'osehshalom',     searchTerms: 'white dove peace sky serene blue' },
+  { id: 'simshalomtova',  searchTerms: 'sunrise peaceful light blessing morning rays' },
   { id: 'aleinu',         searchTerms: 'child planting nature world hope future' },
   { id: 'kaddish',        searchTerms: 'candle flame memory sunset quiet light' },
   { id: 'einkeloheinu',        searchTerms: 'joyful celebration music light festive' },
@@ -123,14 +130,47 @@ async function pexelsFetchById(photoId) {
   return JSON.parse(body);
 }
 
-function toPhotoObj(p) {
+function toPexelsPhotoObj(p) {
   return {
-    id:          p.id,
-    caption:     p.alt || p.photographer,
-    src:         p.src.large2x || p.src.large,
-    srcMedium:   p.src.medium,   // used for Claude vision analysis (faster)
-    pexelsUrl:   p.url,
+    id:           p.id,
+    caption:      p.alt || p.photographer,
+    src:          p.src.large2x || p.src.large,
+    srcMedium:    p.src.medium,
+    sourceUrl:    p.url,
     photographer: p.photographer,
+    source:       'pexels',
+  };
+}
+
+// ─── UNSPLASH ────────────────────────────────────────────────────────────────
+
+async function unsplashSearch(query, perPage = CANDIDATES_PER_PRAYER) {
+  const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`;
+  const { status, body } = await httpGet(url, { Authorization: 'Client-ID ' + UNSPLASH_KEY });
+  if (status === 429) throw new Error('Unsplash rate limit (429)');
+  if (status !== 200) throw new Error(`Unsplash HTTP ${status}`);
+  return JSON.parse(body);
+}
+
+async function unsplashFetchById(photoId) {
+  const { status, body } = await httpGet(
+    `https://api.unsplash.com/photos/${photoId}`,
+    { Authorization: 'Client-ID ' + UNSPLASH_KEY }
+  );
+  if (status !== 200) return null;
+  return JSON.parse(body);
+}
+
+function toUnsplashPhotoObj(p) {
+  return {
+    id:           p.id,
+    caption:      p.alt_description || p.description || p.user.name,
+    src:          p.urls.regular,
+    srcMedium:    p.urls.small,
+    sourceUrl:    'https://unsplash.com/photos/' + p.id + UTM,
+    photographer: p.user.name,
+    photographerUrl: p.user.links.html + UTM,
+    source:       'unsplash',
   };
 }
 
@@ -256,7 +296,10 @@ async function evaluatePhoto(photoUrl, claudePrompt, warnings) {
 
 async function main() {
   const warnings = [];
-  let pexelsFailures = 0;
+  let pexelsFailures  = 0;
+  let unsplashFailures = 0;
+  const sources = [PEXELS_KEY && 'Pexels', UNSPLASH_KEY && 'Unsplash'].filter(Boolean);
+  console.log(`Sources: ${sources.join(' + ')}`);
 
   console.log('Reading Firebase data…');
   const [favorites, blocked, customTerms, blockedKeywordsRaw] = await Promise.all([
@@ -270,7 +313,6 @@ async function main() {
     if (customTerms[prayer.id]) prayer.searchTerms = customTerms[prayer.id];
   }
 
-  // Build Claude evaluation prompt from visual blocklist + aggregated block reasons
   const negativeKeywords = Array.isArray(blockedKeywordsRaw) ? blockedKeywordsRaw : [];
   const avoidCriteria    = aggregateBlockReasons(blocked);
   const claudePrompt     = buildClaudePrompt(negativeKeywords, avoidCriteria);
@@ -294,35 +336,61 @@ async function main() {
         .map(([photoId]) => String(photoId))
     );
 
-    // 1. Fresh Pexels search (fetch extra candidates for Claude to filter down)
-    let candidates = [];
-    try {
-      const data = await pexelsSearch(searchTerms);
-      candidates = (data.photos || [])
-        .map(toPhotoObj)
-        .filter(p => !blockedInPrayer.has(String(p.id)))
-        .filter(p => !isHolidayMismatch(p.caption, searchTerms));
-      process.stdout.write(`${candidates.length} candidates`);
-    } catch (e) {
-      const msg = `Pexels search failed for ${id}: ${e.message}`;
-      warnings.push(msg);
-      pexelsFailures++;
-      process.stdout.write(`search failed (${e.message})`);
+    // 1. Fetch candidates from each active source in parallel
+    const fetchPromises = [];
+    if (PEXELS_KEY) {
+      fetchPromises.push(
+        pexelsSearch(searchTerms)
+          .then(data => (data.photos || []).map(toPexelsPhotoObj))
+          .catch(e => {
+            warnings.push(`Pexels search failed for ${id}: ${e.message}`);
+            pexelsFailures++;
+            process.stdout.write(`[Pexels err] `);
+            return [];
+          })
+      );
     }
+    if (UNSPLASH_KEY) {
+      fetchPromises.push(
+        unsplashSearch(searchTerms)
+          .then(data => (data.results || []).map(toUnsplashPhotoObj))
+          .catch(e => {
+            warnings.push(`Unsplash search failed for ${id}: ${e.message}`);
+            unsplashFailures++;
+            process.stdout.write(`[Unsplash err] `);
+            return [];
+          })
+      );
+    }
+
+    const results = await Promise.all(fetchPromises);
+
+    // Interleave results from each source, then filter blocked/holiday photos
+    const interleaved = [];
+    const maxLen = Math.max(...results.map(r => r.length));
+    for (let j = 0; j < maxLen; j++) {
+      for (const sourceResults of results) {
+        if (j < sourceResults.length) interleaved.push(sourceResults[j]);
+      }
+    }
+    const candidates = interleaved
+      .filter(p => !blockedInPrayer.has(String(p.id)))
+      .filter(p => !isHolidayMismatch(p.caption, searchTerms));
+
+    process.stdout.write(`${candidates.length} candidates`);
 
     // 2. Claude visual filter — keep up to TARGET_PER_PRAYER that pass
     let freshPhotos = [];
     if (candidates.length && ANTHROPIC_KEY) {
       process.stdout.write(' → filtering…');
       for (const photo of candidates) {
-        await sleep(120); // avoid Claude rate limits
+        await sleep(120);
         const passes = await evaluatePhoto(photo.srcMedium || photo.src, claudePrompt, warnings);
         if (passes) {
           freshPhotos.push(photo);
           if (freshPhotos.length >= TARGET_PER_PRAYER) break;
         }
       }
-      // If Claude rejected everything, fall back to unfiltered candidates
       if (freshPhotos.length === 0 && candidates.length > 0) {
         const msg = `Claude rejected all candidates for ${id} — using unfiltered`;
         warnings.push(msg);
@@ -332,11 +400,11 @@ async function main() {
         process.stdout.write(` ${freshPhotos.length} pass`);
       }
     } else {
-      // No Claude key — take first TARGET_PER_PRAYER unblocked candidates
       freshPhotos = candidates.slice(0, TARGET_PER_PRAYER);
     }
 
     // 3. Fetch favorited photos not already in fresh results
+    // Detect source by ID shape: numeric string = Pexels, else = Unsplash
     const freshIds = new Set(freshPhotos.map(p => String(p.id)));
     const favoritedIds = Object.entries(favorites[id] || {})
       .filter(([photoId, count]) => count > 0 && !blockedInPrayer.has(photoId))
@@ -347,10 +415,19 @@ async function main() {
     for (const photoId of missingFavIds) {
       await sleep(150);
       try {
-        const p = await pexelsFetchById(photoId);
-        if (p) {
-          protectedPhotos.push({ ...toPhotoObj(p), favorited: true });
-          process.stdout.write(` +fav(${photoId})`);
+        const isPexels = /^\d+$/.test(photoId);
+        if (isPexels && PEXELS_KEY) {
+          const p = await pexelsFetchById(photoId);
+          if (p) {
+            protectedPhotos.push({ ...toPexelsPhotoObj(p), favorited: true });
+            process.stdout.write(` +fav(${photoId})`);
+          }
+        } else if (!isPexels && UNSPLASH_KEY) {
+          const p = await unsplashFetchById(photoId);
+          if (p) {
+            protectedPhotos.push({ ...toUnsplashPhotoObj(p), favorited: true });
+            process.stdout.write(` +fav(${photoId})`);
+          }
         }
       } catch (e) {
         warnings.push(`Could not fetch favorited photo ${photoId} for ${id}: ${e.message}`);
@@ -368,6 +445,7 @@ async function main() {
   const today = new Date().toISOString().split('T')[0];
   const out = {
     refreshed: today,
+    sources,
     claudeFiltered: !!ANTHROPIC_KEY,
     prayers,
     ...(warnings.length ? { warnings } : {}),
@@ -385,7 +463,6 @@ async function main() {
     console.log('✓ No warnings.');
   }
 
-  // Write GitHub Actions step summary (visible in the Actions UI)
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (summaryPath) {
     const lines = [
@@ -393,6 +470,7 @@ async function main() {
       '',
       `| | |`,
       `|---|---|`,
+      `| Sources | ${sources.join(' + ')} |`,
       `| Prayers refreshed | ${PRAYERS.length} |`,
       `| Claude visual filter | ${ANTHROPIC_KEY ? `✓ (${CLAUDE_MODEL})` : '✗ (no key)'} |`,
       `| Warnings | ${warnings.length} |`,
@@ -405,12 +483,16 @@ async function main() {
     fs.appendFileSync(summaryPath, lines.join('\n') + '\n');
   }
 
-  // Exit non-zero to trigger GitHub email alert on significant failures
-  const claudeDown = ANTHROPIC_KEY && claudeConsecutiveFailures >= CLAUDE_FAILURE_THRESHOLD;
-  const pexelsDown = pexelsFailures > PRAYERS.length / 2;
+  const claudeDown   = ANTHROPIC_KEY && claudeConsecutiveFailures >= CLAUDE_FAILURE_THRESHOLD;
+  const pexelsDown   = PEXELS_KEY   && pexelsFailures   > PRAYERS.length / 2;
+  const unsplashDown = UNSPLASH_KEY && unsplashFailures > PRAYERS.length / 2;
 
   if (pexelsDown) {
     console.error(`\n✗ Pexels API failed for ${pexelsFailures}/${PRAYERS.length} prayers — check PEXELS_API_KEY secret`);
+    process.exit(1);
+  }
+  if (unsplashDown) {
+    console.error(`\n✗ Unsplash API failed for ${unsplashFailures}/${PRAYERS.length} prayers — check UNSPLASH_ACCESS_KEY secret`);
     process.exit(1);
   }
   if (claudeDown) {
