@@ -1218,9 +1218,10 @@
     </div>
     <!-- Full-width input box -->
     <div class="svc-section-box" style="margin-bottom:16px;">
+      <p class="setup-section-label" style="margin-bottom:8px;">Add prayers: <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;">Type or paste in a prayer, multiple prayers, or a full service outline here.</span></p>
       <div class="svc-input-row">
         <textarea id="outline" class="svc-paste" rows="3"
-          placeholder="Type or paste in a prayer, multiple prayers, or a full service outline here."></textarea>
+          placeholder="e.g. Lecha Dodi&#10;Barchu, Shema, V'ahavta&#10;Amidah, Kedushah&#10;Oseh Shalom, Aleinu, Kaddish"></textarea>
         <button class="btn-add-to-list" onclick="parseOutlineToService()">Add to list</button>
       </div>
       <div class="svc-quickstart" style="margin-top:8px;margin-bottom:0;">
@@ -1521,7 +1522,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.60</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.61</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.

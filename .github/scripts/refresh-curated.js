@@ -26,6 +26,7 @@ const PRAYERS = [
   { id: 'barchu',         searchTerms: 'morning horizon gathering nature sunrise meadow' },
   { id: 'yotzeror',       searchTerms: 'sunrise golden light sky dawn radiant' },
   { id: 'ahavarabbah',    searchTerms: 'open book warm light love embrace' },
+  { id: 'ahavatolam',    searchTerms: 'night stars love open book Torah evening candlelight' },
   { id: 'shema',          searchTerms: 'vast sky horizon single light unity one' },
   { id: 'vahavta',        searchTerms: 'mezuzah doorway love family path forward' },
   { id: 'michamocha',     searchTerms: 'ocean sea waves freedom shore sunrise' },
@@ -47,11 +48,9 @@ const PRAYERS = [
   { id: 'yigdal',         searchTerms: 'sunrise expansive sky mountains grandeur' },
   { id: 'psalm150',       searchTerms: 'musical instruments trumpet praise joyful' },
   { id: 'mahrabu',        searchTerms: 'wildflowers field nature wonder creation colorful' },
-  { id: 'kavanah',        searchTerms: 'tree roots grounded stillness meditation' },
   { id: 'hashkivenu',     searchTerms: 'sunset evening dusk peaceful sky rest' },
   { id: 'veshamru',       searchTerms: 'shabbat rest peaceful nature covenant light' },
   { id: 'torahblessings', searchTerms: 'open book scroll learning light wisdom' },
-  { id: 'wherever',       searchTerms: 'globe world map wandering journey' },
 ];
 
 // ─── HTTP HELPERS ─────────────────────────────────────────────────────────────
