@@ -2,6 +2,13 @@
 
 ---
 
+## v2.74 — June 2026
+- Photo fetching now paginates (up to 5 pages × 15) until 8 non-blocked, non-holiday results are found — grids stay full regardless of how many photos are blocked
+- EmailJS report emails fixed: photo thumbnail and Pexels link now passed as pre-built HTML strings; removes invalid `{{#if}}` syntax that caused "corrupted variables" error
+- Unrecognized prayers silently submitted to Firebase (and admin emailed) when user saves search terms — no visible submit button
+
+---
+
 ## v2.72 — June 2026
 - EmailJS admin notifications: prayer submissions and image flags now send an email with action buttons
 - Approve/Dismiss links for prayer submissions; Block image/Dismiss links for reports
