@@ -1523,7 +1523,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.66</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.67</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3450,14 +3450,15 @@ function pexelsSearchUrl(prayer, context) {
 // ─── PEXELS API FETCH ──────────────────────────────────────────────────────────
 
 async function fetchLivePhotos(prayer, context, apiKey) {
-  const q = encodeURIComponent(buildSearchQuery(prayer, context));
-  const url = `https://api.pexels.com/v1/search?query=${q}&per_page=8&orientation=landscape`;
+  const query = buildSearchQuery(prayer, context);
+  const q = encodeURIComponent(query);
+  const url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&orientation=landscape`;
   const res = await fetch(url, { headers: { Authorization: apiKey } });
   if (!res.ok) throw new Error('Pexels API error: ' + res.status);
   const data = await res.json();
-  const query = buildSearchQuery(prayer, context);
   return (data.photos || [])
     .filter(p => !isHolidayMismatch(p.alt, query))
+    .slice(0, 8)
     .map(p => ({
       id: p.id,
       caption: p.alt || p.photographer,
@@ -3705,12 +3706,13 @@ async function refinePrayer(prayerId, inputId, context) {
 
   try {
     const q = encodeURIComponent(terms);
-    const url = `https://api.pexels.com/v1/search?query=${q}&per_page=8&orientation=landscape`;
+    const url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&orientation=landscape`;
     const res = await fetch(url, { headers: { Authorization: apiKey } });
     if (!res.ok) throw new Error('Pexels API error: ' + res.status);
     const data = await res.json();
     const photos = (data.photos || [])
       .filter(p => !isHolidayMismatch(p.alt, terms))
+      .slice(0, 8)
       .map(p => ({
         id: p.id,
         caption: p.alt || p.photographer,
