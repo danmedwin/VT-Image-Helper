@@ -2,6 +2,11 @@
 
 ---
 
+## v2.78 — June 2026
+- Merged Blocklist tab into Filters tab — Visual blocklist now appears as a third section below Always excluded and Jewish holidays
+
+---
+
 ## v2.77 — June 2026
 - New **Filters** admin tab with two editable sections:
   - **Always excluded** (teal chips): keywords that remove a photo regardless of search terms — non-Jewish holidays, etc.
