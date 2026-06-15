@@ -2,6 +2,11 @@
 
 ---
 
+## v2.80 — June 2026
+- Filters tab auto-seeds Firebase with default lists on first admin open — all filter data is now Firebase-backed from day one, no manual edit required to initialize
+
+---
+
 ## v2.79 — June 2026
 - Filters tab reordered: Excluded keywords → Excluded visuals → Jewish holidays
 - Renamed "Always excluded" → "Excluded keywords"; "Visual blocklist" → "Excluded visuals"
