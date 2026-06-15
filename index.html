@@ -1376,7 +1376,7 @@
     </div>
 
     <div class="admin-tab-panel" id="adminTab-filters">
-      <h3 style="color:#1d7a6b;margin:0 0 4px;">&#128683; Always excluded</h3>
+      <h3 style="color:#1d7a6b;margin:0 0 4px;">&#128683; Excluded keywords</h3>
       <p style="font-size:12px;color:var(--text-muted);margin:0 0 2px;">
         Any photo whose alt text contains these keywords is removed from results, no matter what prayer is being searched.
       </p>
@@ -1386,6 +1386,19 @@
                placeholder="e.g. halloween, diwali&hellip;" style="border-color:#8ecfc8;"
                onkeydown="if(event.key==='Enter') addFilterNonJewish()">
         <button class="keyword-add-btn" style="background:#1d7a6b;" onclick="addFilterNonJewish()">Add</button>
+      </div>
+
+      <hr class="filter-section-divider">
+
+      <h3 style="color:#b85c00;margin:0 0 4px;">&#128287; Excluded visuals</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 2px;">
+        Claude visually identifies these subjects and excludes any photo containing them during the monthly refresh. Works even when Pexels search can&rsquo;t filter them out.
+      </p>
+      <div class="keyword-tags" id="keywordTags"></div>
+      <div class="keyword-add-row">
+        <input class="keyword-add-input" id="keywordAddInput" type="text" placeholder="e.g. crucifix, Arabic text&hellip;"
+               onkeydown="if(event.key==='Enter') addNegativeKeyword()">
+        <button class="keyword-add-btn" onclick="addNegativeKeyword()">Add</button>
       </div>
 
       <hr class="filter-section-divider">
@@ -1409,19 +1422,6 @@
           <button onclick="hideFilterAddGroupForm()"
                   style="font-size:12px;background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:5px;padding:5px 10px;cursor:pointer;">Cancel</button>
         </div>
-      </div>
-
-      <hr class="filter-section-divider">
-
-      <h3 style="color:#b85c00;margin:0 0 4px;">&#128287; Visual blocklist</h3>
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 2px;">
-        Claude visually identifies these subjects and excludes any photo containing them during the monthly refresh. Works even when Pexels search can&rsquo;t filter them out.
-      </p>
-      <div class="keyword-tags" id="keywordTags"></div>
-      <div class="keyword-add-row">
-        <input class="keyword-add-input" id="keywordAddInput" type="text" placeholder="e.g. crucifix, Arabic text&hellip;"
-               onkeydown="if(event.key==='Enter') addNegativeKeyword()">
-        <button class="keyword-add-btn" onclick="addNegativeKeyword()">Add</button>
       </div>
     </div>
 
@@ -1577,7 +1577,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.78</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.79</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
