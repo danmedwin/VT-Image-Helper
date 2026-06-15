@@ -1202,6 +1202,7 @@
   .lb-btn.lb-selected { background: rgba(80,140,255,0.45); border-color: rgba(120,170,255,0.7); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -1523,7 +1524,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.71</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.72</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2031,6 +2032,53 @@ const MY_FAVORITES_KEY     = 'vtMyFavorites';
 const FIREBASE_URL         = 'https://vt-image-helper-default-rtdb.firebaseio.com';
 const FIREBASE_API_KEY     = 'AIzaSyC6QkjNg_k731ICmagN2tk-VjDSIQVA8Ng';
 const ADMIN_UID            = 'tizvHyzJ7PdsPvFpbEk4CdSPUk42';
+const EMAILJS_PUBLIC_KEY   = 'ZrMH6Kf4C6InKj7Cx';
+const EMAILJS_SERVICE      = 'service_zyrpz4j';
+const EMAILJS_TEMPLATE     = 'template_nhymtca';
+const APP_URL              = 'https://danmedwin.github.io/VT-Image-Helper/';
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+var _vtPendingAction = null;
+
+function _getPrayerLabel(id) {
+  var p = PRAYERS.find(function(p) { return p.id === id; })
+       || _customPrayers.find(function(p) { return p.id === id; });
+  return p ? (p.names[0] || id) : id;
+}
+
+function _sendAdminEmail(subject, message, action1Label, action1Url, action2Label, action2Url) {
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+    subject: subject,
+    message: message,
+    action1_label: action1Label,
+    action1_url: action1Url,
+    action2_label: action2Label,
+    action2_url: action2Url,
+  }).catch(function(e) { console.warn('EmailJS send failed:', e); });
+}
+
+function _handleVtAction() {
+  var params = new URLSearchParams(window.location.search);
+  var action = params.get('vtAction');
+  if (!action) return;
+  _vtPendingAction = { action: action, id: params.get('id'), prayer: params.get('prayer'), photo: params.get('photo') };
+  window.history.replaceState({}, '', window.location.pathname);
+  if (sessionStorage.getItem('vtAdminToken')) {
+    setTimeout(_executeVtAction, 800);
+  } else {
+    showAdminLoginModal();
+  }
+}
+
+function _executeVtAction() {
+  if (!_vtPendingAction) return;
+  var a = _vtPendingAction;
+  _vtPendingAction = null;
+  if (a.action === 'approve-prayer')  { approveSubmission(a.id); }
+  else if (a.action === 'dismiss-prayer') { dismissSubmission(a.id); }
+  else if (a.action === 'block-report')   { approveReport(a.prayer, a.photo); }
+  else if (a.action === 'dismiss-report') { dismissReport(a.prayer, a.photo); }
+}
 
 function authParam() {
   const t = sessionStorage.getItem('vtAdminToken');
@@ -2285,6 +2333,7 @@ async function submitAdminLogin() {
     renderKeywordsPanel();
     renderSearchTermsEditor();
     loadReports().then(renderReportsPanel);
+    if (_vtPendingAction) setTimeout(_executeVtAction, 800);
   } catch(e) {
     errEl.textContent = 'Network error. Try again.';
   }
@@ -2838,6 +2887,12 @@ async function saveUnrecognized(idx) {
       await fetch(`${FIREBASE_URL}/pendingPrayers/${id}.json`, {
         method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(submission),
       });
+      _sendAdminEmail(
+        'New prayer submitted: ' + name,
+        'A visitor submitted a new prayer for review.\n\nName: ' + name + '\nSearch terms: ' + (terms || '(none)'),
+        'Approve', APP_URL + '?vtAction=approve-prayer&id=' + id,
+        'Dismiss',  APP_URL + '?vtAction=dismiss-prayer&id=' + id
+      );
       _pendingPrayers.push(submission);
       updateSubmissionsBadge();
       // Add locally so it appears in search results this session (no Firebase customPrayers write)
@@ -3103,6 +3158,15 @@ async function confirmReport() {
     reportsData[prayerId][photoId] = { reported: true, reasons, notes, ts: Date.now() };
     showReportBadge();
     renderReportsPanel();
+    const _rLabel = _getPrayerLabel(prayerId);
+    _sendAdminEmail(
+      'Image flagged: ' + _rLabel,
+      'A visitor flagged a photo.\n\nPrayer: ' + _rLabel + '\nPhoto ID: ' + photoId
+        + (reasons.length ? '\nReasons: ' + reasons.join(', ') : '')
+        + (notes ? '\nNotes: ' + notes : ''),
+      'Block image', APP_URL + '?vtAction=block-report&prayer=' + prayerId + '&photo=' + photoId,
+      'Dismiss',     APP_URL + '?vtAction=dismiss-report&prayer=' + prayerId + '&photo=' + photoId
+    );
   } catch(e) { console.warn('Report save failed', e); }
   // Briefly tint the flag to confirm
   const btn = document.querySelector(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"] .btn-report`);
@@ -4157,6 +4221,7 @@ function svcDrop(e, toIdx) {
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 
 renderPrayerChips();
+_handleVtAction();
 loadPrayerLibrary();
 loadMyFavorites();
 loadFavorites();
