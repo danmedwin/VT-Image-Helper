@@ -2,6 +2,11 @@
 
 ---
 
+## v2.71 — June 2026
+Quick-start links (Friday evening · Shabbat morning · Weekday morning · Weekday evening) moved from the "Add prayers" input box to the top of the Prayer library box, just below the header.
+
+---
+
 ## v2.59 — June 2026
 - "Find images for your service" h2 + explainer paragraph moved into their own full-width rounded box
 - Input box reordered: textarea + Add to list button appear first, quick-start links below
