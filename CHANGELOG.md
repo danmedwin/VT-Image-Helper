@@ -2,6 +2,17 @@
 
 ---
 
+## v2.82 — June 2026
+- Unsplash added as a second photo source alongside Pexels
+- Admin API Keys tab now has separate Pexels and Unsplash sections
+- When both keys are set, 4 photos are fetched from each in parallel and interleaved
+- Works with either key alone (8 photos from that source) or both together
+- Per-prayer Refresh and library Refresh both use both sources
+- Photo cards link to the correct source (Pexels or Unsplash); attribution text updates dynamically
+- Report email uses a generic "View photo" link that works for either source
+
+---
+
 ## v2.81 — June 2026
 - Refresh library now paginates (up to 5 pages × 15) until 8 non-blocked photos are collected per prayer — fixes Review tab showing fewer than 8 photos for prayers with many blocked images
 
