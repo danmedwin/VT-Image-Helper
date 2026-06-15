@@ -1523,7 +1523,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.62</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.63</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1954,6 +1954,7 @@ let _termsUntagged   = false;
 // Service builder state
 let _serviceOrder       = [];  // ordered array of prayer IDs for the current service
 let _customServiceItems = {};  // id → { name, searchTerms } for user-entered unrecognized items
+let _svcNameOverrides   = {};  // id → user-edited display name for known prayers
 let _svcExpandedId      = null; // prayer ID whose search terms are currently expanded
 // Note: _dragSrcIdx is already declared below (shared with search terms drag handler)
 
@@ -3740,7 +3741,9 @@ async function findImages() {
     const prayer = PRAYERS.find(p => p.id === id);
     const termsEl = document.getElementById('svc-terms-' + id);
     if (prayer) {
-      matched.push((termsEl && termsEl.value.trim()) ? { ...prayer, searchTerms: termsEl.value.trim() } : prayer);
+      const nameOverride = _svcNameOverrides[prayer.id];
+      const p = nameOverride ? { ...prayer, names: [nameOverride, ...prayer.names.slice(1)] } : prayer;
+      matched.push((termsEl && termsEl.value.trim()) ? { ...p, searchTerms: termsEl.value.trim() } : p);
     } else if (_customServiceItems[id]) {
       const custom = _customServiceItems[id];
       const nameEl = document.getElementById('svc-name-' + id);
@@ -4011,6 +4014,7 @@ function loadServicePreset(key) {
 function clearService() {
   _serviceOrder = [];
   _customServiceItems = {};
+  _svcNameOverrides = {};
   _svcExpandedId = null;
   renderServiceList();
   renderPrayerChips();
@@ -4030,7 +4034,17 @@ function toggleServiceItem(id) {
 }
 
 function toggleSvcExpand(id) {
-  _svcExpandedId = (_svcExpandedId === id) ? null : id;
+  if (_svcExpandedId === id) {
+    const nameEl = document.getElementById('svc-name-' + id);
+    if (nameEl) {
+      const val = nameEl.value.trim();
+      if (val) _svcNameOverrides[id] = val;
+      else delete _svcNameOverrides[id];
+    }
+    _svcExpandedId = null;
+  } else {
+    _svcExpandedId = id;
+  }
   renderServiceList();
 }
 
@@ -4043,7 +4057,7 @@ function renderServiceList() {
     const custom = _customServiceItems[id];
     const isUnknown = !prayer && !!custom;
     const name = prayer
-      ? (prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1))
+      ? (_svcNameOverrides[id] || (prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1)))
       : (custom ? custom.name : id);
     const defaultTerms = prayer ? (prayer.searchTerms || prayer.names[0]) : (custom ? custom.searchTerms : '');
     const expanded = _svcExpandedId === id;
@@ -4057,8 +4071,8 @@ function renderServiceList() {
       pencilClass = hasSaved ? 'svc-item-btn' : 'svc-item-btn svc-item-btn-amber';
     }
     const expandedHtml = expanded ? `<div class="svc-terms">
-        ${isUnknown ? `<div class="svc-terms-label">Display name:</div>
-        <input id="svc-name-${id}" type="text" value="${name.replace(/"/g,'&quot;')}" placeholder="Prayer name…" style="margin-bottom:5px;">` : ''}
+        <div class="svc-terms-label">Display name:</div>
+        <input id="svc-name-${id}" type="text" value="${name.replace(/"/g,'&quot;')}" placeholder="Prayer name…" style="margin-bottom:5px;">
         <div class="svc-terms-label">${isUnknown ? 'Search terms:' : 'Search terms for this prayer:'}</div>
         <input id="svc-terms-${id}" type="text" value="${defaultTerms.replace(/"/g,'&quot;')}" placeholder="Pexels search terms…"${isUnknown ? ` oninput="onSvcTermsInput('${id}')"` : ''}>
       </div>` : '';
