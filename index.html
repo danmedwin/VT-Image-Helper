@@ -961,8 +961,8 @@
     background: var(--surface); cursor: pointer; font-size: 12px; color: var(--text-muted);
     transition: background 0.13s, border-color 0.13s, color 0.13s;
   }
-  .svc-filter-btn:hover { border-color: var(--navy-mid); color: var(--navy); }
-  .svc-filter-btn.active { background: var(--navy); border-color: var(--navy); color: white; }
+  .svc-filter-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .svc-filter-btn.active { background: var(--teal); border-color: var(--teal); color: white; }
   .tag-icon { font-size: 10px; margin-right: 2px; opacity: 0.75; }
   .tag-select {
     font-size: 11px; padding: 2px 4px; border-radius: 4px;
@@ -1523,7 +1523,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.68</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.69</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2604,12 +2604,14 @@ function tagIcon(tag) {
   return '';
 }
 
+const _TAG_OPPOSITE = { morning: 'evening', evening: 'morning', shabbat: 'weekday', weekday: 'shabbat' };
+
 function _prayerMatchesFilters(p, timeFilter, dayFilter) {
   if (!timeFilter && !dayFilter) return true;
   if (!p.tag) return true;
-  if (timeFilter && p.tag === timeFilter) return true;
-  if (dayFilter  && p.tag === dayFilter)  return true;
-  return false;
+  if (timeFilter && p.tag === _TAG_OPPOSITE[timeFilter]) return false;
+  if (dayFilter  && p.tag === _TAG_OPPOSITE[dayFilter])  return false;
+  return true;
 }
 
 function toggleChipTime(tag) {
