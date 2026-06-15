@@ -2,6 +2,12 @@
 
 ---
 
+## v2.79 — June 2026
+- Filters tab reordered: Excluded keywords → Excluded visuals → Jewish holidays
+- Renamed "Always excluded" → "Excluded keywords"; "Visual blocklist" → "Excluded visuals"
+
+---
+
 ## v2.78 — June 2026
 - Merged Blocklist tab into Filters tab — Visual blocklist now appears as a third section below Always excluded and Jewish holidays
 
