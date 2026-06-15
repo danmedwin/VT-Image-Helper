@@ -1523,7 +1523,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.65</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.66</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3709,14 +3709,16 @@ async function refinePrayer(prayerId, inputId, context) {
     const res = await fetch(url, { headers: { Authorization: apiKey } });
     if (!res.ok) throw new Error('Pexels API error: ' + res.status);
     const data = await res.json();
-    const photos = (data.photos || []).map(p => ({
-      id: p.id,
-      caption: p.alt || p.photographer,
-      src: p.src.large2x || p.src.large,
-      pexelsUrl: p.url,
-      photographer: p.photographer,
-      photographerUrl: p.photographer_url,
-    }));
+    const photos = (data.photos || [])
+      .filter(p => !isHolidayMismatch(p.alt, terms))
+      .map(p => ({
+        id: p.id,
+        caption: p.alt || p.photographer,
+        src: p.src.large2x || p.src.large,
+        pexelsUrl: p.url,
+        photographer: p.photographer,
+        photographerUrl: p.photographer_url,
+      }));
     if (photos.length === 0) {
       grid.innerHTML = '<div class="img-loading">No results for those terms. Try different keywords.</div>';
     } else {
