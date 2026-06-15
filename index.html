@@ -1524,7 +1524,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.73</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.74</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3162,6 +3162,12 @@ async function confirmReport() {
     showReportBadge();
     renderReportsPanel();
     const _rLabel = _getPrayerLabel(prayerId);
+    const _photoHtml = imgSrc
+      ? '<p><img src="' + imgSrc + '" style="max-width:100%;border-radius:6px;display:block;margin:8px 0;"></p>'
+      : '';
+    const _pexelsLink = pexelsUrl
+      ? '<p style="font-size:12px;margin-top:4px;"><a href="' + pexelsUrl + '" style="color:#1d7a6b;">View on Pexels</a></p>'
+      : '';
     _sendAdminEmail(
       'Image flagged: ' + _rLabel,
       'A visitor flagged a photo.\n\nPrayer: ' + _rLabel
@@ -3169,7 +3175,7 @@ async function confirmReport() {
         + (notes ? '\nNotes: ' + notes : ''),
       'Block image', APP_URL + '?vtAction=block-report&prayer=' + prayerId + '&photo=' + photoId,
       'Dismiss',     APP_URL + '?vtAction=dismiss-report&prayer=' + prayerId + '&photo=' + photoId,
-      { photo_url: imgSrc || '', pexels_url: pexelsUrl || '' }
+      { photo_html: _photoHtml, pexels_link: _pexelsLink }
     );
   } catch(e) { console.warn('Report save failed', e); }
   // Briefly tint the flag to confirm
@@ -3522,22 +3528,25 @@ function pexelsSearchUrl(prayer, context) {
 async function fetchLivePhotos(prayer, context, apiKey) {
   const query = buildSearchQuery(prayer, context);
   const q = encodeURIComponent(query);
-  const url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&orientation=landscape`;
-  const res = await fetch(url, { headers: { Authorization: apiKey } });
-  if (!res.ok) throw new Error('Pexels API error: ' + res.status);
-  const data = await res.json();
-  return (data.photos || [])
-    .filter(p => !isBlockedValue((blockedData[prayer.id] || {})[String(p.id)]))
-    .filter(p => !isHolidayMismatch(p.alt, query))
-    .slice(0, 8)
-    .map(p => ({
-      id: p.id,
-      caption: p.alt || p.photographer,
-      src: p.src.large2x || p.src.large,
-      pexelsUrl: p.url,
-      photographer: p.photographer,
-      photographerUrl: p.photographer_url,
-    }));
+  const blocked = blockedData[prayer.id] || {};
+  const results = [];
+  let page = 1;
+  while (results.length < 8 && page <= 5) {
+    const url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&page=${page}&orientation=landscape`;
+    const res = await fetch(url, { headers: { Authorization: apiKey } });
+    if (!res.ok) throw new Error('Pexels API error: ' + res.status);
+    const data = await res.json();
+    const photos = data.photos || [];
+    for (const p of photos) {
+      if (results.length >= 8) break;
+      if (isBlockedValue(blocked[String(p.id)])) continue;
+      if (isHolidayMismatch(p.alt, query)) continue;
+      results.push({ id: p.id, caption: p.alt || p.photographer, src: p.src.large2x || p.src.large, pexelsUrl: p.url, photographer: p.photographer, photographerUrl: p.photographer_url });
+    }
+    if (photos.length < 15) break;
+    page++;
+  }
+  return results;
 }
 
 // ─── RENDERING ─────────────────────────────────────────────────────────────────
@@ -3777,22 +3786,24 @@ async function refinePrayer(prayerId, inputId, context) {
 
   try {
     const q = encodeURIComponent(terms);
-    const url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&orientation=landscape`;
-    const res = await fetch(url, { headers: { Authorization: apiKey } });
-    if (!res.ok) throw new Error('Pexels API error: ' + res.status);
-    const data = await res.json();
-    const photos = (data.photos || [])
-      .filter(p => !isBlockedValue((blockedData[prayerId] || {})[String(p.id)]))
-      .filter(p => !isHolidayMismatch(p.alt, terms))
-      .slice(0, 8)
-      .map(p => ({
-        id: p.id,
-        caption: p.alt || p.photographer,
-        src: p.src.large2x || p.src.large,
-        pexelsUrl: p.url,
-        photographer: p.photographer,
-        photographerUrl: p.photographer_url,
-      }));
+    const blocked = blockedData[prayerId] || {};
+    const photos = [];
+    let page = 1;
+    while (photos.length < 8 && page <= 5) {
+      const url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&page=${page}&orientation=landscape`;
+      const res = await fetch(url, { headers: { Authorization: apiKey } });
+      if (!res.ok) throw new Error('Pexels API error: ' + res.status);
+      const data = await res.json();
+      const batch = data.photos || [];
+      for (const p of batch) {
+        if (photos.length >= 8) break;
+        if (isBlockedValue(blocked[String(p.id)])) continue;
+        if (isHolidayMismatch(p.alt, terms)) continue;
+        photos.push({ id: p.id, caption: p.alt || p.photographer, src: p.src.large2x || p.src.large, pexelsUrl: p.url, photographer: p.photographer, photographerUrl: p.photographer_url });
+      }
+      if (batch.length < 15) break;
+      page++;
+    }
     if (photos.length === 0) {
       grid.innerHTML = '<div class="img-loading">No results for those terms. Try different keywords.</div>';
     } else {
@@ -4057,6 +4068,8 @@ function handleSvcUnknownAction(id) {
   toggleSvcExpand(id);
 }
 
+const _submittedCustomIds = new Set();
+
 function saveSvcCustomTerms(id) {
   const termsEl = document.getElementById('svc-terms-' + id);
   const nameEl  = document.getElementById('svc-name-'  + id);
@@ -4065,6 +4078,23 @@ function saveSvcCustomTerms(id) {
     const name  = nameEl  ? nameEl.value.trim()  : '';
     if (terms) _customServiceItems[id].searchTerms = terms;
     if (name)  _customServiceItems[id].name = name;
+    // Silently notify admin of unrecognized prayer on first save
+    if (terms && !_submittedCustomIds.has(id)) {
+      _submittedCustomIds.add(id);
+      const item = _customServiceItems[id];
+      const submission = { id, names: [item.name.toLowerCase()], theme: '', searchTerms: item.searchTerms, tag: '_none_', status: 'pending' };
+      fetch(FIREBASE_URL + '/pendingPrayers/' + id + '.json', {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(submission),
+      }).catch(function() {});
+      _pendingPrayers.push(submission);
+      updateSubmissionsBadge();
+      _sendAdminEmail(
+        'Unrecognized prayer: ' + item.name,
+        'A visitor searched for an unrecognized prayer.\n\nName: ' + item.name + '\nSearch terms: ' + item.searchTerms,
+        'Add to library', APP_URL + '?vtAction=approve-prayer&id=' + id,
+        'Dismiss',        APP_URL + '?vtAction=dismiss-prayer&id=' + id
+      );
+    }
   }
   _svcExpandedId = null;
   renderServiceList();
