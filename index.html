@@ -1524,7 +1524,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.72</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.73</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2046,15 +2046,17 @@ function _getPrayerLabel(id) {
   return p ? (p.names[0] || id) : id;
 }
 
-function _sendAdminEmail(subject, message, action1Label, action1Url, action2Label, action2Url) {
-  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+function _sendAdminEmail(subject, message, action1Label, action1Url, action2Label, action2Url, extras) {
+  var params = Object.assign({
     subject: subject,
     message: message,
     action1_label: action1Label,
     action1_url: action1Url,
     action2_label: action2Label,
     action2_url: action2Url,
-  }).catch(function(e) { console.warn('EmailJS send failed:', e); });
+  }, extras || {});
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
+    .catch(function(e) { console.warn('EmailJS send failed:', e); });
 }
 
 function _handleVtAction() {
@@ -3125,11 +3127,12 @@ let reportsData    = {};
 
 function showReportModal(prayerId, photoId, evt) {
   evt.stopPropagation();
-  _pendingReport = { prayerId, photoId };
   const card  = document.querySelector(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`);
   const imgEl = card ? card.querySelector('img') : null;
+  const imgSrc = imgEl ? imgEl.src : null;
+  _pendingReport = { prayerId, photoId, imgSrc, pexelsUrl: 'https://www.pexels.com/photo/' + photoId + '/' };
   const thumb = document.getElementById('reportModalThumb');
-  if (imgEl && imgEl.src) { thumb.src = imgEl.src; thumb.style.display = 'block'; }
+  if (imgSrc) { thumb.src = imgSrc; thumb.style.display = 'block'; }
   else { thumb.style.display = 'none'; }
   document.querySelectorAll('#reportModalOverlay input[type="checkbox"]').forEach(cb => cb.checked = false);
   document.getElementById('reportModalNotes').value = '';
@@ -3143,7 +3146,7 @@ function closeReportModal() {
 
 async function confirmReport() {
   if (!_pendingReport) return;
-  const { prayerId, photoId } = _pendingReport;
+  const { prayerId, photoId, imgSrc, pexelsUrl } = _pendingReport;
   const reasons = [...document.querySelectorAll('#reportModalOverlay input[type="checkbox"]:checked')]
     .map(cb => cb.value);
   const notes = document.getElementById('reportModalNotes').value.trim();
@@ -3161,11 +3164,12 @@ async function confirmReport() {
     const _rLabel = _getPrayerLabel(prayerId);
     _sendAdminEmail(
       'Image flagged: ' + _rLabel,
-      'A visitor flagged a photo.\n\nPrayer: ' + _rLabel + '\nPhoto ID: ' + photoId
+      'A visitor flagged a photo.\n\nPrayer: ' + _rLabel
         + (reasons.length ? '\nReasons: ' + reasons.join(', ') : '')
         + (notes ? '\nNotes: ' + notes : ''),
       'Block image', APP_URL + '?vtAction=block-report&prayer=' + prayerId + '&photo=' + photoId,
-      'Dismiss',     APP_URL + '?vtAction=dismiss-report&prayer=' + prayerId + '&photo=' + photoId
+      'Dismiss',     APP_URL + '?vtAction=dismiss-report&prayer=' + prayerId + '&photo=' + photoId,
+      { photo_url: imgSrc || '', pexels_url: pexelsUrl || '' }
     );
   } catch(e) { console.warn('Report save failed', e); }
   // Briefly tint the flag to confirm
