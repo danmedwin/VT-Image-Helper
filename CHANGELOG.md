@@ -2,6 +2,14 @@
 
 ---
 
+## v2.77 — June 2026
+- New **Filters** admin tab with two editable sections:
+  - **Always excluded** (teal chips): keywords that remove a photo regardless of search terms — non-Jewish holidays, etc.
+  - **Jewish holidays** (purple, expandable groups): each group holds spelling variants; photos excluded unless that holiday is in the prayer's search terms
+- Both lists saved to Firebase `/filters` and loaded on page load; fall back to built-in defaults
+
+---
+
 ## v2.76 — June 2026
 - Non-Jewish holidays (Christmas, Easter, Ramadan, Diwali, Halloween, Kwanzaa, etc.) always filtered from photo results — applies in live search, per-prayer refresh, and admin review
 
