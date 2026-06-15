@@ -42,6 +42,7 @@ _Last updated: June 2026_
 - **Additional image sources** — Integrate sources beyond Pexels (e.g. Unsplash, Pixabay). Would give access to a broader photo library and reduce dependency on a single provider. Requires separate API key handling per source and adapting the image card/download flow to each provider's attribution rules.
 
 - **Keyboard navigation** — Arrow keys to move between images in a prayer section; Enter to select; Space to open lightbox.
+- **Image & attribution export** — A way for users to get a list of their selected images with proper photographer attributions, e.g. exported as a PDF or printable page. Useful for copyright compliance.
 - **Multi-language support** — Hebrew prayer names as an alternate display mode.
 
 ---
