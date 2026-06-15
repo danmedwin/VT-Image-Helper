@@ -1524,7 +1524,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.74</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.75</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1792,6 +1792,13 @@ let PRAYERS = [
     ]
   },
   {
+    id: 'simshalom',
+    names: ['sim shalom', 'שים שלום', 'grant peace', 'peace morning prayer'],
+    theme: 'Peace & morning',
+    searchTerms: 'peaceful morning light sunrise gentle sky hope serene',
+    photos: []
+  },
+  {
     id: 'aleinu',
     names: ['aleinu', 'עלינו', 'tikkun olam', 'our duty'],
     theme: 'Tikkun olam & hope',
@@ -1925,6 +1932,7 @@ const _defaultPrayerTags = {
   yotzeror:       'morning',
   ahavarabbah:    'morning',
   ahavatolam:    'evening',
+  simshalom:      'morning',
   hashkivenu:     'evening',
   veshamru:       'shabbat',
   kiddushshabbat: 'shabbat',
@@ -1932,7 +1940,7 @@ const _defaultPrayerTags = {
 };
 
 // Mishkan T'filah canonical order
-const _mtOrder = ['shabbatcandles','mahtovu','modehani','asheryatzar','mahrabu','psalm150','lechadodi','barchu','yotzeror','ahavarabbah','ahavatolam','shema','vahavta','michamocha','hashkivenu','amidah','avotimahot','gevurot','kedushah','veshamru','torahblessings','torahservice','hineimahtov','kiddushshabbat','motzi','osehshalom','einkeloheinu','aleinu','kaddish','adonolam','yigdal'];
+const _mtOrder = ['shabbatcandles','mahtovu','modehani','asheryatzar','mahrabu','psalm150','lechadodi','barchu','yotzeror','ahavarabbah','ahavatolam','shema','vahavta','michamocha','hashkivenu','amidah','avotimahot','gevurot','kedushah','veshamru','torahblessings','torahservice','hineimahtov','kiddushshabbat','motzi','osehshalom','simshalom','einkeloheinu','aleinu','kaddish','adonolam','yigdal'];
 PRAYERS.sort((a, b) => {
   const ai = _mtOrder.indexOf(a.id); const bi = _mtOrder.indexOf(b.id);
   return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
@@ -4125,8 +4133,8 @@ function parseOutlineToService() {
 
 const SERVICE_PRESETS = {
   'friday-evening':   ['shabbatcandles','lechadodi','mahrabu','hineimahtov','barchu','ahavatolam','shema','vahavta','michamocha','hashkivenu','veshamru','amidah','kedushah','osehshalom','aleinu','kaddish'],
-  'shabbat-morning':  ['mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','kedushah','torahservice','torahblessings','einkeloheinu','adonolam','osehshalom','aleinu','kaddish'],
-  'weekday-morning':  ['modehani','asheryatzar','mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','osehshalom','aleinu','kaddish'],
+  'shabbat-morning':  ['mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','kedushah','simshalom','torahservice','torahblessings','einkeloheinu','adonolam','osehshalom','aleinu','kaddish'],
+  'weekday-morning':  ['modehani','asheryatzar','mahtovu','barchu','yotzeror','ahavarabbah','shema','vahavta','michamocha','amidah','osehshalom','simshalom','aleinu','kaddish'],
   'weekday-evening':  ['barchu','ahavatolam','shema','vahavta','michamocha','hashkivenu','amidah','osehshalom','aleinu','kaddish'],
 };
 
