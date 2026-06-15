@@ -2,6 +2,11 @@
 
 ---
 
+## v2.81 — June 2026
+- Refresh library now paginates (up to 5 pages × 15) until 8 non-blocked photos are collected per prayer — fixes Review tab showing fewer than 8 photos for prayers with many blocked images
+
+---
+
 ## v2.80 — June 2026
 - Filters tab auto-seeds Firebase with default lists on first admin open — all filter data is now Firebase-backed from day one, no manual edit required to initialize
 
