@@ -1224,13 +1224,6 @@
           placeholder="e.g. Lecha Dodi&#10;Barchu, Shema, V'ahavta&#10;Amidah, Kedushah&#10;Oseh Shalom, Aleinu, Kaddish"></textarea>
         <button class="btn-add-to-list" onclick="parseOutlineToService()">Add to list</button>
       </div>
-      <div class="svc-quickstart" style="margin-top:8px;margin-bottom:0;">
-        Quick&nbsp;start:
-        <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
-        <a onclick="loadServicePreset('shabbat-morning')">Shabbat morning</a> &middot;
-        <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a> &middot;
-        <a onclick="loadServicePreset('weekday-evening')">Weekday evening</a>
-      </div>
     </div>
 
     <div class="svc-builder-cols">
@@ -1255,6 +1248,13 @@
       <div class="svc-col-library">
         <div class="svc-section-box">
           <p class="setup-section-label">Prayer library</p>
+          <div class="svc-quickstart" style="margin-bottom:8px;">
+            Quick&nbsp;start:
+            <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
+            <a onclick="loadServicePreset('shabbat-morning')">Shabbat morning</a> &middot;
+            <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a> &middot;
+            <a onclick="loadServicePreset('weekday-evening')">Weekday evening</a>
+          </div>
           <div class="hint" style="margin-bottom:6px;">Click a prayer to add it to your service list.</div>
           <div class="svc-filter-bar">
             <button class="svc-filter-btn chip-time-btn" data-svc-time="morning" onclick="toggleChipTime('morning')">Morning ☀</button>
@@ -1523,7 +1523,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.70</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.71</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
