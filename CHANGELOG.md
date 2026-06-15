@@ -2,6 +2,14 @@
 
 ---
 
+## v2.75 — June 2026
+- Sim Shalom added to prayer library (morning tag, peaceful sunrise search terms)
+- Sim Shalom added to Weekday morning preset after Oseh Shalom
+- Sim Shalom added to Shabbat morning preset after Kedushah
+- Sim Shalom added to canonical MT order
+
+---
+
 ## v2.74 — June 2026
 - Photo fetching now paginates (up to 5 pages × 15) until 8 non-blocked, non-holiday results are found — grids stay full regardless of how many photos are blocked
 - EmailJS report emails fixed: photo thumbnail and Pexels link now passed as pre-built HTML strings; removes invalid `{{#if}}` syntax that caused "corrupted variables" error
