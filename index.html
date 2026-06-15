@@ -1495,20 +1495,33 @@
     </div>
 
     <div class="admin-tab-panel" id="adminTab-apikey">
-      <h3 style="color:var(--navy);">&#128273; Pexels API key
+      <h3 style="color:var(--navy);">&#128273; API Keys
         <span class="mode-badge curated" id="modeBadge" style="margin-left:8px;font-size:11px;vertical-align:middle;">Using curated photos</span>
       </h3>
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
-        A free key lets this tool fetch live photos instead of the built-in curated set.
-        Get one at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener" style="color:var(--navy-mid);">pexels.com/api</a> &mdash;
-        sign up, go to your profile, and copy the key. Stays in your browser only; never sent anywhere except directly to Pexels.
+
+      <p style="font-size:12px;font-weight:700;margin:0 0 3px;color:var(--text);">Pexels</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">
+        Get a free key at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener" style="color:var(--navy-mid);">pexels.com/api</a> &mdash; sign up, go to your profile, and copy the key.
       </p>
       <div class="apikey-row">
         <input type="text" id="keyInput" placeholder="Paste your Pexels API key here&hellip;" autocomplete="off" spellcheck="false">
-        <button class="btn-save-key" onclick="saveKey()">Save key</button>
+        <button class="btn-save-key" onclick="saveKey()">Save</button>
         <button class="btn-clear-key" id="clearKeyBtn" style="display:none;" onclick="clearKey()">Remove</button>
       </div>
-      <p id="keyMsg" style="margin-top:10px;display:none;"></p>
+      <p id="keyMsg" style="margin-top:6px;display:none;font-size:12px;"></p>
+
+      <hr class="filter-section-divider">
+
+      <p style="font-size:12px;font-weight:700;margin:0 0 3px;color:var(--text);">Unsplash</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">
+        Get a free key at <a href="https://unsplash.com/developers" target="_blank" rel="noopener" style="color:var(--navy-mid);">unsplash.com/developers</a> &mdash; create an app, copy the <em>Access Key</em>.
+      </p>
+      <div class="apikey-row">
+        <input type="text" id="unsplashKeyInput" placeholder="Paste your Unsplash access key here&hellip;" autocomplete="off" spellcheck="false">
+        <button class="btn-save-key" onclick="saveUnsplashKey()">Save</button>
+        <button class="btn-clear-key" id="clearUnsplashKeyBtn" style="display:none;" onclick="clearUnsplashKey()">Remove</button>
+      </div>
+      <p id="unsplashKeyMsg" style="margin-top:6px;display:none;font-size:12px;"></p>
     </div>
 
     <div class="admin-tab-panel" id="adminTab-reports">
@@ -1577,7 +1590,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.81</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.82</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2087,6 +2100,7 @@ async function loadPrayerLibrary() {
 // ─── API KEY MANAGEMENT ────────────────────────────────────────────────────────
 
 const KEY_STORAGE          = 'vtImageHelper_pexelsKey';
+const UNSPLASH_KEY_STORAGE = 'vtImageHelper_unsplashKey';
 const CURATED_STORAGE      = 'vtImageHelper_curatedPhotos';
 const CURATED_DATE_STORAGE = 'vtImageHelper_curatedDate';
 const MY_FAVORITES_KEY     = 'vtMyFavorites';
@@ -2153,32 +2167,54 @@ let myFavorites   = new Set(); // 'prayerId:photoId' strings this browser has fa
 let blockedData   = {}; // { prayerId: { photoId: true } } — from Firebase
 
 function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
+function getUnsplashKey() { return localStorage.getItem(UNSPLASH_KEY_STORAGE) || ''; }
+
+function saveUnsplashKey() {
+  const val = document.getElementById('unsplashKeyInput').value.trim();
+  if (!val) { showUnsplashKeyMsg('Please paste your Unsplash access key first.', '#c0392b'); return; }
+  localStorage.setItem(UNSPLASH_KEY_STORAGE, val);
+  updateKeyUI();
+  showUnsplashKeyMsg('Unsplash key saved.', 'var(--teal)');
+}
+function clearUnsplashKey() {
+  localStorage.removeItem(UNSPLASH_KEY_STORAGE);
+  updateKeyUI();
+  showUnsplashKeyMsg('Unsplash key removed.', 'var(--text-muted)');
+}
+function showUnsplashKeyMsg(text, color) {
+  const msg = document.getElementById('unsplashKeyMsg');
+  msg.textContent = text; msg.style.color = color; msg.style.display = 'block';
+}
 
 function updateKeyUI() {
-  const key = getKey();
-  const badge     = document.getElementById('modeBadge');
-  const clearBtn  = document.getElementById('clearKeyBtn');
-  const input     = document.getElementById('keyInput');
-  const refreshBtn    = document.getElementById('refreshCuratedBtn');
-  const refreshStatus = document.getElementById('refreshCuratedStatus');
-  if (key) {
-    badge.textContent = 'Live search active';
+  const key         = getKey();
+  const unsplashKey = getUnsplashKey();
+  const badge       = document.getElementById('modeBadge');
+  const clearBtn    = document.getElementById('clearKeyBtn');
+  const clearUnsplashBtn = document.getElementById('clearUnsplashKeyBtn');
+  const input           = document.getElementById('keyInput');
+  const unsplashInput   = document.getElementById('unsplashKeyInput');
+  const refreshBtn      = document.getElementById('refreshCuratedBtn');
+  const refreshStatus   = document.getElementById('refreshCuratedStatus');
+  const hasAnyKey = !!(key || unsplashKey);
+  if (hasAnyKey) {
+    const sources = [key && 'Pexels', unsplashKey && 'Unsplash'].filter(Boolean).join(' + ');
+    badge.textContent = 'Live: ' + sources;
     badge.className = 'mode-badge live';
-    if (clearBtn) clearBtn.style.display = 'inline-block';
-    if (input)   input.value = key;
     if (refreshBtn) refreshBtn.style.display = '';
   } else {
     const hasCurated = !!localStorage.getItem(CURATED_STORAGE);
     const hasJson = !!(curatedJson && curatedJson.prayers);
     badge.textContent = (hasCurated || hasJson) ? 'Using verified library' : 'Using curated photos';
     badge.className = 'mode-badge curated';
-    if (clearBtn) clearBtn.style.display = 'none';
-    if (input)   input.value = '';
     if (refreshBtn) refreshBtn.style.display = 'none';
   }
+  if (clearBtn)        { clearBtn.style.display        = key         ? 'inline-block' : 'none'; }
+  if (input)           { input.value                   = key         || ''; }
+  if (clearUnsplashBtn){ clearUnsplashBtn.style.display = unsplashKey ? 'inline-block' : 'none'; }
+  if (unsplashInput)   { unsplashInput.value            = unsplashKey || ''; }
   if (refreshStatus && !refreshStatus.textContent) {
-    const lastDate = localStorage.getItem(CURATED_DATE_STORAGE)
-      || (curatedJson && curatedJson.refreshed);
+    const lastDate = localStorage.getItem(CURATED_DATE_STORAGE) || (curatedJson && curatedJson.refreshed);
     if (lastDate) refreshStatus.textContent = `Last updated ${lastDate}`;
   }
 }
@@ -3346,7 +3382,8 @@ function showReportModal(prayerId, photoId, evt) {
   const card  = document.querySelector(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`);
   const imgEl = card ? card.querySelector('img') : null;
   const imgSrc = imgEl ? imgEl.src : null;
-  _pendingReport = { prayerId, photoId, imgSrc, pexelsUrl: 'https://www.pexels.com/photo/' + photoId + '/' };
+  const sourceUrl = (card && card.dataset.sourceUrl) || '';
+  _pendingReport = { prayerId, photoId, imgSrc, sourceUrl };
   const thumb = document.getElementById('reportModalThumb');
   if (imgSrc) { thumb.src = imgSrc; thumb.style.display = 'block'; }
   else { thumb.style.display = 'none'; }
@@ -3362,7 +3399,7 @@ function closeReportModal() {
 
 async function confirmReport() {
   if (!_pendingReport) return;
-  const { prayerId, photoId, imgSrc, pexelsUrl } = _pendingReport;
+  const { prayerId, photoId, imgSrc, sourceUrl } = _pendingReport;
   const reasons = [...document.querySelectorAll('#reportModalOverlay input[type="checkbox"]:checked')]
     .map(cb => cb.value);
   const notes = document.getElementById('reportModalNotes').value.trim();
@@ -3381,8 +3418,8 @@ async function confirmReport() {
     const _photoHtml = imgSrc
       ? '<p><img src="' + imgSrc + '" style="max-width:100%;border-radius:6px;display:block;margin:8px 0;"></p>'
       : '';
-    const _pexelsLink = pexelsUrl
-      ? '<p style="font-size:12px;margin-top:4px;"><a href="' + pexelsUrl + '" style="color:#1d7a6b;">View on Pexels</a></p>'
+    const _pexelsLink = sourceUrl
+      ? '<p style="font-size:12px;margin-top:4px;"><a href="' + sourceUrl + '" style="color:#1d7a6b;">View photo</a></p>'
       : '';
     _sendAdminEmail(
       'Image flagged: ' + _rLabel,
@@ -3624,8 +3661,9 @@ function renderBlockedPanel() {
 
 
 async function refreshCuratedLibrary() {
-  const apiKey = getKey();
-  if (!apiKey) return;
+  const pKey = getKey();
+  const uKey = getUnsplashKey();
+  if (!pKey && !uKey) return;
   const btn = document.getElementById('refreshCuratedBtn');
   const statusEl = document.getElementById('refreshCuratedStatus');
   btn.disabled = true;
@@ -3639,27 +3677,23 @@ async function refreshCuratedLibrary() {
       const q = encodeURIComponent(buildSearchQuery(prayer, ctx));
       const prayerBlocked = blockedData[prayer.id] || {};
       const blocklistLower = negativeKeywords.map(k => k.toLowerCase());
-      const photos = [];
-      let page = 1;
-      while (photos.length < 8 && page <= 5) {
-        const res = await fetch(
-          `https://api.pexels.com/v1/search?query=${q}&per_page=15&page=${page}&orientation=landscape`,
-          { headers: { Authorization: apiKey } }
-        );
-        if (!res.ok) throw new Error('API ' + res.status);
-        const data = await res.json();
-        const batch = data.photos || [];
-        for (const p of batch) {
-          if (photos.length >= 8) break;
-          if (isBlockedValue(prayerBlocked[String(p.id)])) continue;
-          if (blocklistLower.some(kw => (p.alt || '').toLowerCase().includes(kw))) continue;
-          if (isHolidayMismatch(p.alt, prayer.searchTerms)) continue;
-          photos.push({ id: p.id, caption: p.alt || p.photographer, src: p.src.large2x || p.src.large, pexelsUrl: p.url, photographer: p.photographer });
+      let _combined = [];
+      if (pKey && uKey) {
+        const _px = await fetchPhotosFromSource('pexels',   q, pKey, prayerBlocked, prayer.searchTerms, 6).catch(() => []);
+        const _un = await fetchPhotosFromSource('unsplash', q, uKey, prayerBlocked, prayer.searchTerms, 6).catch(() => []);
+        const _len = Math.max(_px.length, _un.length);
+        for (let j = 0; j < _len; j++) {
+          if (j < _px.length) _combined.push(_px[j]);
+          if (j < _un.length) _combined.push(_un[j]);
         }
-        if (batch.length < 15) break;
-        page++;
+      } else if (pKey) {
+        _combined = await fetchPhotosFromSource('pexels',   q, pKey, prayerBlocked, prayer.searchTerms, 12).catch(() => []);
+      } else {
+        _combined = await fetchPhotosFromSource('unsplash', q, uKey, prayerBlocked, prayer.searchTerms, 12).catch(() => []);
       }
-      curated[prayer.id] = photos;
+      curated[prayer.id] = _combined
+        .filter(ph => !blocklistLower.some(kw => (ph.caption || '').toLowerCase().includes(kw)))
+        .slice(0, 8);
     } catch (e) {
       curated[prayer.id] = [];
     }
@@ -3757,28 +3791,63 @@ function pexelsSearchUrl(prayer, context) {
 
 // ─── PEXELS API FETCH ──────────────────────────────────────────────────────────
 
-async function fetchLivePhotos(prayer, context, apiKey) {
-  const query = buildSearchQuery(prayer, context);
-  const q = encodeURIComponent(query);
-  const blocked = blockedData[prayer.id] || {};
+async function fetchPhotosFromSource(source, q, apiKey, blocked, searchTerms, maxResults) {
+  const UTM = '?utm_source=vt_image_helper&utm_medium=referral';
   const results = [];
   let page = 1;
-  while (results.length < 8 && page <= 5) {
-    const url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&page=${page}&orientation=landscape`;
-    const res = await fetch(url, { headers: { Authorization: apiKey } });
-    if (!res.ok) throw new Error('Pexels API error: ' + res.status);
-    const data = await res.json();
-    const photos = data.photos || [];
-    for (const p of photos) {
-      if (results.length >= 8) break;
-      if (isBlockedValue(blocked[String(p.id)])) continue;
-      if (isHolidayMismatch(p.alt, query)) continue;
-      results.push({ id: p.id, caption: p.alt || p.photographer, src: p.src.large2x || p.src.large, pexelsUrl: p.url, photographer: p.photographer, photographerUrl: p.photographer_url });
+  while (results.length < maxResults && page <= 5) {
+    let url, headers;
+    if (source === 'pexels') {
+      url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&page=${page}&orientation=landscape`;
+      headers = { Authorization: apiKey };
+    } else {
+      url = `https://api.unsplash.com/search/photos?query=${q}&per_page=15&page=${page}&orientation=landscape`;
+      headers = { Authorization: 'Client-ID ' + apiKey };
     }
-    if (photos.length < 15) break;
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(source + ' API error: ' + res.status);
+    const data = await res.json();
+    const batch = source === 'pexels' ? (data.photos || []) : (data.results || []);
+    const hasMore = source === 'pexels' ? batch.length >= 15 : (data.total_pages || 0) > page;
+    for (const p of batch) {
+      if (results.length >= maxResults) break;
+      if (isBlockedValue((blocked || {})[String(p.id)])) continue;
+      const altText = source === 'pexels' ? (p.alt || '') : (p.alt_description || p.description || '');
+      if (isHolidayMismatch(altText, searchTerms)) continue;
+      if (source === 'pexels') {
+        results.push({ id: p.id, caption: p.alt || p.photographer || '', src: p.src.large2x || p.src.large, sourceUrl: p.url, photographer: p.photographer, photographerUrl: p.photographer_url, source: 'pexels' });
+      } else {
+        results.push({ id: p.id, caption: p.alt_description || p.user.name || '', src: p.urls.regular, sourceUrl: 'https://unsplash.com/photos/' + p.id + UTM, photographer: p.user.name, photographerUrl: p.user.links.html + UTM, source: 'unsplash' });
+      }
+    }
+    if (!hasMore) break;
     page++;
   }
   return results;
+}
+
+async function fetchLivePhotos(prayer, context) {
+  const query   = buildSearchQuery(prayer, context);
+  const q       = encodeURIComponent(query);
+  const blocked = blockedData[prayer.id] || {};
+  const pKey    = getKey();
+  const uKey    = getUnsplashKey();
+  if (pKey && uKey) {
+    const [p, u] = await Promise.all([
+      fetchPhotosFromSource('pexels',   q, pKey, blocked, query, 4).catch(() => []),
+      fetchPhotosFromSource('unsplash', q, uKey, blocked, query, 4).catch(() => []),
+    ]);
+    const results = [];
+    const len = Math.max(p.length, u.length);
+    for (let i = 0; i < len && results.length < 8; i++) {
+      if (i < p.length && results.length < 8) results.push(p[i]);
+      if (i < u.length && results.length < 8) results.push(u[i]);
+    }
+    return results;
+  }
+  if (pKey) return fetchPhotosFromSource('pexels',   q, pKey, blocked, query, 8);
+  if (uKey) return fetchPhotosFromSource('unsplash', q, uKey, blocked, query, 8);
+  return [];
 }
 
 // ─── RENDERING ─────────────────────────────────────────────────────────────────
@@ -3902,7 +3971,8 @@ function photoCardHtml(prayerId, photo, isLive) {
   const src = isLive
     ? photo.src
     : `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=520`;
-  const pageUrl = isLive ? photo.pexelsUrl : `https://www.pexels.com/photo/${photo.id}/`;
+  const sourceUrl = isLive ? (photo.sourceUrl || '') : `https://www.pexels.com/photo/${photo.id}/`;
+  const sourceLabel = (isLive && photo.source === 'unsplash') ? 'Unsplash' : 'Pexels';
   // Curated captions are unreliable (IDs may not match intended photos), so omit them
   const captionText = isLive
     ? photo.caption + (photo.photographer
@@ -3914,27 +3984,27 @@ function photoCardHtml(prayerId, photo, isLive) {
   const safePhotog = (photo.photographer || '').replace(/"/g, '&quot;');
   return `
     <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
-         data-caption="${safeCaption}" data-photographer="${safePhotog}"
-         onclick="selectPhoto('${prayerId}', ${photo.id}, '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${isLive ? photo.src : ''}')">
+         data-caption="${safeCaption}" data-photographer="${safePhotog}" data-source-url="${sourceUrl}"
+         onclick="selectPhoto('${prayerId}', '${photo.id}', '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${isLive ? photo.src : ''}')">
       <input type="radio" name="${prayerId}" value="${photo.id}">
       <img src="${src}" loading="lazy" alt="${photo.caption}" onerror="this.closest('.img-card').style.display='none'">
       <div class="img-caption">
         <span class="cap-text">${captionText}</span>
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;">
-          <button class="btn-expand" onclick="showLightbox('${prayerId}', ${photo.id}, event)" title="View full size">
+          <button class="btn-expand" onclick="showLightbox('${prayerId}', '${photo.id}', event)" title="View full size">
             <svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
           </button>
           <button class="btn-fav" id="fav-btn-${photo.id}"
-                  onclick="toggleFavorite('${prayerId}', ${photo.id}, event)" title="Favorite">
+                  onclick="toggleFavorite('${prayerId}', '${photo.id}', event)" title="Favorite">
             <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </button>
-          <a class="pexels-link" href="${pageUrl}" target="_blank" rel="noopener" title="View on Pexels">
+          <a class="pexels-link" href="${sourceUrl}" target="_blank" rel="noopener" title="View on ${sourceLabel}">
             <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
-          <button class="btn-report" onclick="showReportModal('${prayerId}',${photo.id},event)" title="Report this photo">
+          <button class="btn-report" onclick="showReportModal('${prayerId}','${photo.id}',event)" title="Report this photo">
             <svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           </button>
-          <button class="btn-block" onclick="showBlockModal('${prayerId}', ${photo.id}, event)" title="Block this photo (admin)">
+          <button class="btn-block" onclick="showBlockModal('${prayerId}', '${photo.id}', event)" title="Block this photo (admin)">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
           </button>
         </div>
@@ -3993,8 +4063,9 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
 }
 
 async function refinePrayer(prayerId, inputId, context) {
-  const apiKey = getKey();
-  if (!apiKey) return;
+  const pKey = getKey();
+  const uKey = getUnsplashKey();
+  if (!pKey && !uKey) return;
   const terms = getActiveTerms(prayerId, inputId);
   if (!terms) return;
 
@@ -4017,24 +4088,21 @@ async function refinePrayer(prayerId, inputId, context) {
   grid.innerHTML = loadingGridHtml(prayerId);
 
   try {
-    const q = encodeURIComponent(terms);
+    const q       = encodeURIComponent(terms);
     const blocked = blockedData[prayerId] || {};
-    const photos = [];
-    let page = 1;
-    while (photos.length < 8 && page <= 5) {
-      const url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&page=${page}&orientation=landscape`;
-      const res = await fetch(url, { headers: { Authorization: apiKey } });
-      if (!res.ok) throw new Error('Pexels API error: ' + res.status);
-      const data = await res.json();
-      const batch = data.photos || [];
-      for (const p of batch) {
-        if (photos.length >= 8) break;
-        if (isBlockedValue(blocked[String(p.id)])) continue;
-        if (isHolidayMismatch(p.alt, terms)) continue;
-        photos.push({ id: p.id, caption: p.alt || p.photographer, src: p.src.large2x || p.src.large, pexelsUrl: p.url, photographer: p.photographer, photographerUrl: p.photographer_url });
+    var photos = [];
+    if (pKey && uKey) {
+      const _px = await fetchPhotosFromSource('pexels',   q, pKey, blocked, terms, 4).catch(() => []);
+      const _un = await fetchPhotosFromSource('unsplash', q, uKey, blocked, terms, 4).catch(() => []);
+      const _len = Math.max(_px.length, _un.length);
+      for (var _i = 0; _i < _len && photos.length < 8; _i++) {
+        if (_i < _px.length && photos.length < 8) photos.push(_px[_i]);
+        if (_i < _un.length && photos.length < 8) photos.push(_un[_i]);
       }
-      if (batch.length < 15) break;
-      page++;
+    } else if (pKey) {
+      photos = await fetchPhotosFromSource('pexels',   q, pKey, blocked, terms, 8);
+    } else {
+      photos = await fetchPhotosFromSource('unsplash', q, uKey, blocked, terms, 8);
     }
     if (photos.length === 0) {
       grid.innerHTML = '<div class="img-loading">No results for those terms. Try different keywords.</div>';
@@ -4070,6 +4138,7 @@ async function findImages() {
   const context = document.getElementById('ctx').value.trim();
   const resultsEl = document.getElementById('results');
   const apiKey = getKey();
+  const unsplashKey = getUnsplashKey();
 
   if (!outline && _serviceOrder.length === 0) {
     resultsEl.innerHTML = '<div class="prayer-section" style="padding:24px 20px;color:var(--text-muted);">Please select prayers above or paste your service outline.</div>';
@@ -4161,12 +4230,12 @@ async function findImages() {
   renderAllFavoriteCounts();
 
   // If we have an API key, fetch live photos for each prayer in parallel
-  if (apiKey) {
+  if (apiKey || unsplashKey) {
     matched.forEach(async (prayer) => {
       const grid = document.getElementById('grid-' + prayer.id);
       if (!grid) return;
       try {
-        const photos = await fetchLivePhotos(prayer, context, apiKey);
+        const photos = await fetchLivePhotos(prayer, context);
         if (photos.length === 0) throw new Error('No results');
         grid.innerHTML = photos.map(ph => photoCardHtml(prayer.id, ph, true)).join('');
         renderAllFavoriteCounts();
