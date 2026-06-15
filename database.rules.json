@@ -116,6 +116,11 @@
     "promotedPrayers": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
+    },
+
+    "filters": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
     }
   }
 }
