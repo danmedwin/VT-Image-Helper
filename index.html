@@ -1524,7 +1524,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.75</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.76</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3498,7 +3498,7 @@ function getKeywordFilters() {
     .map(cb => cb.value).join(' ');
 }
 
-// Photos whose alt text mentions a holiday are excluded unless the search also mentions that holiday.
+// Jewish holiday photos excluded unless the search also mentions that holiday.
 // Prevents e.g. Hanukkah menorah photos from appearing in generic candle searches.
 const HOLIDAY_FILTER = [
   ['hanukkah', 'chanukah', 'hanukah', 'channukah', 'hannukah', 'chanukkah', 'hanuka', 'chanuka'],
@@ -3511,9 +3511,23 @@ const HOLIDAY_FILTER = [
   ['simchat torah', 'simchas torah'],
 ];
 
+// Non-Jewish holiday photos always excluded — these will never be appropriate for synagogue use.
+const NON_JEWISH_HOLIDAY_FILTER = [
+  'christmas', 'xmas', 'christmas tree', 'santa claus', 'santa', 'nativity', 'advent',
+  'easter', 'easter egg', 'easter bunny',
+  'ramadan', 'eid', 'eid al-fitr', 'eid al-adha', 'iftar',
+  'diwali', 'deepavali',
+  'halloween', 'jack-o-lantern', 'jack o lantern',
+  'kwanzaa',
+  'thanksgiving turkey',
+  'chinese new year', 'lunar new year',
+  'dussehra', 'holi',
+];
+
 function isHolidayMismatch(altText, searchTerms) {
   const alt = (altText || '').toLowerCase();
   const search = (searchTerms || '').toLowerCase();
+  if (NON_JEWISH_HOLIDAY_FILTER.some(s => alt.includes(s))) return true;
   return HOLIDAY_FILTER.some(spellings =>
     spellings.some(s => alt.includes(s)) && !spellings.some(s => search.includes(s))
   );
