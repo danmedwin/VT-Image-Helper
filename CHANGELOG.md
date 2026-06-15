@@ -2,6 +2,13 @@
 
 ---
 
+## v2.59 — June 2026
+- "Find images for your service" h2 + explainer paragraph moved into their own full-width rounded box
+- Input box reordered: textarea + Add to list button appear first, quick-start links below
+- All `svc-section-box` elements now have a white background + subtle shadow, so they read as cards against the light blue-gray page background
+
+---
+
 ## v2.46 — June 2026
 **40/60 service builder redesign**
 
