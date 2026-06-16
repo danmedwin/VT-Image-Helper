@@ -2,6 +2,9 @@
 
 ---
 
+## v2.92 — June 2026
+- Block and report modals: circled × button in top-right corner to close; Esc key also closes whichever is open (lightbox and admin login already had both)
+
 ## v2.91 — June 2026
 - Report modal: Cancel/Report buttons moved to directly below notes textarea; "Fits another prayer?" wrapped in a rounded rectangle instead of a divider line
 
