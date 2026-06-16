@@ -2,6 +2,9 @@
 
 ---
 
+## v2.93 — June 2026
+- Suggestion emails now include Approve and Dismiss action buttons; Approve sets the photo as a favorite for the suggested prayer in Firebase and cleans up the suggestion entry; Dismiss just deletes it
+
 ## v2.92 — June 2026
 - Block and report modals: circled × button in top-right corner to close; Esc key also closes whichever is open (lightbox and admin login already had both)
 
