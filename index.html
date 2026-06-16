@@ -1590,7 +1590,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.84</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.85</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -1681,7 +1681,7 @@ let PRAYERS = [
     id: 'ahavatolam',
     names: ['ahavat olam', 'אהבת עולם', 'everlasting love', 'evening love'],
     theme: 'Evening love & Torah',
-    searchTerms: 'night stars love open book Torah evening candlelight',
+    searchTerms: 'night stars love open book candlelight evening soft light',
     photos: [
       { id: 1755683,  caption: 'Warm candlelight in evening' },
       { id: 1370300,  caption: 'Stars and night sky' },
@@ -1693,7 +1693,7 @@ let PRAYERS = [
     id: 'shema',
     names: ['shema', 'sh\'ma', 'שמע', 'hear o israel', 'hear, o israel'],
     theme: 'Unity & the One',
-    searchTerms: 'vast sky horizon single light unity one',
+    searchTerms: 'open sky horizon blue light sunrise nature',
     photos: [
       { id: 36983661, caption: 'Sweeping sky over open field' },
       { id: 1182942,  caption: 'Lone tree against blue sky' },
@@ -1705,7 +1705,7 @@ let PRAYERS = [
     id: 'vahavta',
     names: ['v\'ahavta', 'vahavta', 'ואהבת', 'and you shall love'],
     theme: 'Love & commandment',
-    searchTerms: 'mezuzah doorway love family path forward',
+    searchTerms: 'doorway wooden arch home path garden love family',
     photos: [
       { id: 3408744,  caption: 'Welcoming doorway with warm light' },
       { id: 36409227, caption: 'Child holding small plant' },
@@ -1729,7 +1729,7 @@ let PRAYERS = [
     id: 'amidah',
     names: ['amidah', 'amida', 'שמונה עשרה', 'shmoneh esreh', 'standing prayer', 'silent prayer'],
     theme: 'Standing & prayer',
-    searchTerms: 'mountain path mist still lake reflection nature solitude',
+    searchTerms: 'mountain path mist lake reflection nature peaceful',
     photos: [
       { id: 1181715,  caption: 'Figure on mountaintop at dusk' },
       { id: 1370300,  caption: 'Quiet lake at golden hour' },
@@ -1741,7 +1741,7 @@ let PRAYERS = [
     id: 'avotimahot',
     names: ['avot', 'imahot', 'avot v\'imahot', 'אבות', 'אמהות', 'patriarchs', 'matriarchs', 'ancestors', 'patriarchs and matriarchs'],
     theme: 'Ancestors & covenant',
-    searchTerms: 'ancient tree roots heritage generational nature',
+    searchTerms: 'ancient oak tree roots nature forest landscape',
     photos: [
       { id: 1182942,  caption: 'Ancient oak tree with deep roots' },
       { id: 17713087, caption: 'Large tree in open field' },
@@ -1753,7 +1753,7 @@ let PRAYERS = [
     id: 'gevurot',
     names: ['gevurot', 'g\'vurot', 'גבורות', 'power of god', 'divine power', 'rain prayer', 'geshem', 'tal'],
     theme: 'Power & rain',
-    searchTerms: 'rain dew water drops morning renewal',
+    searchTerms: 'rain dew water drops morning leaves',
     photos: [
       { id: 36832999, caption: 'Morning dew on fresh green grass' },
       { id: 36236131, caption: 'Dew drops on grass at dawn' },
@@ -1801,7 +1801,7 @@ let PRAYERS = [
     id: 'lechadodi',
     names: ['lecha dodi', 'l\'cha dodi', 'לכה דודי', 'come my beloved', 'shabbat bride', 'kabbalat shabbat'],
     theme: 'Shabbat & welcome',
-    searchTerms: 'sunset friday shabbat candles warm glow',
+    searchTerms: 'sunset warm golden candles evening glowing light',
     photos: [
       { id: 1755683,  caption: 'Warm sunset over horizon' },
       { id: 1028600,  caption: 'Golden hour light over water' },
@@ -1813,7 +1813,7 @@ let PRAYERS = [
     id: 'shabbatcandles',
     names: ['candle lighting', 'shabbat candles', 'hadlakat nerot', 'נרות', 'candles'],
     theme: 'Light & Shabbat',
-    searchTerms: 'candles soft warm light flame Shabbat',
+    searchTerms: 'candles warm soft light flame evening glow',
     photos: [
       { id: 36167613, caption: 'Shabbat candles glowing' },
       { id: 1755683,  caption: 'Warm candlelight' },
@@ -1825,7 +1825,7 @@ let PRAYERS = [
     id: 'kiddushshabbat',
     names: ['kiddush', 'קידוש', 'kiddush shabbat', 'wine blessing', 'borei pri hagafen'],
     theme: 'Wine & blessing',
-    searchTerms: 'wine glass grapes vineyard kiddush',
+    searchTerms: 'wine glass grapes vineyard harvest evening golden',
     photos: [
       { id: 2912033,  caption: 'Wine glass in golden light' },
       { id: 1407846,  caption: 'Red grapes on vine' },
@@ -1837,7 +1837,7 @@ let PRAYERS = [
     id: 'motzi',
     names: ['motzi', 'hamotzi', 'המוציא', 'bread blessing', 'challah'],
     theme: 'Bread & blessing',
-    searchTerms: 'challah bread golden loaf fresh baked',
+    searchTerms: 'braided bread golden loaf fresh baked',
     photos: [
       { id: 1775043,  caption: 'Golden braided challah loaf' },
       { id: 2724354,  caption: 'Freshly baked bread in warm light' },
@@ -1861,14 +1861,14 @@ let PRAYERS = [
     id: 'simshalom',
     names: ['sim shalom', 'שים שלום', 'grant peace', 'peace morning prayer'],
     theme: 'Peace & morning',
-    searchTerms: 'peaceful morning light sunrise gentle sky hope serene',
+    searchTerms: 'sunrise golden rays light morning warmth sky',
     photos: []
   },
   {
     id: 'aleinu',
     names: ['aleinu', 'עלינו', 'tikkun olam', 'our duty'],
     theme: 'Tikkun olam & hope',
-    searchTerms: 'child planting nature world hope future',
+    searchTerms: 'child hands soil seedling planting garden earth',
     photos: [
       { id: 36409227, caption: 'Child holding small plant' },
       { id: 28744932, caption: 'Hand holding green seedling' },
@@ -1880,7 +1880,7 @@ let PRAYERS = [
     id: 'kaddish',
     names: ['kaddish', 'קדיש', 'mourners kaddish', 'mourner\'s kaddish', 'yitgadal', 'yitgadal v\'yitkadash'],
     theme: 'Memory & sanctification',
-    searchTerms: 'candle flame memory sunset quiet light',
+    searchTerms: 'candle flame memorial sunset evening light',
     photos: [
       { id: 36167613, caption: 'Single candle flame at dusk' },
       { id: 1755683,  caption: 'Soft sunset light on water' },
@@ -1892,7 +1892,7 @@ let PRAYERS = [
     id: 'einkeloheinu',
     names: ['ein keloheinu', 'ein kelohenu', 'אין כאלהינו', 'there is none like our god'],
     theme: 'Praise & celebration',
-    searchTerms: 'joyful celebration music light festive',
+    searchTerms: 'celebration people music instruments colorful light',
     photos: [
       { id: 8107205,  caption: 'Gold trumpet in sunlight' },
       { id: 1370300,  caption: 'Stars and night sky' },
@@ -1904,7 +1904,7 @@ let PRAYERS = [
     id: 'adonolam',
     names: ['adon olam', 'אדון עולם', 'lord of the universe', 'eternal master'],
     theme: 'Eternity & wonder',
-    searchTerms: 'universe stars galaxy infinity night sky',
+    searchTerms: 'stars galaxy nebula cosmos night sky space',
     photos: [
       { id: 1370300,  caption: 'Milky way stars over landscape' },
       { id: 36983661, caption: 'Star-filled night sky' },
@@ -1916,7 +1916,7 @@ let PRAYERS = [
     id: 'yigdal',
     names: ['yigdal', 'יגדל'],
     theme: 'Praise & principles',
-    searchTerms: 'sunrise expansive sky mountains grandeur',
+    searchTerms: 'mountain peaks sunrise panorama landscape majestic',
     photos: [
       { id: 2440009,  caption: 'Grand mountain sunrise' },
       { id: 1028600,  caption: 'Sweeping sky and horizon' },
@@ -1928,7 +1928,7 @@ let PRAYERS = [
     id: 'psalm150',
     names: ['psalm 150', 'mizmor', 'mizmor shir', 'praise with instruments', 'hallelujah'],
     theme: 'Praise with instruments',
-    searchTerms: 'musical instruments trumpet praise joyful',
+    searchTerms: 'musical instruments drums trumpet brass orchestra',
     photos: [
       { id: 8107205,  caption: 'Gold trumpet' },
       { id: 15441039, caption: 'Close-up of two trumpets' },
@@ -1940,7 +1940,7 @@ let PRAYERS = [
     id: 'mahrabu',
     names: ['mah rabu', 'מה רבו', 'how abundant', 'wonder of creation'],
     theme: 'Wonder & creation',
-    searchTerms: 'wildflowers field nature wonder creation colorful',
+    searchTerms: 'colorful wildflowers meadow spring flowers nature',
     photos: [
       { id: 37728654, caption: 'Wildflower field with poppies' },
       { id: 33802061, caption: 'Wildflowers in lush meadow' },
@@ -1964,7 +1964,7 @@ let PRAYERS = [
     id: 'veshamru',
     names: ['v\'shamru', 'veshamru', 'ושמרו', 'shabbat sign', 'shabbat covenant'],
     theme: 'Shabbat covenant',
-    searchTerms: 'shabbat rest peaceful nature covenant light',
+    searchTerms: 'rest peaceful meadow nature sunset golden light',
     photos: [
       { id: 36983661, caption: 'Peaceful Shabbat light' },
       { id: 1755683,  caption: 'Warm golden rest' },
