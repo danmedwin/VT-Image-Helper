@@ -2,6 +2,10 @@
 
 ---
 
+## v2.90 — June 2026
+- Report modal now includes a "Fits another prayer?" section: prayer dropdown + green Suggest button
+- Suggestion saves to Firebase and emails admin without closing the modal, so users can report and suggest independently
+
 ## v2.89 — June 2026
 - Full cross-section keyboard navigation: ArrowDown lands on same column in next section's top row; ArrowUp lands on same column in previous section's bottom row; ArrowRight from last card wraps to first card of next section; ArrowLeft from first card wraps to last card of previous section
 
