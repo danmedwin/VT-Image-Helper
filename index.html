@@ -418,6 +418,7 @@
   }
   .img-card:hover { border-color: var(--navy-mid); box-shadow: 0 2px 10px rgba(11,45,94,0.12); }
   .img-card.selected { border-color: var(--gold); box-shadow: 0 2px 12px rgba(196,154,42,0.2); }
+  .img-card:focus-visible { outline: 3px solid var(--teal); outline-offset: -3px; z-index: 2; }
   .img-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
   .img-card img {
     width: 100%;
@@ -1590,7 +1591,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.86</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.87</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3970,6 +3971,42 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
   }
 }
 
+function handleCardKeydown(e) {
+  if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter',' '].includes(e.key)) return;
+  e.preventDefault();
+  const card     = e.currentTarget;
+  const grid     = card.closest('.img-grid');
+  if (!grid) return;
+  const prayerId = card.dataset.prayer;
+  const photoId  = card.dataset.photo;
+
+  if (e.key === 'Enter') {
+    selectPhoto(prayerId, photoId, card.dataset.caption || '', card.dataset.src || '');
+    return;
+  }
+  if (e.key === ' ') {
+    showLightbox(prayerId, photoId, e);
+    return;
+  }
+
+  const cards = [...grid.querySelectorAll('.img-card')];
+  const idx   = cards.indexOf(card);
+  let nextIdx;
+
+  if (e.key === 'ArrowRight') {
+    nextIdx = idx + 1;
+  } else if (e.key === 'ArrowLeft') {
+    nextIdx = idx - 1;
+  } else {
+    const firstTop = cards[0].getBoundingClientRect().top;
+    let cols = 1;
+    while (cols < cards.length && Math.abs(cards[cols].getBoundingClientRect().top - firstTop) < 5) cols++;
+    nextIdx = e.key === 'ArrowDown' ? idx + cols : idx - cols;
+  }
+
+  if (nextIdx >= 0 && nextIdx < cards.length) cards[nextIdx].focus();
+}
+
 function photoCardHtml(prayerId, photo, isLive) {
   const src = photo.src ||
     `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=520`;
@@ -3988,6 +4025,7 @@ function photoCardHtml(prayerId, photo, isLive) {
   return `
     <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
          data-caption="${safeCaption}" data-photographer="${safePhotog}" data-source-url="${sourceUrl}"
+         tabindex="0" onkeydown="handleCardKeydown(event)"
          onclick="selectPhoto('${prayerId}', '${photo.id}', '${photo.caption.replace(/'/g,"\\'").replace(/"/g,'&quot;')}', '${photoSrc}')">
       <input type="radio" name="${prayerId}" value="${photo.id}">
       <img src="${src}" loading="lazy" alt="${photo.caption}" onerror="this.closest('.img-card').style.display='none'">
