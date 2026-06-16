@@ -2,6 +2,11 @@
 
 ---
 
+## v2.94 — June 2026
+- Per-prayer "★ Favorites (N)" button in each section header (disabled when N=0); toggles grid to show only favorited photos for that prayer
+- approveSuggestion now writes the full photo object to Firebase pinnedPhotos/{prayer} so approved suggestions appear immediately in the favorites view
+- pinnedPhotos loaded at startup and merged into curated photo sets for each prayer
+
 ## v2.93 — June 2026
 - Suggestion emails now include Approve and Dismiss action buttons; Approve sets the photo as a favorite for the suggested prayer in Firebase and cleans up the suggestion entry; Dismiss just deletes it
 
