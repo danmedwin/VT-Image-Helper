@@ -1625,7 +1625,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.96</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.97</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4234,9 +4234,11 @@ function photoCardHtml(prayerId, photo, isLive) {
     `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=520`;
   const sourceUrl = photo.sourceUrl || `https://www.pexels.com/photo/${photo.id}/`;
   const sourceLabel = photo.source === 'unsplash' ? 'Unsplash' : 'Pexels';
-  const captionText = (photo.caption || '') + (photo.photographer
-    ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`
-    : '');
+  const captionText = photo.src
+    ? (photo.caption || '') + (photo.photographer
+        ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`
+        : '')
+    : '';
   const photoSrc = photo.src || '';
   const srcAttr = photoSrc ? `data-src="${photoSrc}"` : '';
   const safeCaption = (photo.caption || '').replace(/"/g, '&quot;');
@@ -4476,9 +4478,13 @@ async function findImages() {
         return prayerSectionHtml(p, context, [], true);
       } else {
         const storedPhotos = getCuratedPhotos(p.id);
-        return storedPhotos && storedPhotos.length
-          ? prayerSectionHtml(p, context, storedPhotos, true)
-          : prayerSectionHtml(p, context, p.photos, false);
+        if (storedPhotos && storedPhotos.length) {
+          const pb = blockedData[p.id] || {};
+          return prayerSectionHtml(p, context, storedPhotos.filter(ph => !isBlockedValue(pb[String(ph.id)])), true);
+        }
+        const pb = blockedData[p.id] || {};
+        const fallback = p.photos.filter(ph => !isBlockedValue(pb[String(ph.id)]));
+        return prayerSectionHtml(p, context, fallback, false);
       }
     }).join('')}
     <div class="results-footer" id="results-footer">

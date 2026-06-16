@@ -2,6 +2,10 @@
 
 ---
 
+## v2.97 — June 2026
+- Block list now enforced in the no-API-key fallback paths: curated photos and hardcoded p.photos fallback are both filtered against per-prayer blockedData before rendering
+- Captions suppressed for hardcoded fallback photos (p.photos) which have no src field and carry unreliable hand-written descriptions; captions still show for all curated/API/pinned photos
+
 ## v2.96 — June 2026
 - Fix captions and photographer attribution not appearing in Safari (or any browser without API keys and no local curated library): removed isLive gating from photoCardHtml so captions always render when photo.caption or photo.photographer is present; also fixes favorites view showing images only with no caption/attribution
 
