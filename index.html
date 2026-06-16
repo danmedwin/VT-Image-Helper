@@ -1591,7 +1591,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.87</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.88</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3985,7 +3985,11 @@ function handleCardKeydown(e) {
     return;
   }
   if (e.key === ' ') {
-    showLightbox(prayerId, photoId, e);
+    if (document.getElementById('lightbox').classList.contains('lb-open')) {
+      closeLightbox();
+    } else {
+      showLightbox(prayerId, photoId, e);
+    }
     return;
   }
 
@@ -4004,7 +4008,13 @@ function handleCardKeydown(e) {
     nextIdx = e.key === 'ArrowDown' ? idx + cols : idx - cols;
   }
 
-  if (nextIdx >= 0 && nextIdx < cards.length) cards[nextIdx].focus();
+  if (nextIdx >= 0 && nextIdx < cards.length) {
+    cards[nextIdx].focus();
+  } else if (e.key === 'ArrowDown' && nextIdx >= cards.length) {
+    const allGrids = [...document.querySelectorAll('.img-grid')];
+    const nextGrid = allGrids[allGrids.indexOf(grid) + 1];
+    if (nextGrid) { const firstCard = nextGrid.querySelector('.img-card'); if (firstCard) firstCard.focus(); }
+  }
 }
 
 function photoCardHtml(prayerId, photo, isLive) {
@@ -4372,7 +4382,7 @@ document.addEventListener('keydown', e => {
   if (!document.getElementById('lightbox').classList.contains('lb-open')) return;
   if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateLightbox(-1); }
   else if (e.key === 'ArrowRight') { e.preventDefault(); navigateLightbox(1); }
-  else if (e.key === 'Escape') closeLightbox();
+  else if (e.key === 'Escape' || e.key === ' ') { e.preventDefault(); closeLightbox(); }
   else if (e.key === 'Enter')  { e.preventDefault(); lbSelect(); }
 });
 
