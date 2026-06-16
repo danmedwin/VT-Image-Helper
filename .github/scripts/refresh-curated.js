@@ -397,7 +397,13 @@ async function main() {
         freshPhotos = candidates.slice(0, TARGET_PER_PRAYER);
         process.stdout.write(' (all rejected, using unfiltered)');
       } else {
-        process.stdout.write(` ${freshPhotos.length} pass`);
+        // Pad with unfiltered candidates if Claude approved fewer than target
+        if (freshPhotos.length < TARGET_PER_PRAYER && candidates.length > freshPhotos.length) {
+          const seen = new Set(freshPhotos.map(p => String(p.id)));
+          const pad = candidates.filter(p => !seen.has(String(p.id))).slice(0, TARGET_PER_PRAYER - freshPhotos.length);
+          freshPhotos = [...freshPhotos, ...pad];
+        }
+        process.stdout.write(` ${freshPhotos.length} photos`);
       }
     } else {
       freshPhotos = candidates.slice(0, TARGET_PER_PRAYER);
