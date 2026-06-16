@@ -2,6 +2,9 @@
 
 ---
 
+## v2.98 — June 2026
+- Fix "Find Images does nothing" when all prayer chips are selected: custom prayers from Firebase lack a photos/searchTerms field; three null-guards added (prayer.searchTerms.trim(), prayer.photos.map in catch block, p.photos.filter in no-API fallback)
+
 ## v2.97 — June 2026
 - Block list now enforced in the no-API-key fallback paths: curated photos and hardcoded p.photos fallback are both filtered against per-prayer blockedData before rendering
 - Captions suppressed for hardcoded fallback photos (p.photos) which have no src field and carry unreliable hand-written descriptions; captions still show for all curated/API/pinned photos

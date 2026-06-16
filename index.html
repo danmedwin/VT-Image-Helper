@@ -1625,7 +1625,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.97</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.98</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4276,7 +4276,7 @@ function photoCardHtml(prayerId, photo, isLive) {
 }
 
 function prayerSectionHtml(prayer, context, photos, isLive) {
-  const baseTerms = prayer.searchTerms.trim().split(/\s+/).filter(Boolean);
+  const baseTerms = (prayer.searchTerms || '').trim().split(/\s+/).filter(Boolean);
   const keywords = getKeywordFilters();
   const extraTerms = [keywords, context ? context.trim().slice(0, 60) : ''].filter(Boolean).join(' ');
   const fullQuery = [prayer.searchTerms, extraTerms].filter(Boolean).join(' ');
@@ -4483,7 +4483,7 @@ async function findImages() {
           return prayerSectionHtml(p, context, storedPhotos.filter(ph => !isBlockedValue(pb[String(ph.id)])), true);
         }
         const pb = blockedData[p.id] || {};
-        const fallback = p.photos.filter(ph => !isBlockedValue(pb[String(ph.id)]));
+        const fallback = (p.photos || []).filter(ph => !isBlockedValue(pb[String(ph.id)]));
         return prayerSectionHtml(p, context, fallback, false);
       }
     }).join('')}
@@ -4519,7 +4519,7 @@ async function findImages() {
         const note = isAuthErr
           ? '<div style="font-size:12px;color:#c0392b;padding:0 20px 10px;">API key error &mdash; check your key in the setup panel above. Showing curated photos.</div>'
           : '<div style="font-size:12px;color:var(--text-muted);padding:0 20px 10px;">Could not load live photos &mdash; showing curated set.</div>';
-        grid.innerHTML = prayer.photos.map(ph => photoCardHtml(prayer.id, ph, false)).join('');
+        grid.innerHTML = (prayer.photos || []).map(ph => photoCardHtml(prayer.id, ph, false)).join('');
         grid.insertAdjacentHTML('beforebegin', note);
         renderAllFavoriteCounts();
       }
