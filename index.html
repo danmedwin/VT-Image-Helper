@@ -920,6 +920,11 @@
     padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .btn-modal-suggest:hover { background: #155f54; }
   .btn-modal-suggest:disabled { background: #6ba89e; cursor: default; }
+  .btn-fav-view { font-size: 12px; padding: 4px 10px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: none; color: var(--text-muted); cursor: pointer; }
+  .btn-fav-view:not(:disabled):hover { border-color: var(--teal); color: var(--teal); }
+  .btn-fav-view.active { background: var(--teal); color: white; border-color: var(--teal); }
+  .btn-fav-view:disabled { opacity: 0.4; cursor: default; }
 
   .admin-tab-panel h3 { font-size: 14px; margin-bottom: 6px; }
   .review-controls {
@@ -1620,7 +1625,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.93</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.94</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2194,9 +2199,11 @@ function authParam() {
   return t ? '?auth=' + t : '';
 }
 
-let favoritesData = {}; // { prayerId: { photoId: count } } — from Firebase
-let myFavorites   = new Set(); // 'prayerId:photoId' strings this browser has favorited
-let blockedData   = {}; // { prayerId: { photoId: true } } — from Firebase
+let favoritesData    = {}; // { prayerId: { photoId: count } } — from Firebase
+let pinnedPhotosData = {}; // { prayerId: { photoId: photoObj } } — approved suggestions
+let myFavorites      = new Set(); // 'prayerId:photoId' strings this browser has favorited
+let blockedData      = {}; // { prayerId: { photoId: true } } — from Firebase
+const _favViewOriginals = new Map(); // prayerId → saved grid innerHTML when in favorites view
 
 function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
 function getUnsplashKey() { return localStorage.getItem(UNSPLASH_KEY_STORAGE) || ''; }
@@ -2281,19 +2288,22 @@ function showKeyMsg(text, color) {
 }
 
 function getCuratedPhotos(prayerId) {
-  // localStorage takes priority (user's personal refresh)
+  let curated = null;
   try {
     const stored = localStorage.getItem(CURATED_STORAGE);
     if (stored) {
       const data = JSON.parse(stored)[prayerId];
-      if (data && data.length) return data;
+      if (data && data.length) curated = data;
     }
   } catch (e) {}
-  // Fall back to curated.json maintained by the GitHub Action
-  if (curatedJson && curatedJson.prayers && curatedJson.prayers[prayerId]) {
-    return curatedJson.prayers[prayerId];
+  if (!curated && curatedJson && curatedJson.prayers && curatedJson.prayers[prayerId]) {
+    curated = curatedJson.prayers[prayerId];
   }
-  return null;
+  const pinned = Object.values(pinnedPhotosData[prayerId] || {});
+  if (!pinned.length) return curated;
+  if (!curated || !curated.length) return pinned;
+  const seen = new Set(curated.map(p => String(p.id)));
+  return [...curated, ...pinned.filter(p => !seen.has(String(p.id)))];
 }
 
 async function loadCuratedJson() {
@@ -2329,6 +2339,16 @@ async function loadFavorites() {
   } catch (e) {}
 }
 
+async function loadPinnedPhotos() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/pinnedPhotos.json`);
+    if (res.ok) {
+      pinnedPhotosData = (await res.json()) || {};
+      updateFavViewButtons();
+    }
+  } catch(e) {}
+}
+
 function renderAllFavoriteCounts() {
   for (const [prayerId, photos] of Object.entries(favoritesData)) {
     for (const [photoId, count] of Object.entries(photos || {})) {
@@ -2336,6 +2356,43 @@ function renderAllFavoriteCounts() {
     }
   }
   applyBlockedToCards();
+  updateFavViewButtons();
+}
+
+function getFavCount(prayerId) {
+  const photos = getCuratedPhotos(prayerId);
+  if (!photos || !photos.length) return 0;
+  const pFavs = favoritesData[prayerId] || {};
+  return photos.filter(p => (pFavs[String(p.id)] || 0) > 0).length;
+}
+
+function updateFavViewButtons() {
+  document.querySelectorAll('[id^="fav-view-"]').forEach(btn => {
+    const prayerId = btn.id.slice('fav-view-'.length);
+    const n = getFavCount(prayerId);
+    btn.disabled = n === 0 && !btn.classList.contains('active');
+    btn.textContent = n > 0 ? `★ Favorites (${n})` : '★ Favorites';
+  });
+}
+
+function toggleFavoritesView(prayerId) {
+  const grid = document.getElementById('grid-' + prayerId);
+  const btn  = document.getElementById('fav-view-' + prayerId);
+  if (!grid || !btn) return;
+  if (_favViewOriginals.has(prayerId)) {
+    grid.innerHTML = _favViewOriginals.get(prayerId);
+    _favViewOriginals.delete(prayerId);
+    btn.classList.remove('active');
+    return;
+  }
+  const photos = getCuratedPhotos(prayerId) || [];
+  const pFavs  = favoritesData[prayerId] || {};
+  const favs   = photos.filter(p => (pFavs[String(p.id)] || 0) > 0);
+  _favViewOriginals.set(prayerId, grid.innerHTML);
+  grid.innerHTML = favs.length
+    ? favs.map(p => photoCardHtml(prayerId, p, false)).join('')
+    : '<p style="padding:20px;font-size:13px;color:var(--text-muted);">No favorites yet for this prayer.</p>';
+  btn.classList.add('active');
 }
 
 function updateFavUI(prayerId, photoId, count) {
@@ -3674,14 +3731,27 @@ async function dismissReport(prayerId, photoId) {
 
 async function approveSuggestion(fromPrayer, photoId, targetPrayer) {
   if (!targetPrayer) return;
-  // Set favorite count to 1 for the target prayer (authenticated write)
+  // Read saved suggestion to recover photo object
+  const sugRes = await fetch(`${FIREBASE_URL}/suggestions/${fromPrayer}/${photoId}.json`);
+  const sug = (sugRes.ok ? await sugRes.json() : null) || {};
+  // Set favorite count for target prayer
   await fetch(`${FIREBASE_URL}/favorites/${targetPrayer}/${photoId}.json${authParam()}`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(1),
   });
   if (!favoritesData[targetPrayer]) favoritesData[targetPrayer] = {};
   favoritesData[targetPrayer][String(photoId)] = 1;
+  // Pin the full photo object so it appears in the favorites view immediately
+  if (sug.src) {
+    const photoObj = { id: photoId, src: sug.src, sourceUrl: sug.sourceUrl || '', photographer: sug.photographer || '', source: sug.source || 'pexels', caption: sug.caption || '' };
+    await fetch(`${FIREBASE_URL}/pinnedPhotos/${targetPrayer}/${photoId}.json${authParam()}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(photoObj),
+    });
+    if (!pinnedPhotosData[targetPrayer]) pinnedPhotosData[targetPrayer] = {};
+    pinnedPhotosData[targetPrayer][String(photoId)] = photoObj;
+  }
   // Clean up the suggestion
   await fetch(`${FIREBASE_URL}/suggestions/${fromPrayer}/${photoId}.json${authParam()}`, { method: 'DELETE' });
+  updateFavViewButtons();
 }
 
 async function dismissSuggestion(fromPrayer, photoId) {
@@ -4204,6 +4274,7 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
     <div class="prayer-section" id="section-${prayer.id}">
       <div class="prayer-header">
         <span class="prayer-title">${title}<span class="prayer-theme"> — ${prayer.theme}</span></span>
+        ${(()=>{ const n=getFavCount(prayer.id); return `<button class="btn-fav-view" id="fav-view-${prayer.id}" onclick="toggleFavoritesView('${prayer.id}')"${n===0?' disabled':''}>${n>0?`★ Favorites (${n})`:'★ Favorites'}</button>`; })()}
       </div>
       <div class="controls-bar">
         <div class="search-terms-bar" id="terms-chips-${prayer.id}">${chipsHtml}</div>
@@ -4235,6 +4306,11 @@ async function refinePrayer(prayerId, inputId, context) {
 
   const grid = document.getElementById('grid-' + prayerId);
   if (!grid) return;
+  if (_favViewOriginals.has(prayerId)) {
+    _favViewOriginals.delete(prayerId);
+    const favBtn = document.getElementById('fav-view-' + prayerId);
+    if (favBtn) favBtn.classList.remove('active');
+  }
 
   const pexelsLink = document.getElementById('pexels-link-' + prayerId);
   if (pexelsLink) {
@@ -4298,6 +4374,7 @@ function loadingGridHtml(prayerId) {
 // ─── MAIN FIND FUNCTION ────────────────────────────────────────────────────────
 
 async function findImages() {
+  _favViewOriginals.clear();
   const outline = document.getElementById('outline').value.trim();
   const context = document.getElementById('ctx').value.trim();
   const resultsEl = document.getElementById('results');
@@ -4729,6 +4806,7 @@ _handleVtAction();
 loadPrayerLibrary();
 loadMyFavorites();
 loadFavorites();
+loadPinnedPhotos();
 loadBlocked();
 loadCustomSearchTerms();
 loadNegativeKeywords();
