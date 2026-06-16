@@ -20,7 +20,6 @@ _Last updated: June 2026_
 ## Pending UI Polish (next session)
 
 - **Favorites button: use heart icon** — The "★ Favorites (N)" button in each prayer section header should use a ♥ heart instead of a star, consistent with the heart icon already used on individual photo cards.
-- **Favorites view: show full card** — When viewing favorites (after clicking the Favorites button), cards currently only show the image. They should display the full card with caption, photographer attribution, action buttons, etc. — the same as the normal search results view. (`toggleFavoritesView` calls `photoCardHtml` with `isLive=false`; check why captions/buttons aren't rendering.)
 
 ---
 
