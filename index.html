@@ -1591,7 +1591,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.88</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.89</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3993,27 +3993,44 @@ function handleCardKeydown(e) {
     return;
   }
 
-  const cards = [...grid.querySelectorAll('.img-card')];
-  const idx   = cards.indexOf(card);
+  const cards    = [...grid.querySelectorAll('.img-card')];
+  const idx      = cards.indexOf(card);
+  const firstTop = cards[0].getBoundingClientRect().top;
+  let cols = 1;
+  while (cols < cards.length && Math.abs(cards[cols].getBoundingClientRect().top - firstTop) < 5) cols++;
+
   let nextIdx;
+  if (e.key === 'ArrowRight') nextIdx = idx + 1;
+  else if (e.key === 'ArrowLeft') nextIdx = idx - 1;
+  else nextIdx = e.key === 'ArrowDown' ? idx + cols : idx - cols;
 
-  if (e.key === 'ArrowRight') {
-    nextIdx = idx + 1;
-  } else if (e.key === 'ArrowLeft') {
-    nextIdx = idx - 1;
+  if (nextIdx >= 0 && nextIdx < cards.length) { cards[nextIdx].focus(); return; }
+
+  // Cross-section navigation
+  const allGrids = [...document.querySelectorAll('.img-grid')];
+  const gridIdx  = allGrids.indexOf(grid);
+  const colIdx   = idx % cols;
+
+  if (nextIdx >= cards.length) {
+    // ArrowRight wraps to first card of next section; ArrowDown lands on same column in next section's top row
+    const nextGrid = allGrids[gridIdx + 1];
+    if (!nextGrid) return;
+    const nc = [...nextGrid.querySelectorAll('.img-card')];
+    if (!nc.length) return;
+    if (e.key === 'ArrowRight') { nc[0].focus(); return; }
+    nc[Math.min(colIdx, nc.length - 1)].focus();
   } else {
-    const firstTop = cards[0].getBoundingClientRect().top;
-    let cols = 1;
-    while (cols < cards.length && Math.abs(cards[cols].getBoundingClientRect().top - firstTop) < 5) cols++;
-    nextIdx = e.key === 'ArrowDown' ? idx + cols : idx - cols;
-  }
-
-  if (nextIdx >= 0 && nextIdx < cards.length) {
-    cards[nextIdx].focus();
-  } else if (e.key === 'ArrowDown' && nextIdx >= cards.length) {
-    const allGrids = [...document.querySelectorAll('.img-grid')];
-    const nextGrid = allGrids[allGrids.indexOf(grid) + 1];
-    if (nextGrid) { const firstCard = nextGrid.querySelector('.img-card'); if (firstCard) firstCard.focus(); }
+    // ArrowLeft wraps to last card of previous section; ArrowUp lands on same column in previous section's bottom row
+    const prevGrid = allGrids[gridIdx - 1];
+    if (!prevGrid) return;
+    const pc = [...prevGrid.querySelectorAll('.img-card')];
+    if (!pc.length) return;
+    if (e.key === 'ArrowLeft') { pc[pc.length - 1].focus(); return; }
+    const pTop = pc[0].getBoundingClientRect().top;
+    let pCols = 1;
+    while (pCols < pc.length && Math.abs(pc[pCols].getBoundingClientRect().top - pTop) < 5) pCols++;
+    const lastRowStart = Math.floor((pc.length - 1) / pCols) * pCols;
+    pc[lastRowStart + Math.min(colIdx, pc.length - lastRowStart - 1)].focus();
   }
 }
 
