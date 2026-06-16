@@ -15,8 +15,8 @@ const UNSPLASH_KEY  = process.env.UNSPLASH_ACCESS_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const FIREBASE_URL  = 'https://vt-image-helper-default-rtdb.firebaseio.com';
 const CLAUDE_MODEL  = 'claude-haiku-4-5-20251001';
-const CANDIDATES_PER_PRAYER = 10;
-const TARGET_PER_PRAYER     = 4;
+const CANDIDATES_PER_PRAYER = 20;
+const TARGET_PER_PRAYER     = 8;
 const UTM = '?utm_source=vt_image_helper&utm_medium=referral';
 
 if (!PEXELS_KEY && !UNSPLASH_KEY) {
