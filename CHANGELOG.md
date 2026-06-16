@@ -2,6 +2,12 @@
 
 ---
 
+## v2.88 — June 2026
+- ArrowDown on the bottom row of a prayer section now jumps to the first card of the next section
+- Space closes the lightbox when it is open (in addition to Esc)
+
+---
+
 ## v2.82 — June 2026
 - Unsplash added as a second photo source alongside Pexels
 - Admin API Keys tab now has separate Pexels and Unsplash sections
