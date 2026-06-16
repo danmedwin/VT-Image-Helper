@@ -2,6 +2,9 @@
 
 ---
 
+## v2.95 — June 2026
+- Prayers & Terms tab: theme text column added to each prayer row (between tag and search terms); Save button writes both search terms and theme to Firebase; saveAsDefault/resetToDefault include themes; loadCustomThemes() applies Firebase overrides at startup
+
 ## v2.94 — June 2026
 - Per-prayer "★ Favorites (N)" button in each section header (disabled when N=0); toggles grid to show only favorited photos for that prayer
 - approveSuggestion now writes the full photo object to Firebase pinnedPhotos/{prayer} so approved suggestions appear immediately in the favorites view
