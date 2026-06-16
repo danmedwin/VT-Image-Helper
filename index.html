@@ -1590,7 +1590,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.85</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.86</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2849,7 +2849,10 @@ async function saveAsDefault() {
     renderSearchTermsEditor();
     alert('Default saved.');
   } catch(e) {
-    alert('Failed to save default. You may need to add siteDefaults to your Firebase rules.');
+    const isAuth = e.message === '401' || e.message === '403';
+    alert(isAuth
+      ? 'Save failed: your admin session has expired. Log out and log back in, then try again.'
+      : 'Failed to save default. Check the browser console for details.');
   }
 }
 
