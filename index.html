@@ -902,6 +902,15 @@
     padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
   }
   .btn-modal-block:hover { background: #a93226; }
+  .suggest-section { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 10px; }
+  .suggest-section-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 6px; }
+  .suggest-row { display: flex; gap: 8px; align-items: center; }
+  .suggest-select { flex: 1; min-width: 0; font-size: 13px; padding: 6px 8px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: white; }
+  .btn-modal-suggest { background: #1d7a6b; color: white; border: none; border-radius: var(--radius);
+    padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn-modal-suggest:hover { background: #155f54; }
+  .btn-modal-suggest:disabled { background: #6ba89e; cursor: default; }
 
   .admin-tab-panel h3 { font-size: 14px; margin-bottom: 6px; }
   .review-controls {
@@ -1581,6 +1590,15 @@
       <label><input type="checkbox" value="off_topic"> Off-topic for this prayer</label>
     </div>
     <textarea class="block-notes" id="reportModalNotes" rows="2" placeholder="Additional notes (optional)&hellip;"></textarea>
+    <div class="suggest-section">
+      <p class="suggest-section-label">Fits another prayer?</p>
+      <div class="suggest-row">
+        <select id="suggestPrayerSelect" class="suggest-select">
+          <option value="">— choose a prayer —</option>
+        </select>
+        <button class="btn-modal-suggest" id="suggestBtn" onclick="confirmSuggestion()">Suggest</button>
+      </div>
+    </div>
     <div class="block-modal-actions">
       <button class="btn-modal-cancel" onclick="closeReportModal()">Cancel</button>
       <button class="btn-modal-block" onclick="confirmReport()">Report photo</button>
@@ -1591,7 +1609,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.89</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.90</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3393,12 +3411,54 @@ function showReportModal(prayerId, photoId, evt) {
   else { thumb.style.display = 'none'; }
   document.querySelectorAll('#reportModalOverlay input[type="checkbox"]').forEach(cb => cb.checked = false);
   document.getElementById('reportModalNotes').value = '';
+  const _ssel = document.getElementById('suggestPrayerSelect');
+  _ssel.innerHTML = '<option value="">— choose a prayer —</option>';
+  [...PRAYERS, ..._customPrayers].forEach(p => {
+    if (p.id === prayerId) return;
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.names[0] || p.id;
+    _ssel.appendChild(opt);
+  });
+  _ssel.disabled = false;
+  const _sbtn = document.getElementById('suggestBtn');
+  _sbtn.textContent = 'Suggest'; _sbtn.disabled = false;
   document.getElementById('reportModalOverlay').classList.add('open');
 }
 
 function closeReportModal() {
   document.getElementById('reportModalOverlay').classList.remove('open');
   _pendingReport = null;
+}
+
+async function confirmSuggestion() {
+  if (!_pendingReport) return;
+  const targetId = document.getElementById('suggestPrayerSelect').value;
+  if (!targetId) { alert('Please choose a prayer first.'); return; }
+  const { prayerId, photoId, imgSrc, sourceUrl } = _pendingReport;
+  const sel = document.getElementById('suggestPrayerSelect');
+  const btn = document.getElementById('suggestBtn');
+  sel.disabled = true; btn.textContent = '✓ Suggested!'; btn.disabled = true;
+  try {
+    await fetch(`${FIREBASE_URL}/suggestions/${prayerId}/${photoId}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ suggestedFor: targetId, ts: Date.now() }),
+    });
+  } catch(e) { console.warn('Suggestion save failed', e); }
+  const fromLabel = _getPrayerLabel(prayerId);
+  const toLabel   = _getPrayerLabel(targetId);
+  _sendAdminEmail(
+    'Image suggestion: ' + fromLabel + ' → ' + toLabel,
+    'A visitor suggested this photo also fits another prayer.\n\nCurrently shown in: ' + fromLabel
+      + '\nSuggested for: ' + toLabel,
+    'View photo', sourceUrl || APP_URL,
+    '', '',
+    {
+      photo_html: imgSrc ? '<p><img src="' + imgSrc + '" style="max-width:100%;border-radius:6px;display:block;margin:8px 0;"></p>' : '',
+      pexels_link: sourceUrl ? '<p style="font-size:12px;"><a href="' + sourceUrl + '" style="color:#1d7a6b;">View photo</a></p>' : '',
+    }
+  );
 }
 
 async function confirmReport() {
