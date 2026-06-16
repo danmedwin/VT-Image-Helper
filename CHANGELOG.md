@@ -2,6 +2,9 @@
 
 ---
 
+## v2.91 — June 2026
+- Report modal: Cancel/Report buttons moved to directly below notes textarea; "Fits another prayer?" wrapped in a rounded rectangle instead of a divider line
+
 ## v2.90 — June 2026
 - Report modal now includes a "Fits another prayer?" section: prayer dropdown + green Suggest button
 - Suggestion saves to Firebase and emails admin without closing the modal, so users can report and suggest independently
