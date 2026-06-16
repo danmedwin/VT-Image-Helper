@@ -1620,7 +1620,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.92</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.93</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2168,7 +2168,7 @@ function _handleVtAction() {
   var params = new URLSearchParams(window.location.search);
   var action = params.get('vtAction');
   if (!action) return;
-  _vtPendingAction = { action: action, id: params.get('id'), prayer: params.get('prayer'), photo: params.get('photo') };
+  _vtPendingAction = { action: action, id: params.get('id'), prayer: params.get('prayer'), photo: params.get('photo'), target: params.get('target') };
   window.history.replaceState({}, '', window.location.pathname);
   if (sessionStorage.getItem('vtAdminToken')) {
     setTimeout(_executeVtAction, 800);
@@ -2183,8 +2183,10 @@ function _executeVtAction() {
   _vtPendingAction = null;
   if (a.action === 'approve-prayer')  { approveSubmission(a.id); }
   else if (a.action === 'dismiss-prayer') { dismissSubmission(a.id); }
-  else if (a.action === 'block-report')   { approveReport(a.prayer, a.photo); }
-  else if (a.action === 'dismiss-report') { dismissReport(a.prayer, a.photo); }
+  else if (a.action === 'block-report')        { approveReport(a.prayer, a.photo); }
+  else if (a.action === 'dismiss-report')      { dismissReport(a.prayer, a.photo); }
+  else if (a.action === 'approve-suggestion')  { approveSuggestion(a.prayer, a.photo, a.target); }
+  else if (a.action === 'dismiss-suggestion')  { dismissSuggestion(a.prayer, a.photo); }
 }
 
 function authParam() {
@@ -3415,8 +3417,10 @@ function showReportModal(prayerId, photoId, evt) {
   const card  = document.querySelector(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`);
   const imgEl = card ? card.querySelector('img') : null;
   const imgSrc = imgEl ? imgEl.src : null;
-  const sourceUrl = (card && card.dataset.sourceUrl) || '';
-  _pendingReport = { prayerId, photoId, imgSrc, sourceUrl };
+  const sourceUrl    = (card && card.dataset.sourceUrl) || '';
+  const photographer = (card && card.dataset.photographer) || '';
+  const source       = /^\d+$/.test(String(photoId)) ? 'pexels' : 'unsplash';
+  _pendingReport = { prayerId, photoId, imgSrc, sourceUrl, photographer, source };
   const thumb = document.getElementById('reportModalThumb');
   if (imgSrc) { thumb.src = imgSrc; thumb.style.display = 'block'; }
   else { thumb.style.display = 'none'; }
@@ -3454,7 +3458,12 @@ async function confirmSuggestion() {
     await fetch(`${FIREBASE_URL}/suggestions/${prayerId}/${photoId}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ suggestedFor: targetId, ts: Date.now() }),
+      body: JSON.stringify({
+        suggestedFor: targetId, ts: Date.now(),
+        src: imgSrc || '', sourceUrl: sourceUrl || '',
+        photographer: _pendingReport.photographer || '',
+        source: _pendingReport.source || '',
+      }),
     });
   } catch(e) { console.warn('Suggestion save failed', e); }
   const fromLabel = _getPrayerLabel(prayerId);
@@ -3463,8 +3472,8 @@ async function confirmSuggestion() {
     'Image suggestion: ' + fromLabel + ' → ' + toLabel,
     'A visitor suggested this photo also fits another prayer.\n\nCurrently shown in: ' + fromLabel
       + '\nSuggested for: ' + toLabel,
-    'View photo', sourceUrl || APP_URL,
-    '', '',
+    'Approve', APP_URL + '?vtAction=approve-suggestion&prayer=' + prayerId + '&photo=' + photoId + '&target=' + targetId,
+    'Dismiss', APP_URL + '?vtAction=dismiss-suggestion&prayer=' + prayerId + '&photo=' + photoId,
     {
       photo_html: imgSrc ? '<p><img src="' + imgSrc + '" style="max-width:100%;border-radius:6px;display:block;margin:8px 0;"></p>' : '',
       pexels_link: sourceUrl ? '<p style="font-size:12px;"><a href="' + sourceUrl + '" style="color:#1d7a6b;">View photo</a></p>' : '',
@@ -3661,6 +3670,22 @@ async function approveReport(prayerId, photoId) {
 async function dismissReport(prayerId, photoId) {
   await _saveReportStatus(prayerId, photoId, 'dismissed');
   renderReportsPanel();
+}
+
+async function approveSuggestion(fromPrayer, photoId, targetPrayer) {
+  if (!targetPrayer) return;
+  // Set favorite count to 1 for the target prayer (authenticated write)
+  await fetch(`${FIREBASE_URL}/favorites/${targetPrayer}/${photoId}.json${authParam()}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(1),
+  });
+  if (!favoritesData[targetPrayer]) favoritesData[targetPrayer] = {};
+  favoritesData[targetPrayer][String(photoId)] = 1;
+  // Clean up the suggestion
+  await fetch(`${FIREBASE_URL}/suggestions/${fromPrayer}/${photoId}.json${authParam()}`, { method: 'DELETE' });
+}
+
+async function dismissSuggestion(fromPrayer, photoId) {
+  await fetch(`${FIREBASE_URL}/suggestions/${fromPrayer}/${photoId}.json${authParam()}`, { method: 'DELETE' });
 }
 
 async function reverseReport(prayerId, photoId) {
