@@ -989,7 +989,7 @@
 
   .terms-row {
     display: grid;
-    grid-template-columns: 16px 130px 80px 1fr auto auto;
+    grid-template-columns: 16px 130px 80px minmax(80px,120px) 1fr auto auto;
     gap: 8px;
     align-items: center;
     margin-bottom: 7px;
@@ -1625,7 +1625,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.94</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.95</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2797,6 +2797,7 @@ function loadReviewPhotos() {
 // ─── SEARCH TERMS EDITOR ───────────────────────────────────────────────────────
 
 let customSearchTerms = {};
+let customThemes      = {};
 
 async function loadCustomSearchTerms() {
   try {
@@ -2805,6 +2806,18 @@ async function loadCustomSearchTerms() {
       customSearchTerms = (await res.json()) || {};
       for (const prayer of PRAYERS) {
         if (customSearchTerms[prayer.id]) prayer.searchTerms = customSearchTerms[prayer.id];
+      }
+    }
+  } catch (e) {}
+}
+
+async function loadCustomThemes() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/prayerThemes.json`);
+    if (res.ok) {
+      customThemes = (await res.json()) || {};
+      for (const prayer of PRAYERS) {
+        if (customThemes[prayer.id] !== undefined) prayer.theme = customThemes[prayer.id];
       }
     }
   } catch (e) {}
@@ -2836,6 +2849,7 @@ function renderSearchTermsEditor() {
       <span class="terms-drag-handle">&#8942;&#8942;</span>
       <span class="terms-prayer-name" id="name-display-${p.id}">${label}${badge}<button class="terms-pencil-btn" onclick="editPrayerName('${p.id}')" title="Edit name">&#9998;</button></span>
       ${tagSelect}
+      <input class="terms-input" id="theme-input-${p.id}" type="text" placeholder="thematic text…" value="${(p.theme||'').replace(/"/g,'&quot;')}">
       <input class="terms-input" id="terms-input-${p.id}" type="text" value="${(p.searchTerms||'').replace(/"/g,'&quot;')}">
       <div style="display:flex;align-items:center;gap:6px;">
         <button class="terms-save-btn" onclick="saveSearchTerm('${p.id}')">Save</button>
@@ -2902,19 +2916,22 @@ async function savePrayerOrder() {
 }
 
 async function saveAsDefault() {
-  if (!confirm('Save the current prayer list, order, tags, and search terms as the new site default?')) return;
+  if (!confirm('Save the current prayer list, order, tags, search terms, and theme text as the new site default?')) return;
   const order = PRAYERS.map(p => p.id);
-  const tags = {};
+  const tags = {}, terms = {}, themes = {};
   PRAYERS.forEach(p => { tags[p.id] = p.tag || '_none_'; });
-  const terms = {};
   PRAYERS.forEach(p => { terms[p.id] = p.searchTerms; });
+  PRAYERS.forEach(p => { themes[p.id] = p.theme || ''; });
   try {
     const promotedIds = _customPrayers.map(p => p.id);
     const [res] = await Promise.all([
       fetch(`${FIREBASE_URL}/siteDefaults.json${authParam()}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order, tags, terms })
+        body: JSON.stringify({ order, tags, terms, themes })
+      }),
+      fetch(`${FIREBASE_URL}/prayerThemes.json${authParam()}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(themes)
       }),
       fetch(`${FIREBASE_URL}/prayerTags.json${authParam()}`, {
         method: 'PUT',
@@ -2946,7 +2963,7 @@ async function saveAsDefault() {
 }
 
 async function resetToDefault() {
-  if (!confirm('Reset prayers to the saved default? This overwrites the current order, tags, and search terms.')) return;
+  if (!confirm('Reset prayers to the saved default? This overwrites the current order, tags, search terms, and theme text.')) return;
   try {
     const res = await fetch(`${FIREBASE_URL}/siteDefaults.json`);
     const defaults = await res.json();
@@ -2963,6 +2980,10 @@ async function resetToDefault() {
         fetch(`${FIREBASE_URL}/searchTerms.json${authParam()}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(defaults.terms || {})
+        }),
+        fetch(`${FIREBASE_URL}/prayerThemes.json${authParam()}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(defaults.themes || {})
         }),
         fetch(`${FIREBASE_URL}/prayerDisplayNames.json${authParam()}`, { method: 'DELETE' }),
       ]);
@@ -3343,22 +3364,30 @@ async function restorePrayer(prayerId) {
 }
 
 async function saveSearchTerm(prayerId) {
-  const input = document.getElementById(`terms-input-${prayerId}`);
-  const terms = input.value.trim();
-  if (!terms) return;
-  await fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json${authParam()}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(terms),
-  });
+  const termsInput = document.getElementById(`terms-input-${prayerId}`);
+  const themeInput = document.getElementById(`theme-input-${prayerId}`);
+  const terms = termsInput ? termsInput.value.trim() : '';
+  const theme = themeInput ? themeInput.value.trim() : '';
   const prayer = PRAYERS.find(p => p.id === prayerId);
-  if (prayer) prayer.searchTerms = terms;
-  customSearchTerms[prayerId] = terms;
-  const reviewSel = document.getElementById('reviewPrayerSelect');
-  if (reviewSel && reviewSel.value === prayerId) {
-    const ri = document.getElementById('reviewTermsInput');
-    if (ri) ri.value = terms;
+  const saves = [];
+  if (terms) {
+    saves.push(fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json${authParam()}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(terms),
+    }));
+    if (prayer) prayer.searchTerms = terms;
+    customSearchTerms[prayerId] = terms;
+    const reviewSel = document.getElementById('reviewPrayerSelect');
+    if (reviewSel && reviewSel.value === prayerId) {
+      const ri = document.getElementById('reviewTermsInput');
+      if (ri) ri.value = terms;
+    }
   }
+  saves.push(fetch(`${FIREBASE_URL}/prayerThemes/${prayerId}.json${authParam()}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(theme),
+  }));
+  if (prayer) prayer.theme = theme;
+  customThemes[prayerId] = theme;
+  await Promise.all(saves);
   const ok = document.getElementById(`terms-ok-${prayerId}`);
   if (ok) { ok.style.visibility = 'visible'; setTimeout(() => ok.style.visibility = 'hidden', 2000); }
 }
@@ -4809,6 +4838,7 @@ loadFavorites();
 loadPinnedPhotos();
 loadBlocked();
 loadCustomSearchTerms();
+loadCustomThemes();
 loadNegativeKeywords();
 loadFilters();
 loadReportCount();
