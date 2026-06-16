@@ -2,6 +2,9 @@
 
 ---
 
+## v2.96 — June 2026
+- Fix captions and photographer attribution not appearing in Safari (or any browser without API keys and no local curated library): removed isLive gating from photoCardHtml so captions always render when photo.caption or photo.photographer is present; also fixes favorites view showing images only with no caption/attribution
+
 ## v2.95 — June 2026
 - Prayers & Terms tab: theme text column added to each prayer row (between tag and search terms); Save button writes both search terms and theme to Firebase; saveAsDefault/resetToDefault include themes; loadCustomThemes() applies Firebase overrides at startup
 
