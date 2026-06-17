@@ -1625,7 +1625,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.98</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.99</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4284,7 +4284,9 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
   const title = prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1);
   const cards = photos && photos.length
     ? photos.map(ph => photoCardHtml(prayer.id, ph, isLive)).join('')
-    : loadingGridHtml(prayer.id);
+    : isLive
+        ? loadingGridHtml(prayer.id)
+        : '<div class="img-loading" style="color:var(--text-muted);font-size:14px;">No curated photos available. Add a Pexels or Unsplash API key to search live.</div>';
   const apiKey = getKey();
   const safeCtx = (context || '').replace(/'/g, "\\'");
 

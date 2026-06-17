@@ -2,6 +2,9 @@
 
 ---
 
+## v2.99 — June 2026
+- Fix custom prayers (Maariv Aravim etc.) stuck on "Fetching photos…" in Safari: when no API key is set and no curated photos exist for a prayer, prayerSectionHtml now shows "No curated photos available. Add an API key to search live." instead of the infinite loading spinner
+
 ## v2.98 — June 2026
 - Fix "Find Images does nothing" when all prayer chips are selected: custom prayers from Firebase lack a photos/searchTerms field; three null-guards added (prayer.searchTerms.trim(), prayer.photos.map in catch block, p.photos.filter in no-API fallback)
 
