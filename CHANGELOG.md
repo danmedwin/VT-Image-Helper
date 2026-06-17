@@ -2,6 +2,9 @@
 
 ---
 
+## v3.03 — June 2026
+- Switch header/Beta row to 60/40 ratio (was 40/60)
+
 ## v3.02 — June 2026
 - Separate header and Beta box into two independent cards in a 40/60 grid matching the lower column layout
 
