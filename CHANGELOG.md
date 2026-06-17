@@ -2,6 +2,10 @@
 
 ---
 
+## v3.04 — June 2026
+- Replace all hardcoded stub photos in PRAYERS array with full curated.json photo objects (src, caption, photographer, sourceUrl, source) — the page now shows real photos immediately, before Firebase or curated.json loads
+- Update 22 prayers' hardcoded searchTerms to match current Firebase defaults saved via the admin panel
+
 ## v3.03 — June 2026
 - Switch header/Beta row to 60/40 ratio (was 40/60)
 
