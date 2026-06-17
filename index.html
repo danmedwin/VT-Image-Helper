@@ -33,6 +33,7 @@
     --radius-lg: 18px;
     --radius-card: 11px;
     --radius-chip: 30px;
+    --accent: var(--navy-mid);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -106,12 +107,12 @@
     border-radius: 20px;
   }
   .apikey-status.active {
-    background: #e6f5f2;
+    background: var(--teal-light);
     color: var(--teal);
   }
   .apikey-status.inactive {
-    background: #fdf6e3;
-    color: #7a5c00;
+    background: var(--gold-light);
+    color: var(--gold-dark);
   }
   .apikey-body {
     margin-top: 14px;
@@ -191,8 +192,8 @@
     margin-left: 8px;
     vertical-align: middle;
   }
-  .mode-badge.live { background: #e6f5f2; color: var(--teal); }
-  .mode-badge.curated { background: var(--gold-light); color: #7a5c00; }
+  .mode-badge.live { background: var(--teal-light); color: var(--teal); }
+  .mode-badge.curated { background: var(--gold-light); color: var(--gold-dark); }
 
   /* LOADING STATE */
   .img-loading {
@@ -236,10 +237,9 @@
     color: var(--navy);
     margin-bottom: 0;
   }
-  .setup-hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
   .setup-section-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 10px; }
-  .setup-two-col { display: grid; grid-template-columns: 1fr 3fr; gap: 20px; align-items: start; }
-  @media (max-width: 700px) { .setup-two-col { grid-template-columns: 1fr; } }
+
   .field input[type="text"] {
     width: 100%; border: 1px solid var(--border); border-radius: var(--radius);
     padding: 10px 13px; font-size: 14px; font-family: inherit; color: var(--text);
@@ -296,13 +296,7 @@
   .svc-empty { font-size: 13px; color: var(--text-muted); padding: 6px 2px; font-style: italic; }
   .setup-explainer { font-size: 13px; color: var(--text-muted); margin: 6px 0 0; line-height: 1.6; }
   .setup-explainer a { color: var(--navy-mid); }
-  .field-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 18px;
-  }
-  @media (max-width: 680px) { .field-row { grid-template-columns: 1fr; } }
+
   .field label {
     display: block;
     font-size: 13px;
@@ -934,9 +928,9 @@
   .suggest-row { display: flex; gap: 8px; align-items: center; }
   .suggest-select { flex: 1; min-width: 0; font-size: 13px; padding: 6px 8px;
     border: 1px solid var(--border); border-radius: var(--radius); background: white; }
-  .btn-modal-suggest { background: #1d7a6b; color: white; border: none; border-radius: var(--radius);
+  .btn-modal-suggest { background: var(--teal); color: white; border: none; border-radius: var(--radius);
     padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-  .btn-modal-suggest:hover { background: #155f54; }
+  .btn-modal-suggest:hover { background: var(--teal); filter: brightness(0.88); }
   .btn-modal-suggest:disabled { background: #6ba89e; cursor: default; }
   .btn-fav-view { font-size: 12px; padding: 4px 10px; border-radius: var(--radius);
     border: 1px solid #e2e1ee; background: #f7f6fb; color: #9092ab; cursor: pointer; }
@@ -989,7 +983,7 @@
   }
   .keyword-add-btn:hover { opacity: 0.85; }
   .filter-teal-tag { background: #d4f5f0; color: #0d5c55; border-color: #8ecfc8; }
-  .filter-teal-tag .chip-remove { color: #1d7a6b; }
+  .filter-teal-tag .chip-remove { color: var(--teal); }
   .filter-jew-tag { background: #ede8f8; color: #4a2d82; border-color: #c4b0e8; }
   .filter-jew-tag .chip-remove { color: #6a3eb0; }
   .filter-group-row { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; overflow: hidden; }
@@ -1649,7 +1643,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.07</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.08</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2366,6 +2360,17 @@ function authParam() {
   return t ? '?auth=' + t : '';
 }
 
+async function fbPut(path, data) {
+  return fetch(`${FIREBASE_URL}/${path}${authParam()}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}
+async function fbDel(path) {
+  return fetch(`${FIREBASE_URL}/${path}${authParam()}`, { method: 'DELETE' });
+}
+
 let favoritesData    = {}; // { prayerId: { photoId: count } } — from Firebase
 let pinnedPhotosData = {}; // { prayerId: { photoId: photoObj } } — approved suggestions
 let myFavorites      = new Set(); // 'prayerId:photoId' strings this browser has favorited
@@ -2744,11 +2749,7 @@ async function removeNegativeKeyword(word) {
 }
 
 async function saveKeywordsToFirebase() {
-  const res = await fetch(`${FIREBASE_URL}/blockedKeywords.json${authParam()}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(negativeKeywords),
-  });
+  const res = await fbPut('blockedKeywords.json', negativeKeywords);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     alert(`Blocklist save failed: ${err.error || res.status}. Check Firebase rules.`);
@@ -2774,11 +2775,7 @@ async function loadFilters() {
 }
 
 async function saveFilters() {
-  const res = await fetch(`${FIREBASE_URL}/filters.json${authParam()}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nonJewish: _filterNonJewish, jewish: _filterJewish }),
-  });
+  const res = await fbPut('filters.json', { nonJewish: _filterNonJewish, jewish: _filterJewish });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     alert(`Filter save failed: ${err.error || res.status}. Check Firebase rules.`);
@@ -3079,9 +3076,7 @@ function onTermsDrop(e, idx) {
 }
 async function savePrayerOrder() {
   try {
-    await fetch(`${FIREBASE_URL}/prayerOrder.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(_prayerOrder),
-    });
+    await fbPut('prayerOrder.json', _prayerOrder);
   } catch(e) {}
 }
 
@@ -3095,25 +3090,11 @@ async function saveAsDefault() {
   try {
     const promotedIds = _customPrayers.map(p => p.id);
     const [res] = await Promise.all([
-      fetch(`${FIREBASE_URL}/siteDefaults.json${authParam()}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order, tags, terms, themes })
-      }),
-      fetch(`${FIREBASE_URL}/prayerThemes.json${authParam()}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(themes)
-      }),
-      fetch(`${FIREBASE_URL}/prayerTags.json${authParam()}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(tags)
-      }),
-      fetch(`${FIREBASE_URL}/promotedPrayers.json${authParam()}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(promotedIds)
-      }),
-      fetch(`${FIREBASE_URL}/prayerDisplayNames.json${authParam()}`, { method: 'DELETE' }),
+      fbPut('siteDefaults.json', { order, tags, terms, themes }),
+      fbPut('prayerThemes.json', themes),
+      fbPut('prayerTags.json', tags),
+      fbPut('promotedPrayers.json', promotedIds),
+      fbDel('prayerDisplayNames.json'),
     ]);
     if (!res.ok) throw new Error(res.status);
     _promotedPrayerIds = new Set(promotedIds);
@@ -3139,29 +3120,17 @@ async function resetToDefault() {
     const defaults = await res.json();
     if (defaults && defaults.order) {
       await Promise.all([
-        fetch(`${FIREBASE_URL}/prayerOrder.json${authParam()}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(defaults.order)
-        }),
-        fetch(`${FIREBASE_URL}/prayerTags.json${authParam()}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(defaults.tags || {})
-        }),
-        fetch(`${FIREBASE_URL}/searchTerms.json${authParam()}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(defaults.terms || {})
-        }),
-        fetch(`${FIREBASE_URL}/prayerThemes.json${authParam()}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(defaults.themes || {})
-        }),
-        fetch(`${FIREBASE_URL}/prayerDisplayNames.json${authParam()}`, { method: 'DELETE' }),
+        fbPut('prayerOrder.json', defaults.order),
+        fbPut('prayerTags.json', defaults.tags || {}),
+        fbPut('searchTerms.json', defaults.terms || {}),
+        fbPut('prayerThemes.json', defaults.themes || {}),
+        fbDel('prayerDisplayNames.json'),
       ]);
     } else {
       // No saved default — fall back to MT order by clearing Firebase order
       await Promise.all([
-        fetch(`${FIREBASE_URL}/prayerOrder.json${authParam()}`, { method: 'DELETE' }),
-        fetch(`${FIREBASE_URL}/prayerDisplayNames.json${authParam()}`, { method: 'DELETE' }),
+        fbDel('prayerOrder.json'),
+        fbDel('prayerDisplayNames.json'),
       ]);
     }
     location.reload();
@@ -3240,9 +3209,7 @@ async function savePrayerTag(prayerId, tag) {
   // Store '_none_' as sentinel for "explicitly no tag" so the default doesn't re-apply
   const stored = tag || '_none_';
   try {
-    await fetch(`${FIREBASE_URL}/prayerTags/${prayerId}.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(stored),
-    });
+    await fbPut(`prayerTags/${prayerId}.json`, stored);
     _prayerTags[prayerId] = stored;
   } catch(e) { alert('Could not save tag — check Firebase rules for prayerTags/'); return; }
   applyPrayerLibrary();
@@ -3310,18 +3277,12 @@ async function approveSubmission(id) {
   if (!s) return;
   const prayer = { id: s.id, names: s.names, theme: s.theme || '', searchTerms: s.searchTerms };
   try {
-    await fetch(`${FIREBASE_URL}/customPrayers/${id}.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
-    });
+    await fbPut(`customPrayers/${id}.json`, prayer);
     if (s.tag && s.tag !== '_none_') {
-      await fetch(`${FIREBASE_URL}/prayerTags/${id}.json${authParam()}`, {
-        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(s.tag),
-      });
+      await fbPut(`prayerTags/${id}.json`, s.tag);
       _prayerTags[id] = s.tag;
     }
-    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('approved'),
-    });
+    await fbPut(`pendingPrayers/${id}/status.json`, 'approved');
     s.status = 'approved';
     _customPrayers.push(prayer);
     _refreshPrayerUI();
@@ -3332,9 +3293,7 @@ async function approveSubmission(id) {
 
 async function dismissSubmission(id) {
   try {
-    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('dismissed'),
-    });
+    await fbPut(`pendingPrayers/${id}/status.json`, 'dismissed');
     const s = _pendingPrayers.find(p => p.id === id);
     if (s) s.status = 'dismissed';
     updateSubmissionsBadge();
@@ -3344,9 +3303,7 @@ async function dismissSubmission(id) {
 
 async function reverseSubmission(id) {
   try {
-    await fetch(`${FIREBASE_URL}/pendingPrayers/${id}/status.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify('pending'),
-    });
+    await fbPut(`pendingPrayers/${id}/status.json`, 'pending');
     const s = _pendingPrayers.find(p => p.id === id);
     if (s) s.status = 'pending';
     updateSubmissionsBadge();
@@ -3406,13 +3363,9 @@ async function saveUnrecognized(idx) {
   try {
     if (isAdmin) {
       const prayer = { id, names: [name.toLowerCase()], theme: '', searchTerms: terms };
-      await fetch(`${FIREBASE_URL}/customPrayers/${id}.json${authParam()}`, {
-        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
-      });
+      await fbPut(`customPrayers/${id}.json`, prayer);
       if (tag) {
-        await fetch(`${FIREBASE_URL}/prayerTags/${id}.json${authParam()}`, {
-          method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tag),
-        });
+        await fbPut(`prayerTags/${id}.json`, tag);
         _prayerTags[id] = tag;
       }
       _customPrayers.push(prayer);
@@ -3465,9 +3418,7 @@ async function savePrayerName(prayerId) {
   const newName = inp ? inp.value.trim() : '';
   if (!newName) { renderSearchTermsEditor(); return; }
   try {
-    await fetch(`${FIREBASE_URL}/prayerDisplayNames/${prayerId}.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newName.toLowerCase()),
-    });
+    await fbPut(`prayerDisplayNames/${prayerId}.json`, newName.toLowerCase());
     _prayerDisplayNames[prayerId] = newName.toLowerCase();
     const prayer = PRAYERS.find(p => p.id === prayerId);
     if (prayer) prayer.names[0] = newName.toLowerCase();
@@ -3493,14 +3444,10 @@ async function addCustomPrayer() {
   const id = 'custom_' + name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
   const prayer = { id, names: [name.toLowerCase()], theme: theme||'', searchTerms: terms };
   try {
-    const res = await fetch(`${FIREBASE_URL}/customPrayers/${id}.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(prayer),
-    });
+    const res = await fbPut(`customPrayers/${id}.json`, prayer);
     if (!res.ok) throw new Error(res.status);
     if (tag) {
-      await fetch(`${FIREBASE_URL}/prayerTags/${id}.json${authParam()}`, {
-        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tag),
-      });
+      await fbPut(`prayerTags/${id}.json`, tag);
       _prayerTags[id] = tag;
     }
     _customPrayers.push(prayer);
@@ -3516,19 +3463,17 @@ async function removePrayer(prayerId, isCustom) {
   const label = (PRAYERS.find(p => p.id === prayerId)||{}).names?.[0] || prayerId;
   if (!confirm(`Remove "${label}" from the prayer list?`)) return;
   if (isCustom) {
-    await fetch(`${FIREBASE_URL}/customPrayers/${prayerId}.json${authParam()}`, { method: 'DELETE' });
+    await fbDel(`customPrayers/${prayerId}.json`);
     _customPrayers = _customPrayers.filter(p => p.id !== prayerId);
   } else {
-    await fetch(`${FIREBASE_URL}/hiddenPrayers/${prayerId}.json${authParam()}`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}, body: 'true',
-    });
+    await fbPut(`hiddenPrayers/${prayerId}.json`, true);
     _hiddenPrayerIds.add(prayerId);
   }
   _refreshPrayerUI();
 }
 
 async function restorePrayer(prayerId) {
-  await fetch(`${FIREBASE_URL}/hiddenPrayers/${prayerId}.json${authParam()}`, { method: 'DELETE' });
+  await fbDel(`hiddenPrayers/${prayerId}.json`);
   _hiddenPrayerIds.delete(prayerId);
   _refreshPrayerUI();
 }
@@ -3541,9 +3486,7 @@ async function saveSearchTerm(prayerId) {
   const prayer = PRAYERS.find(p => p.id === prayerId);
   const saves = [];
   if (terms) {
-    saves.push(fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json${authParam()}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(terms),
-    }));
+    saves.push(fbPut(`searchTerms/${prayerId}.json`, terms));
     if (prayer) prayer.searchTerms = terms;
     customSearchTerms[prayerId] = terms;
     const reviewSel = document.getElementById('reviewPrayerSelect');
@@ -3552,9 +3495,7 @@ async function saveSearchTerm(prayerId) {
       if (ri) ri.value = terms;
     }
   }
-  saves.push(fetch(`${FIREBASE_URL}/prayerThemes/${prayerId}.json${authParam()}`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(theme),
-  }));
+  saves.push(fbPut(`prayerThemes/${prayerId}.json`, theme));
   if (prayer) prayer.theme = theme;
   customThemes[prayerId] = theme;
   await Promise.all(saves);
@@ -3569,11 +3510,7 @@ async function saveReviewTerms() {
   const input = document.getElementById('reviewTermsInput');
   const terms = input ? input.value.trim() : '';
   if (!terms) return;
-  await fetch(`${FIREBASE_URL}/searchTerms/${prayerId}.json${authParam()}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(terms),
-  });
+  await fbPut(`searchTerms/${prayerId}.json`, terms);
   const prayer = PRAYERS.find(p => p.id === prayerId);
   if (prayer) prayer.searchTerms = terms;
   customSearchTerms[prayerId] = terms;
@@ -3642,9 +3579,7 @@ async function confirmBlock() {
     ? { blocked: true, reasons, notes }
     : true;
 
-  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockData),
-  });
+  await fbPut(`blocked/${prayerId}/${photoId}.json`, blockData);
   await fetch(`${FIREBASE_URL}/favorites/${prayerId}/${photoId}.json`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '0',
   });
@@ -3891,9 +3826,7 @@ function renderReportsPanel() {
 async function _saveReportStatus(prayerId, photoId, status) {
   const existing = (reportsData[prayerId] || {})[photoId] || {};
   const updated = { ...existing, status, actionTs: Date.now() };
-  await fetch(`${FIREBASE_URL}/reports/${prayerId}/${photoId}.json${authParam()}`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated),
-  });
+  await fbPut(`reports/${prayerId}/${photoId}.json`, updated);
   if (!reportsData[prayerId]) reportsData[prayerId] = {};
   reportsData[prayerId][photoId] = updated;
 }
@@ -3902,9 +3835,7 @@ async function approveReport(prayerId, photoId) {
   const r = (reportsData[prayerId] || {})[photoId] || {};
   // Block the photo
   const blockVal = { blocked: true, reasons: r.reasons || [], notes: r.notes || '', ts: Date.now() };
-  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockVal),
-  });
+  await fbPut(`blocked/${prayerId}/${photoId}.json`, blockVal);
   if (!blockedData[prayerId]) blockedData[prayerId] = {};
   blockedData[prayerId][photoId] = blockVal;
   document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
@@ -3934,36 +3865,30 @@ async function approveSuggestion(fromPrayer, photoId, targetPrayer) {
   const sugRes = await fetch(`${FIREBASE_URL}/suggestions/${fromPrayer}/${photoId}.json`);
   const sug = (sugRes.ok ? await sugRes.json() : null) || {};
   // Set favorite count for target prayer
-  await fetch(`${FIREBASE_URL}/favorites/${targetPrayer}/${photoId}.json${authParam()}`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(1),
-  });
+  await fbPut(`favorites/${targetPrayer}/${photoId}.json`, 1);
   if (!favoritesData[targetPrayer]) favoritesData[targetPrayer] = {};
   favoritesData[targetPrayer][String(photoId)] = 1;
   // Pin the full photo object so it appears in the favorites view immediately
   if (sug.src) {
     const photoObj = { id: photoId, src: sug.src, sourceUrl: sug.sourceUrl || '', photographer: sug.photographer || '', source: sug.source || 'pexels', caption: sug.caption || '' };
-    await fetch(`${FIREBASE_URL}/pinnedPhotos/${targetPrayer}/${photoId}.json${authParam()}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(photoObj),
-    });
+    await fbPut(`pinnedPhotos/${targetPrayer}/${photoId}.json`, photoObj);
     if (!pinnedPhotosData[targetPrayer]) pinnedPhotosData[targetPrayer] = {};
     pinnedPhotosData[targetPrayer][String(photoId)] = photoObj;
   }
   // Clean up the suggestion
-  await fetch(`${FIREBASE_URL}/suggestions/${fromPrayer}/${photoId}.json${authParam()}`, { method: 'DELETE' });
+  await fbDel(`suggestions/${fromPrayer}/${photoId}.json`);
   updateFavViewButtons();
 }
 
 async function dismissSuggestion(fromPrayer, photoId) {
-  await fetch(`${FIREBASE_URL}/suggestions/${fromPrayer}/${photoId}.json${authParam()}`, { method: 'DELETE' });
+  await fbDel(`suggestions/${fromPrayer}/${photoId}.json`);
 }
 
 async function reverseReport(prayerId, photoId) {
   const r = (reportsData[prayerId] || {})[photoId] || {};
   if (r.status === 'approved') {
     // Reverse: unblock and dismiss
-    await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false',
-    });
+    await fbPut(`blocked/${prayerId}/${photoId}.json`, false);
     if (blockedData[prayerId]) blockedData[prayerId][photoId] = false;
     document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
       .forEach(c => c.classList.remove('blocked'));
@@ -3972,9 +3897,7 @@ async function reverseReport(prayerId, photoId) {
   } else {
     // Reverse: approve (block, don't re-add keywords to avoid duplicates)
     const blockVal = { blocked: true, reasons: r.reasons || [], notes: r.notes || '', ts: Date.now() };
-    await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(blockVal),
-    });
+    await fbPut(`blocked/${prayerId}/${photoId}.json`, blockVal);
     if (!blockedData[prayerId]) blockedData[prayerId] = {};
     blockedData[prayerId][photoId] = blockVal;
     document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
@@ -3986,9 +3909,7 @@ async function reverseReport(prayerId, photoId) {
 }
 
 async function unblockPhoto(prayerId, photoId) {
-  await fetch(`${FIREBASE_URL}/blocked/${prayerId}/${photoId}.json${authParam()}`, {
-    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: 'false',
-  });
+  await fbPut(`blocked/${prayerId}/${photoId}.json`, false);
   if (blockedData[prayerId]) blockedData[prayerId][photoId] = false;
   document.querySelectorAll(`.img-card[data-prayer="${prayerId}"][data-photo="${photoId}"]`)
     .forEach(c => c.classList.remove('blocked'));

@@ -2,6 +2,12 @@
 
 ---
 
+## v3.08 — June 2026
+- Fix invisible Reports sub-tab active state and Reverse button: define missing `--accent` CSS variable
+- Remove 3 dead CSS classes: `.setup-hr`, `.setup-two-col`, `.field-row` (defined but never used in HTML)
+- Replace 8+ hardcoded old-palette hex colors with CSS variables (`--teal-light`, `--gold-light`, `--gold-dark`, `--teal`)
+- Add `fbPut()` and `fbDel()` Firebase helper functions; replace ~48 raw fetch boilerplate blocks with helpers (~100 lines removed)
+
 ## v3.07 — June 2026
 - Email action links (Approve/Dismiss) now skip the login modal if you've previously logged in — a stored refresh token silently exchanges for a fresh session and executes the action directly
 
