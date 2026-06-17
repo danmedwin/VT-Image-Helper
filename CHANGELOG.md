@@ -2,6 +2,9 @@
 
 ---
 
+## v3.01 — June 2026
+- Add Beta notice panel on the right side of the "Find images for your service" header box: soft orange styling, explains the tool is in development and invites users to ♥ favorite great images and 🚩 flag photos that don't fit or belong with a different prayer
+
 ## v3.00 — June 2026
 - Fix Favorites button staying disabled after live photo fetch: getFavCount now reads from the DOM grid (`.btn-fav.favorited` count) instead of getCuratedPhotos, so it correctly reflects favorited live-search photos
 - Fix Favorites view showing empty for live-fetched prayers: toggleFavoritesView now clones favorited img-card elements directly from the DOM instead of rebuilding from getCuratedPhotos
