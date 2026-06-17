@@ -1649,7 +1649,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.06</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.07</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2326,7 +2326,26 @@ function _handleVtAction() {
   if (sessionStorage.getItem('vtAdminToken')) {
     setTimeout(_executeVtAction, 800);
   } else {
-    showAdminLoginModal();
+    var rt = localStorage.getItem('vtAdminRefreshToken');
+    if (rt) {
+      fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_API_KEY, {
+        method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt)
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.id_token && data.user_id === ADMIN_UID) {
+          sessionStorage.setItem('vtAdminToken', data.id_token);
+          localStorage.setItem('vtAdminRefreshToken', data.refresh_token);
+          document.body.classList.add('admin-mode');
+          document.getElementById('adminToggle').textContent = 'Exit admin';
+          setTimeout(_executeVtAction, 800);
+        } else {
+          localStorage.removeItem('vtAdminRefreshToken');
+          showAdminLoginModal();
+        }
+      }).catch(function() { showAdminLoginModal(); });
+    } else {
+      showAdminLoginModal();
+    }
   }
 }
 
@@ -2605,6 +2624,7 @@ function showAdminTab(id, btn) {
 function toggleAdmin() {
   if (sessionStorage.getItem('vtAdminToken')) {
     sessionStorage.removeItem('vtAdminToken');
+    localStorage.removeItem('vtAdminRefreshToken');
     document.body.classList.remove('admin-mode');
     document.getElementById('adminToggle').textContent = 'Admin';
   } else {
@@ -2660,6 +2680,7 @@ async function submitAdminLogin() {
       return;
     }
     sessionStorage.setItem('vtAdminToken', data.idToken);
+    localStorage.setItem('vtAdminRefreshToken', data.refreshToken);
     closeAdminLogin();
     document.body.classList.add('admin-mode');
     document.getElementById('adminToggle').textContent = 'Exit admin';

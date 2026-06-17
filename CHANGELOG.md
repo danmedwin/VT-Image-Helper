@@ -2,6 +2,9 @@
 
 ---
 
+## v3.07 — June 2026
+- Email action links (Approve/Dismiss) now skip the login modal if you've previously logged in — a stored refresh token silently exchanges for a fresh session and executes the action directly
+
 ## v3.06 — June 2026
 - Header: title changed to "VT Image Helper" with dark text and no shadow; "Visual T'filah" eyebrow removed
 - Explainer: removed "Click ♡ to save favorites across sessions" from the setup panel intro
