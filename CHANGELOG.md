@@ -2,6 +2,11 @@
 
 ---
 
+## v3.06 — June 2026
+- Header: title changed to "VT Image Helper" with dark text and no shadow; "Visual T'filah" eyebrow removed
+- Explainer: removed "Click ♡ to save favorites across sessions" from the setup panel intro
+- Frosted glass panel opacity reduced slightly (0.94 → 0.88)
+
 ## v3.05 — June 2026
 - Frosted Sanctuary visual redesign (CSS-only re-skin)
 - New design tokens: updated navy/gold/teal palette, new page-bg, footer-bg, fav-heart, radius-card, radius-chip variables
