@@ -4,29 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VT Image Helper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #0b2d5e;
-    --navy-mid: #1a4a7a;
-    --navy-light: #e8f0f8;
-    --gold: #c49a2a;
-    --gold-light: #fdf6e3;
-    --teal: #1d7a6b;
-    --teal-light: #e6f5f2;
-    --text: #1a2a3a;
-    --text-muted: #4a6080;
-    --border: #d0dce8;
-    --surface: #f5f8fb;
+    --navy: #20233a;
+    --navy-mid: #2f3357;
+    --navy-light: #eef0fb;
+    --gold: #cf9a4e;
+    --gold-light: #f3ece0;
+    --gold-dark: #a9802f;
+    --teal: #3f7d72;
+    --teal-light: #e6f4f1;
+    --teal-border: #b7d8d1;
+    --text: #20233a;
+    --text-muted: #6b6e85;
+    --text-soft: #7d8095;
+    --text-placeholder: #9698ad;
+    --border: #e4e3f0;
+    --border-field: #dcdbe8;
+    --surface: #f4f3fa;
     --white: #ffffff;
-    --radius: 10px;
-    --radius-lg: 16px;
+    --page-bg: #ecebf3;
+    --footer-bg: #e7e6ef;
+    --fav-heart: #e0566a;
+    --radius: 12px;
+    --radius-lg: 18px;
+    --radius-card: 11px;
+    --radius-chip: 30px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--surface);
+    font-family: 'Figtree', system-ui, sans-serif;
+    background: var(--page-bg);
     color: var(--text);
     min-height: 100vh;
   }
@@ -34,39 +47,36 @@
   /* HEADER */
   header {
     background:
-      linear-gradient(to bottom,
-        rgba(5, 18, 55, 0)    0%,
-        rgba(5, 18, 55, 0.18) 38%,
-        rgba(5, 18, 55, 0.65) 75%,
-        rgba(5, 18, 55, 0.87) 100%),
+      linear-gradient(to bottom, rgba(16,18,38,0) 18%, rgba(16,18,38,.5) 68%, rgba(16,18,38,.92) 100%),
       url('./header-bg.jpg') center 35% / cover no-repeat;
-    padding: 56px 32px 28px;
-    min-height: 170px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    border-bottom: 3px solid var(--gold);
+    padding: 54px 40px 46px;
+    display: block;
+    border-bottom: none;
   }
+  .hero-wordmark { text-align: center; margin-bottom: 34px; }
+  .hero-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: rgba(250,242,228,0.9); text-shadow: 0 1px 14px rgba(0,0,0,0.55); margin-bottom: 11px; }
   header h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #ffffff;
-    letter-spacing: -0.3px;
-    margin-bottom: 5px;
-    text-shadow: 0 2px 18px rgba(0,0,0,0.55);
+    font-size: 46px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    color: #fdfaf3;
+    text-shadow: 0 2px 30px rgba(0,0,0,0.5);
+    line-height: 1.02;
   }
   header .subtitle {
-    font-size: 13px;
-    color: rgba(255,255,255,0.88);
+    font-size: 15.5px;
+    color: rgba(252,247,238,0.92);
+    text-shadow: 0 1px 12px rgba(0,0,0,0.5);
+    margin-top: 12px;
     font-weight: 400;
-    text-shadow: 0 1px 10px rgba(0,0,0,0.5);
   }
 
   /* MAIN LAYOUT */
   main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 28px 24px 64px;
+    max-width: none;
+    margin: 0;
+    padding: 34px 40px 40px;
+    background: var(--page-bg);
   }
 
   /* API KEY PANEL */
@@ -210,7 +220,15 @@
 
   /* SETUP PANEL */
   .setup-panel {
-    margin-bottom: 28px;
+    max-width: 920px;
+    margin: 0 auto 28px;
+    background: rgba(249,248,252,0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.7);
+    border-radius: 22px;
+    box-shadow: 0 24px 60px rgba(16,18,38,0.34);
+    padding: 28px 30px;
   }
   .svc-input-row { display: flex; gap: 8px; align-items: flex-end; }
   .svc-input-row .svc-paste { flex: 1; }
@@ -233,18 +251,18 @@
   .prayer-chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; margin-bottom: 16px; }
   .prayer-chip {
     display: inline-flex; align-items: center; background: var(--surface);
-    border: 1.5px solid var(--border); border-radius: 20px; padding: 4px 11px;
-    font-size: 12px; color: var(--text-muted); cursor: pointer;
+    border: 1px solid var(--border); border-radius: var(--radius-chip); padding: 5px 12px;
+    font-size: 12.5px; color: #5f6279; cursor: pointer;
     transition: background 0.13s, border-color 0.13s, color 0.13s; user-select: none;
   }
   .prayer-chip:hover { border-color: var(--navy-mid); color: var(--navy); }
-  .prayer-chip.chip-selected { background: var(--navy); border-color: var(--navy); color: white; }
+  .prayer-chip.chip-selected { background: var(--navy-mid); border-color: var(--navy-mid); color: white; }
   /* ── Service builder 40/60 layout ── */
-  .svc-builder-cols { display: grid; grid-template-columns: 40% minmax(0, 1fr); gap: 24px; align-items: start; }
+  .svc-builder-cols { display: grid; grid-template-columns: 40% minmax(0, 1fr); gap: 22px; align-items: start; }
   @media (max-width: 700px) { .svc-builder-cols { grid-template-columns: 1fr; } }
   .svc-col-service { display: flex; flex-direction: column; gap: 10px; }
   .svc-col-library { display: flex; flex-direction: column; gap: 12px; }
-  .svc-section-box { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--white); box-shadow: 0 1px 3px rgba(11,45,94,0.07); }
+  .svc-section-box { border: 1px solid #e6e5f0; border-radius: 15px; padding: 16px 18px; background: var(--white); box-shadow: 0 2px 8px rgba(20,22,46,0.05); }
   .svc-quickstart { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; line-height: 2; }
   .svc-quickstart a { color: var(--navy-mid); cursor: pointer; text-decoration: none; }
   .svc-quickstart a:hover { text-decoration: underline; }
@@ -323,27 +341,28 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--navy);
+    background: var(--navy-mid);
     color: white;
     border: none;
-    padding: 12px 26px;
-    border-radius: var(--radius);
+    padding: 14px;
+    border-radius: 13px;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: background 0.15s;
+    box-shadow: 0 8px 18px rgba(47,51,87,0.3);
   }
-  .btn-find:hover { background: var(--navy-mid); }
+  .btn-find:hover { background: var(--navy); }
   .btn-find svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; }
   .btn-add-to-list {
     display: inline-flex; align-items: center; gap: 5px;
-    background: var(--surface); color: var(--navy);
-    border: 1.5px solid var(--navy-mid); padding: 6px 14px;
-    border-radius: var(--radius); font-size: 13px; font-weight: 600;
+    background: var(--gold); color: #241a06;
+    border: none; padding: 6px 14px;
+    border-radius: var(--radius); font-size: 14px; font-weight: 700;
     cursor: pointer; transition: background 0.15s, color 0.15s;
     align-self: flex-end; margin-top: 6px;
   }
-  .btn-add-to-list:hover { background: var(--navy); color: white; }
+  .btn-add-to-list:hover { background: var(--gold-dark); color: #fff; }
 
   /* RESULTS AREA */
   #results { display: none; }
@@ -358,16 +377,17 @@
     gap: 10px;
   }
   .results-header h2 {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 21px;
+    font-weight: 800;
     color: var(--navy);
+    letter-spacing: -0.3px;
   }
   .results-header .found-count {
     font-size: 13px;
     color: var(--text-muted);
-    background: var(--navy-light);
-    padding: 4px 12px;
-    border-radius: 20px;
+    background: #e2e1f0;
+    padding: 5px 14px;
+    border-radius: var(--radius-chip);
   }
 
   /* PRAYER SECTION */
@@ -377,11 +397,11 @@
     border-radius: var(--radius-lg);
     margin-bottom: 22px;
     overflow: hidden;
-    box-shadow: 0 1px 4px rgba(11,45,94,0.06);
+    box-shadow: 0 6px 22px rgba(20,22,46,0.07);
   }
   .prayer-header {
-    background: var(--navy-light);
-    padding: 14px 20px;
+    background: linear-gradient(90deg, #f3f1fa, #eef0fb);
+    padding: 15px 22px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -390,39 +410,39 @@
     gap: 10px;
   }
   .prayer-title {
-    font-size: 16px;
+    font-size: 16.5px;
     font-weight: 700;
     color: var(--navy);
   }
   .prayer-theme {
-    font-size: 14px;
-    color: var(--teal);
+    font-size: 14.5px;
+    color: var(--gold);
     font-weight: 400;
   }
 
   /* IMAGE GRID */
   .img-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 14px;
-    padding: 16px 20px;
+    padding: 18px 22px;
   }
   .img-card {
     border: 2px solid transparent;
-    border-radius: var(--radius);
+    border-radius: var(--radius-card);
     overflow: hidden;
     cursor: pointer;
     transition: border-color 0.15s, box-shadow 0.15s;
     background: var(--surface);
     position: relative;
   }
-  .img-card:hover { border-color: var(--navy-mid); box-shadow: 0 2px 10px rgba(11,45,94,0.12); }
-  .img-card.selected { border-color: var(--gold); box-shadow: 0 2px 12px rgba(196,154,42,0.2); }
+  .img-card:hover { border-color: #c4b3e8; box-shadow: 0 2px 10px rgba(32,35,58,0.12); }
+  .img-card.selected { border-color: var(--gold); box-shadow: 0 2px 14px rgba(207,154,78,0.25); }
   .img-card:focus-visible { outline: 3px solid var(--teal); outline-offset: -3px; z-index: 2; }
   .img-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
   .img-card img {
     width: 100%;
-    height: 155px;
+    height: 150px;
     object-fit: cover;
     display: block;
   }
@@ -488,12 +508,12 @@
 
   /* CONTROLS BAR (above grid) */
   .controls-bar {
-    padding: 10px 20px 12px;
+    padding: 11px 22px 13px;
     border-bottom: 1px solid var(--border);
-    background: var(--surface);
+    background: #faf9fd;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 9px;
   }
   .search-terms-bar {
     display: flex;
@@ -504,13 +524,13 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    background: var(--navy-light);
-    color: var(--navy);
+    background: #e8e7f4;
+    color: #3a3d63;
     font-size: 12px;
     font-weight: 500;
     padding: 3px 6px 3px 10px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
+    border-radius: var(--radius-chip);
+    border: 1px solid #dcdbec;
   }
   .chip-remove {
     background: none;
@@ -549,11 +569,11 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: var(--navy);
+    background: var(--navy-mid);
     color: white;
     border: none;
     padding: 7px 14px;
-    border-radius: var(--radius);
+    border-radius: 9px;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
@@ -561,7 +581,7 @@
     transition: background 0.15s;
     flex-shrink: 0;
   }
-  .btn-refine:hover { background: var(--navy-mid); }
+  .btn-refine:hover { background: var(--navy); }
   .btn-refine svg { width: 13px; height: 13px; fill: none; stroke: white; stroke-width: 2.2; }
   .btn-refine-pexels {
     display: inline-flex;
@@ -569,9 +589,9 @@
     gap: 6px;
     background: transparent;
     color: var(--teal);
-    border: 1px solid var(--teal);
+    border: 1px solid var(--teal-border);
     padding: 6px 12px;
-    border-radius: var(--radius);
+    border-radius: 9px;
     font-size: 12px;
     font-weight: 600;
     text-decoration: none;
@@ -667,7 +687,7 @@
     align-items: center;
     background: var(--surface);
     border: 1.5px solid var(--border);
-    border-radius: 20px;
+    border-radius: var(--radius-chip);
     padding: 4px 11px;
     font-size: 12px;
     color: var(--text-muted);
@@ -678,8 +698,8 @@
   .filter-chip input[type="checkbox"] { display: none; }
   .filter-chip:hover { border-color: var(--navy-mid); color: var(--navy); }
   .filter-chip:has(input:checked) {
-    background: var(--navy);
-    border-color: var(--navy);
+    background: var(--navy-mid);
+    border-color: var(--navy-mid);
     color: white;
   }
   .keyword-filters {
@@ -706,13 +726,13 @@
     flex-wrap: wrap;
     padding: 20px 0 6px;
     margin-top: 8px;
-    border-top: 2px solid var(--border);
+    border-top: 2px solid #dddcec;
   }
   .btn-dl-all {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--navy);
+    background: var(--navy-mid);
     color: white;
     border: none;
     border-radius: var(--radius);
@@ -723,7 +743,7 @@
     transition: background 0.15s;
     white-space: nowrap;
   }
-  .btn-dl-all:hover:not(:disabled) { background: var(--navy-mid); }
+  .btn-dl-all:hover:not(:disabled) { background: var(--navy); }
   .btn-dl-all:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-dl-all svg { width: 15px; height: 15px; fill: none; stroke: white; stroke-width: 2.2; flex-shrink: 0; }
   .rf-stat {
@@ -751,11 +771,11 @@
     display: inline-flex;
     align-items: center;
     background: none;
-    border: 1px solid var(--border);
+    border: 1px solid #d8d7e4;
     border-radius: var(--radius);
     padding: 8px 16px;
     font-size: 13px;
-    color: var(--text-muted);
+    color: #7d8095;
     cursor: pointer;
     transition: border-color 0.12s, color 0.12s;
     white-space: nowrap;
@@ -775,7 +795,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    background: var(--navy);
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
     padding: 10px 16px;
     flex-wrap: wrap;
   }
@@ -834,7 +854,7 @@
     flex-shrink: 0;
     font-family: inherit;
   }
-  .admin-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .admin-tab.active { color: var(--navy-mid); border-bottom-color: var(--navy-mid); }
   .admin-tab:hover { color: var(--navy); }
   .admin-tab-refresh {
     align-self: center;
@@ -921,9 +941,9 @@
   .btn-modal-suggest:hover { background: #155f54; }
   .btn-modal-suggest:disabled { background: #6ba89e; cursor: default; }
   .btn-fav-view { font-size: 12px; padding: 4px 10px; border-radius: var(--radius);
-    border: 1px solid var(--border); background: none; color: var(--text-muted); cursor: pointer; }
-  .btn-fav-view:not(:disabled):hover { border-color: var(--teal); color: var(--teal); }
-  .btn-fav-view.active { background: var(--teal); color: white; border-color: var(--teal); }
+    border: 1px solid #e2e1ee; background: #f7f6fb; color: #9092ab; cursor: pointer; }
+  .btn-fav-view:not(:disabled):hover { background: #fbf3e3; color: var(--gold-dark); border-color: #d9c39a; }
+  .btn-fav-view.active { background: #fbf3e3; color: var(--gold-dark); border-color: #d9c39a; }
   .btn-fav-view:disabled { opacity: 0.4; cursor: default; }
 
   .admin-tab-panel h3 { font-size: 14px; margin-bottom: 6px; }
@@ -997,7 +1017,7 @@
   }
   .svc-filter-bar { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 8px; }
   .svc-filter-btn {
-    padding: 3px 11px; border-radius: 12px; border: 1.5px solid var(--teal);
+    padding: 3px 11px; border-radius: 14px; border: 1.5px solid var(--teal-border);
     background: var(--teal-light); cursor: pointer; font-size: 12px; color: var(--teal);
     transition: background 0.13s, border-color 0.13s, color 0.13s;
   }
@@ -1083,24 +1103,23 @@
     color: var(--text-muted); opacity: 0.55; flex-shrink: 0; line-height: 1;
     transition: color 0.15s;
   }
-  .btn-fav:hover { opacity: 1; color: #e74c3c; }
-  .btn-fav.favorited { color: #e74c3c; opacity: 1; }
+  .btn-fav:hover { opacity: 1; color: var(--fav-heart); }
+  .btn-fav.favorited { color: var(--fav-heart); opacity: 1; }
   .btn-fav svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; display: block; }
   .btn-fav.favorited svg { fill: currentColor; }
-  .fav-count { font-size: 11px; color: #e74c3c; font-weight: 700; flex-shrink: 0; }
+  .fav-count { font-size: 11px; color: var(--fav-heart); font-weight: 700; flex-shrink: 0; }
 
   /* FOOTER */
   footer {
-    border-top: 1px solid var(--border);
-    margin-top: 48px;
-    padding: 20px 24px;
+    border-top: 1px solid #dddcec;
+    padding: 22px 40px;
     text-align: center;
     font-size: 12px;
-    color: var(--text-muted);
+    color: #8589a3;
     line-height: 1.7;
-    max-width: 1100px;
-    margin-left: auto;
-    margin-right: auto;
+    background: var(--footer-bg);
+    max-width: none;
+    margin: 0;
   }
   footer a { color: var(--navy-mid); text-decoration: none; }
   footer a:hover { text-decoration: underline; }
@@ -1247,24 +1266,24 @@
 <body>
 
 <header>
-  <h1>VT Image Helper</h1>
-  <div class="subtitle">Find beautiful, text-ready images for your service slides</div>
-</header>
-
-<main>
+  <div class="hero-wordmark">
+    <div class="hero-eyebrow">Visual T'filah</div>
+    <h1>Image Helper</h1>
+    <div class="subtitle">Find beautiful, text-ready images for your service slides</div>
+  </div>
   <div class="setup-panel">
-    <div class="svc-builder-cols" style="margin-bottom:16px;grid-template-columns:60% minmax(0,1fr);">
-      <div class="svc-section-box">
-        <h2>Find images for your service</h2>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <h2 style="margin:0 0 7px;font-size:20px;font-weight:700;color:#20233a;">Find images for your service</h2>
         <p class="setup-explainer">Choose the prayers in your service and search for images to accompany each one &mdash; drawn from <a href="https://www.pexels.com" target="_blank" rel="noopener">Pexels</a> and <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a> and filtered for beauty, thematic resonance, and room for text overlay. Click &#9825; to save favorites across sessions.</p>
       </div>
-      <div class="svc-section-box" style="background:#fff9f2;border-color:#f0a030;font-size:12px;color:#7a4a00;line-height:1.6;">
-        <div style="font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#c87800;margin-bottom:5px;">Beta</div>
-        This tool is in active development. Help improve it by ♥ favoriting great images and 🚩 flagging photos that don&rsquo;t fit &mdash; or that belong with a different prayer.
+      <div style="background:#f3ece0;border:1px solid #e6d4ad;border-radius:13px;padding:12px 15px;max-width:230px;flex-shrink:0;">
+        <div style="font-size:10.5px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:#a9802f;margin-bottom:4px;">Beta</div>
+        <div style="font-size:12px;line-height:1.55;color:#7d6536;">In active development — ♥ favorite and 🚩 flag photos to help improve it.</div>
       </div>
     </div>
     <!-- Full-width input box -->
-    <div class="svc-section-box" style="margin-bottom:16px;">
+    <div style="margin-bottom:22px;">
       <p class="setup-section-label" style="margin-bottom:8px;">Add prayers: <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;">Type or paste in a prayer, multiple prayers, or a full service outline here.</span></p>
       <div class="svc-input-row">
         <textarea id="outline" class="svc-paste" rows="3"
@@ -1353,8 +1372,10 @@
 
     </div>
 
-  </div>
+  </div>  <!-- end .setup-panel -->
+</header>
 
+<main>
   <div id="results"></div>
 
   <div class="admin-area" id="adminArea">
@@ -1631,7 +1652,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.04</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.05</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.

@@ -2,6 +2,22 @@
 
 ---
 
+## v3.05 — June 2026
+- Frosted Sanctuary visual redesign (CSS-only re-skin)
+- New design tokens: updated navy/gold/teal palette, new page-bg, footer-bg, fav-heart, radius-card, radius-chip variables
+- Figtree font (Google Fonts) replaces system-ui stack
+- Header restructured: hero wordmark with eyebrow + large title sits above frosted glass setup panel; header is now a full-bleed photo with darker gradient overlay
+- Setup panel: frosted glass card (blur, white/translucent bg, rounded 22px, deep shadow) nested inside the header
+- Find/Add buttons: "Find images" is navy-mid with stronger shadow; "Add to list" is gold
+- Prayer chips, filter chips, search-term chips all use radius-chip (30px pill shape)
+- Prayer theme text changed from teal to gold
+- Prayer header uses a subtle lavender gradient instead of flat navy-light
+- Image cards use radius-card (11px) and hover with lavender border instead of navy
+- Favorites button: gold tint (instead of teal) when active; heart color updated to #e0566a
+- Footer: full-width, footer-bg color, no max-width constraint
+- Admin header: indigo gradient instead of flat navy
+- Version bumped to v3.05
+
 ## v3.04 — June 2026
 - Replace all hardcoded stub photos in PRAYERS array with full curated.json photo objects (src, caption, photographer, sourceUrl, source) — the page now shows real photos immediately, before Firebase or curated.json loads
 - Update 22 prayers' hardcoded searchTerms to match current Firebase defaults saved via the admin panel
