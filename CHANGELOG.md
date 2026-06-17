@@ -2,6 +2,9 @@
 
 ---
 
+## v3.02 — June 2026
+- Separate header and Beta box into two independent cards in a 40/60 grid matching the lower column layout
+
 ## v3.01 — June 2026
 - Add Beta notice panel on the right side of the "Find images for your service" header box: soft orange styling, explains the tool is in development and invites users to ♥ favorite great images and 🚩 flag photos that don't fit or belong with a different prayer
 
