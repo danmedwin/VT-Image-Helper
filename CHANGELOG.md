@@ -2,6 +2,11 @@
 
 ---
 
+## v3.00 — June 2026
+- Fix Favorites button staying disabled after live photo fetch: getFavCount now reads from the DOM grid (`.btn-fav.favorited` count) instead of getCuratedPhotos, so it correctly reflects favorited live-search photos
+- Fix Favorites view showing empty for live-fetched prayers: toggleFavoritesView now clones favorited img-card elements directly from the DOM instead of rebuilding from getCuratedPhotos
+- Refresh script now processes Firebase custom prayers: customPrayers loaded from Firebase and appended to the prayer list if they have search terms, so all custom prayers (e.g. Maariv Aravim) get curated photos in curated.json — fixing the "no photos" state in Safari
+
 ## v2.99 — June 2026
 - Fix custom prayers (Maariv Aravim etc.) stuck on "Fetching photos…" in Safari: when no API key is set and no curated photos exist for a prayer, prayerSectionHtml now shows "No curated photos available. Add an API key to search live." instead of the infinite loading spinner
 

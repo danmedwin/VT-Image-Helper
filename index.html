@@ -1625,7 +1625,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v2.99</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.00</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2360,6 +2360,9 @@ function renderAllFavoriteCounts() {
 }
 
 function getFavCount(prayerId) {
+  // After live fetch the DOM is the source of truth; fall back to curated data for pre-render
+  const grid = document.getElementById('grid-' + prayerId);
+  if (grid) return grid.querySelectorAll('.btn-fav.favorited').length;
   const photos = getCuratedPhotos(prayerId);
   if (!photos || !photos.length) return 0;
   const pFavs = favoritesData[prayerId] || {};
@@ -2385,12 +2388,10 @@ function toggleFavoritesView(prayerId) {
     btn.classList.remove('active');
     return;
   }
-  const photos = getCuratedPhotos(prayerId) || [];
-  const pFavs  = favoritesData[prayerId] || {};
-  const favs   = photos.filter(p => (pFavs[String(p.id)] || 0) > 0);
   _favViewOriginals.set(prayerId, grid.innerHTML);
-  grid.innerHTML = favs.length
-    ? favs.map(p => photoCardHtml(prayerId, p, false)).join('')
+  const favCards = [...grid.querySelectorAll('.img-card')].filter(c => c.querySelector('.btn-fav.favorited'));
+  grid.innerHTML = favCards.length
+    ? favCards.map(c => c.outerHTML).join('')
     : '<p style="padding:20px;font-size:13px;color:var(--text-muted);">No favorites yet for this prayer.</p>';
   btn.classList.add('active');
 }

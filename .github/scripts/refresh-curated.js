@@ -302,15 +302,30 @@ async function main() {
   console.log(`Sources: ${sources.join(' + ')}`);
 
   console.log('Reading Firebase data…');
-  const [favorites, blocked, customTerms, blockedKeywordsRaw] = await Promise.all([
+  const [favorites, blocked, customTerms, blockedKeywordsRaw, customPrayers] = await Promise.all([
     getFirebase('favorites'),
     getFirebase('blocked'),
     getFirebase('searchTerms'),
     getFirebase('blockedKeywords'),
+    getFirebase('customPrayers'),
   ]);
 
   for (const prayer of PRAYERS) {
     if (customTerms[prayer.id]) prayer.searchTerms = customTerms[prayer.id];
+  }
+
+  // Append Firebase custom prayers that have search terms (from customPrayers or customTerms)
+  if (customPrayers && typeof customPrayers === 'object') {
+    const existingIds = new Set(PRAYERS.map(p => p.id));
+    for (const [id, cp] of Object.entries(customPrayers)) {
+      if (existingIds.has(id)) continue;
+      const terms = customTerms[id] || (cp && cp.searchTerms) || '';
+      if (!terms) {
+        console.log(`  Skipping custom prayer "${id}" — no search terms`);
+        continue;
+      }
+      PRAYERS.push({ id, searchTerms: terms });
+    }
   }
 
   const negativeKeywords = Array.isArray(blockedKeywordsRaw) ? blockedKeywordsRaw : [];
