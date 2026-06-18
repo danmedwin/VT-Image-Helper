@@ -2,6 +2,10 @@
 
 ---
 
+## v3.11 — June 2026
+- Quick-start row: surface background + border + rounded rect to visually distinguish from prayer chips
+- Service list explainer: added pencil icon hint ("Click the ✎ icon to edit a prayer's default search terms")
+
 ## v3.10 — June 2026
 - Removing a search term chip auto-refreshes results (400ms debounce, live API keys only)
 
