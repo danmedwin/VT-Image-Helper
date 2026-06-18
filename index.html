@@ -619,11 +619,11 @@
   }
   .btn-download svg { width: 15px; height: 15px; fill: none; stroke: white; stroke-width: 2.2; flex-shrink: 0; }
   .attrib-toast {
-    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(12px);
+    position: fixed; transform: translateX(-50%) translateY(10px);
     background: var(--navy); color: #fff; font-size: 13px; font-family: inherit;
     padding: 14px 20px; border-radius: 11px; pointer-events: auto;
     opacity: 0; transition: opacity 0.18s, transform 0.18s; z-index: 9999;
-    max-width: min(580px, 92vw); width: max-content; text-align: center;
+    max-width: min(560px, 92vw); width: max-content; text-align: center;
     box-shadow: 0 8px 28px rgba(16,18,38,0.35);
   }
   .attrib-toast.attrib-toast-show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -1657,7 +1657,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.13</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.14</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4569,6 +4569,7 @@ function buildAttributionHtml(entries) {
 
 function copyAttribution(prayerId) {
   var sel = selections[prayerId];
+  var anchorEl = document.getElementById('dl-' + prayerId);
   var attribText = '';
   if (sel && sel.sourceUrl) {
     var source = sel.sourceUrl.indexOf('unsplash') >= 0 ? 'Unsplash' : 'Pexels';
@@ -4578,16 +4579,16 @@ function copyAttribution(prayerId) {
   }
   if (attribText && navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(attribText).then(function() {
-      showAttribToast('Image downloaded · Attribution copied to clipboard', attribText, true);
+      showAttribToast('Image downloaded · Attribution copied to clipboard', attribText, true, anchorEl);
     }).catch(function() {
-      showAttribToast('Image downloaded', attribText, false);
+      showAttribToast('Image downloaded', attribText, false, anchorEl);
     });
   } else {
-    showAttribToast('Image downloaded', attribText, false);
+    showAttribToast('Image downloaded', attribText, false, anchorEl);
   }
 }
 
-function showAttribToast(msg, attribText, copied) {
+function showAttribToast(msg, attribText, copied, anchorEl) {
   var t = document.getElementById('attrib-toast');
   if (!t) {
     t = document.createElement('div');
@@ -4603,6 +4604,24 @@ function showAttribToast(msg, attribText, copied) {
     }
   }
   t.innerHTML = html;
+  // Position near the anchor button
+  if (anchorEl) {
+    var rect = anchorEl.getBoundingClientRect();
+    var centerX = rect.left + rect.width / 2;
+    t.style.left = Math.max(10, Math.min(centerX, window.innerWidth - 10)) + 'px';
+    // Place above the button; if too close to top, place below instead
+    if (rect.top > window.innerHeight * 0.35) {
+      t.style.top = 'auto';
+      t.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+    } else {
+      t.style.bottom = 'auto';
+      t.style.top = (rect.bottom + 10) + 'px';
+    }
+  } else {
+    t.style.left = '50%';
+    t.style.bottom = '28px';
+    t.style.top = 'auto';
+  }
   t.classList.add('attrib-toast-show');
   clearTimeout(t._hideTimer);
   t._hideTimer = setTimeout(function() { t.classList.remove('attrib-toast-show'); }, 5000);

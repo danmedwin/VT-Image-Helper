@@ -2,6 +2,9 @@
 
 ---
 
+## v3.14 — June 2026
+- Attribution toast now appears adjacent to the download button (above it by default; below if near top of viewport) instead of bottom-center of screen
+
 ## v3.13 — June 2026
 - Attribution toast always appears on individual download (not just when clipboard succeeds)
 - Toast shows "Image downloaded · Attribution copied to clipboard" + the attribution text in a selectable box
