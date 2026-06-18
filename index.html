@@ -618,6 +618,13 @@
     cursor: default;
   }
   .btn-download svg { width: 15px; height: 15px; fill: none; stroke: white; stroke-width: 2.2; flex-shrink: 0; }
+  .attrib-toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(10px);
+    background: var(--navy); color: #fff; font-size: 13px; font-family: inherit;
+    padding: 10px 20px; border-radius: 9px; pointer-events: none;
+    opacity: 0; transition: opacity 0.18s, transform 0.18s; z-index: 9999; white-space: nowrap;
+  }
+  .attrib-toast.attrib-toast-show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   .btn-pexels {
     display: inline-flex;
@@ -1644,7 +1651,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.11</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.12</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4198,6 +4205,7 @@ async function downloadAllSelected() {
       if (btn) btn.textContent = `Fetching… ${done}/${entries.length}`;
     }));
     if (btn) btn.textContent = 'Creating ZIP…';
+    zip.file('attribution.html', buildAttributionHtml(entries));
     const content = await zip.generateAsync({ type: 'blob' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(content);
@@ -4234,7 +4242,10 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
     updateResultsFooter();
     return;
   }
-  selections[prayerId] = { photoId, caption, srcUrl };
+  var _card = document.querySelector('.img-card[data-prayer="' + prayerId + '"][data-photo="' + photoId + '"]');
+  selections[prayerId] = { photoId: photoId, caption: caption, srcUrl: srcUrl,
+    photographer: _card ? (_card.dataset.photographer || '') : '',
+    sourceUrl: _card ? (_card.dataset.sourceUrl || '') : '' };
 
   document.querySelectorAll(`.img-card[data-prayer="${prayerId}"]`).forEach(card => {
     card.classList.toggle('selected', card.dataset.photo == photoId);
@@ -4255,7 +4266,7 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
     dl.textContent = '';
     dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download ${filename}`;
     dl.classList.remove('disabled');
-    dl.onclick = () => autoFavorite(prayerId, photoId);
+    dl.onclick = function() { autoFavorite(prayerId, photoId); copyAttribution(prayerId); };
   }
 }
 
@@ -4492,6 +4503,90 @@ function removeTermChip(btn, prayerId) {
   if (!getKey() && !getUnsplashKey()) return;
   clearTimeout(_refineTimers[prayerId]);
   _refineTimers[prayerId] = setTimeout(() => refinePrayer(prayerId, prayerId + '-refine-input'), 400);
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getPrayerTitleForAttrib(prayerId) {
+  var p = PRAYERS.find(function(pr) { return pr.id === prayerId; });
+  if (p) {
+    var name = (_svcNameOverrides[prayerId] || p.names[0]) || prayerId;
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }
+  return prayerId.charAt(0).toUpperCase() + prayerId.slice(1);
+}
+
+function buildAttributionHtml(entries) {
+  var rows = entries.map(function(entry) {
+    var prayerId = entry[0];
+    var sel = entry[1];
+    var source = (sel.sourceUrl || '').indexOf('unsplash') >= 0 ? 'Unsplash' : 'Pexels';
+    var prayerTitle = getPrayerTitleForAttrib(prayerId);
+    var slug = (sel.caption || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+    var filename = prayerId + '-' + slug + '.jpg';
+    var photographer = sel.photographer || 'Unknown';
+    var sourceLink = sel.sourceUrl
+      ? '<a href="' + escHtml(sel.sourceUrl) + '">' + source + ' ↗</a>'
+      : source;
+    return '<tr><td>' + escHtml(prayerTitle) + '</td>'
+      + '<td style="color:#6b6e85;">' + escHtml(filename) + '</td>'
+      + '<td>' + escHtml(sel.caption || '') + '</td>'
+      + '<td>' + escHtml(photographer) + '</td>'
+      + '<td>' + sourceLink + '</td></tr>';
+  }).join('');
+
+  var dateStr = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+    + '<title>Image Attribution — VT Image Helper</title>'
+    + '<style>'
+    + 'body{font-family:system-ui,sans-serif;max-width:860px;margin:40px auto;padding:0 28px;color:#20233a;line-height:1.5;}'
+    + 'h1{font-size:22px;font-weight:800;margin:0 0 4px;}'
+    + 'p.sub{color:#6b6e85;font-size:13px;margin:0 0 28px;}'
+    + 'p.credit{color:#6b6e85;font-size:12px;margin-top:32px;border-top:1px solid #e4e3f0;padding-top:14px;}'
+    + 'table{width:100%;border-collapse:collapse;font-size:13px;}'
+    + 'th{text-align:left;padding:9px 12px;background:#ecebf3;border-bottom:2px solid #dddcec;font-weight:600;}'
+    + 'td{padding:9px 12px;border-bottom:1px solid #e4e3f0;vertical-align:top;}'
+    + 'tr:hover td{background:#f8f7fd;}'
+    + 'a{color:#2f3357;}'
+    + '</style></head><body>'
+    + '<h1>Image Attribution</h1>'
+    + '<p class="sub">Downloaded via VT Image Helper &middot; ' + escHtml(dateStr) + '</p>'
+    + '<table><thead><tr><th>Prayer</th><th>File</th><th>Description</th><th>Photographer</th><th>Source</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table>'
+    + '<p class="credit">Photos from <a href="https://www.pexels.com">Pexels</a> and/or '
+    + '<a href="https://unsplash.com">Unsplash</a>. Free to use under their respective licenses. '
+    + 'Attribution to the photographer is appreciated.</p>'
+    + '</body></html>';
+}
+
+function copyAttribution(prayerId) {
+  var sel = selections[prayerId];
+  if (!sel || !sel.sourceUrl) return;
+  var source = sel.sourceUrl.indexOf('unsplash') >= 0 ? 'Unsplash' : 'Pexels';
+  var text = sel.photographer
+    ? 'Photo by ' + sel.photographer + ' on ' + source + ' — ' + sel.sourceUrl
+    : 'Photo from ' + source + ' — ' + sel.sourceUrl;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      showAttribToast('Attribution copied to clipboard');
+    }).catch(function() {});
+  }
+}
+
+function showAttribToast(msg) {
+  var t = document.getElementById('attrib-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'attrib-toast';
+    t.className = 'attrib-toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('attrib-toast-show');
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(function() { t.classList.remove('attrib-toast-show'); }, 2800);
 }
 
 function loadingGridHtml(prayerId) {

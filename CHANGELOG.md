@@ -2,6 +2,10 @@
 
 ---
 
+## v3.12 — June 2026
+- Attribution HTML added to every ZIP download (`attribution.html` — prayer, filename, description, photographer, source link)
+- Individual image download copies attribution line to clipboard with a toast confirmation
+
 ## v3.11 — June 2026
 - Quick-start row: surface background + border + rounded rect to visually distinguish from prayer chips
 - Service list explainer: added pencil icon hint ("Click the ✎ icon to edit a prayer's default search terms")
