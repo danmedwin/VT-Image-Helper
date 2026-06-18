@@ -619,12 +619,18 @@
   }
   .btn-download svg { width: 15px; height: 15px; fill: none; stroke: white; stroke-width: 2.2; flex-shrink: 0; }
   .attrib-toast {
-    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(10px);
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(12px);
     background: var(--navy); color: #fff; font-size: 13px; font-family: inherit;
-    padding: 10px 20px; border-radius: 9px; pointer-events: none;
-    opacity: 0; transition: opacity 0.18s, transform 0.18s; z-index: 9999; white-space: nowrap;
+    padding: 14px 20px; border-radius: 11px; pointer-events: auto;
+    opacity: 0; transition: opacity 0.18s, transform 0.18s; z-index: 9999;
+    max-width: min(580px, 92vw); width: max-content; text-align: center;
+    box-shadow: 0 8px 28px rgba(16,18,38,0.35);
   }
   .attrib-toast.attrib-toast-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .attrib-toast-msg { font-weight: 600; margin-bottom: 7px; }
+  .attrib-toast-attrib { font-size: 12px; opacity: 0.82; word-break: break-all; text-align: left;
+    background: rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px; user-select: text; }
+  .attrib-toast-note { font-size: 11px; opacity: 0.55; margin-top: 6px; }
 
   .btn-pexels {
     display: inline-flex;
@@ -1651,7 +1657,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.12</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.13</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4563,19 +4569,25 @@ function buildAttributionHtml(entries) {
 
 function copyAttribution(prayerId) {
   var sel = selections[prayerId];
-  if (!sel || !sel.sourceUrl) return;
-  var source = sel.sourceUrl.indexOf('unsplash') >= 0 ? 'Unsplash' : 'Pexels';
-  var text = sel.photographer
-    ? 'Photo by ' + sel.photographer + ' on ' + source + ' — ' + sel.sourceUrl
-    : 'Photo from ' + source + ' — ' + sel.sourceUrl;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function() {
-      showAttribToast('Attribution copied to clipboard');
-    }).catch(function() {});
+  var attribText = '';
+  if (sel && sel.sourceUrl) {
+    var source = sel.sourceUrl.indexOf('unsplash') >= 0 ? 'Unsplash' : 'Pexels';
+    attribText = sel.photographer
+      ? 'Photo by ' + sel.photographer + ' on ' + source + ' — ' + sel.sourceUrl
+      : 'Photo from ' + source + ' — ' + sel.sourceUrl;
+  }
+  if (attribText && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(attribText).then(function() {
+      showAttribToast('Image downloaded · Attribution copied to clipboard', attribText, true);
+    }).catch(function() {
+      showAttribToast('Image downloaded', attribText, false);
+    });
+  } else {
+    showAttribToast('Image downloaded', attribText, false);
   }
 }
 
-function showAttribToast(msg) {
+function showAttribToast(msg, attribText, copied) {
   var t = document.getElementById('attrib-toast');
   if (!t) {
     t = document.createElement('div');
@@ -4583,10 +4595,17 @@ function showAttribToast(msg) {
     t.className = 'attrib-toast';
     document.body.appendChild(t);
   }
-  t.textContent = msg;
+  var html = '<div class="attrib-toast-msg">' + escHtml(msg) + '</div>';
+  if (attribText) {
+    html += '<div class="attrib-toast-attrib">' + escHtml(attribText) + '</div>';
+    if (!copied) {
+      html += '<div class="attrib-toast-note">Select the text above to copy it manually.</div>';
+    }
+  }
+  t.innerHTML = html;
   t.classList.add('attrib-toast-show');
   clearTimeout(t._hideTimer);
-  t._hideTimer = setTimeout(function() { t.classList.remove('attrib-toast-show'); }, 2800);
+  t._hideTimer = setTimeout(function() { t.classList.remove('attrib-toast-show'); }, 5000);
 }
 
 function loadingGridHtml(prayerId) {

@@ -2,6 +2,13 @@
 
 ---
 
+## v3.13 — June 2026
+- Attribution toast always appears on individual download (not just when clipboard succeeds)
+- Toast shows "Image downloaded · Attribution copied to clipboard" + the attribution text in a selectable box
+- If clipboard is blocked, toast shows the text with "Select the text above to copy it manually"
+- Attribution format follows Pexels/Unsplash suggested convention: "Photo by [Name] on [Source] — [URL]"
+- Toast stays visible for 5 seconds; wider, drop-shadow, pointer-events enabled for text selection
+
 ## v3.12 — June 2026
 - Attribution HTML added to every ZIP download (`attribution.html` — prayer, filename, description, photographer, source link)
 - Individual image download copies attribution line to clipboard with a toast confirmation
