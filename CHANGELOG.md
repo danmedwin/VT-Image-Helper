@@ -2,6 +2,9 @@
 
 ---
 
+## v3.09 — June 2026
+- Add SVG favicon: dark indigo background, gold "VT" monogram
+
 ## v3.08 — June 2026
 - Fix invisible Reports sub-tab active state and Reverse button: define missing `--accent` CSS variable
 - Remove 3 dead CSS classes: `.setup-hr`, `.setup-two-col`, `.field-row` (defined but never used in HTML)
