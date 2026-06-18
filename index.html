@@ -1644,7 +1644,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.09</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.10</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2377,6 +2377,7 @@ let pinnedPhotosData = {}; // { prayerId: { photoId: photoObj } } — approved s
 let myFavorites      = new Set(); // 'prayerId:photoId' strings this browser has favorited
 let blockedData      = {}; // { prayerId: { photoId: true } } — from Firebase
 const _favViewOriginals = new Map(); // prayerId → saved grid innerHTML when in favorites view
+const _refineTimers = {};            // prayerId → debounce timer for auto-refresh on chip removal
 
 function getKey() { return localStorage.getItem(KEY_STORAGE) || ''; }
 function getUnsplashKey() { return localStorage.getItem(UNSPLASH_KEY_STORAGE) || ''; }
@@ -4488,6 +4489,9 @@ function getActiveTerms(prayerId, inputId) {
 
 function removeTermChip(btn, prayerId) {
   btn.closest('.search-term-chip').remove();
+  if (!getKey() && !getUnsplashKey()) return;
+  clearTimeout(_refineTimers[prayerId]);
+  _refineTimers[prayerId] = setTimeout(() => refinePrayer(prayerId, prayerId + '-refine-input'), 400);
 }
 
 function loadingGridHtml(prayerId) {

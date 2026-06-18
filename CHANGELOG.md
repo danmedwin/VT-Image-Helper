@@ -2,6 +2,9 @@
 
 ---
 
+## v3.10 — June 2026
+- Removing a search term chip auto-refreshes results (400ms debounce, live API keys only)
+
 ## v3.09 — June 2026
 - Add SVG favicon: dark indigo background, gold "VT" monogram
 
