@@ -2,6 +2,10 @@
 
 ---
 
+## v3.20 — June 2026
+- **Silent admin token refresh:** when the admin's Firebase token expires mid-session, admin requests now silently exchange the stored refresh token for a fresh one and retry — no more getting logged out (or console 401s) after an hour. Applies to all admin writes (`fbPut`/`fbDel`), the `reports` reads, and the `suggestions` read via a shared `fbAuthedFetch` helper.
+- Admin-only reads (`reports`, `suggestions`) are now skipped entirely for non-admin visitors, removing the 401 console noise they used to trigger on every page load.
+
 ## v3.19 — June 2026
 - **Partial-match search variety:** live search now gathers a larger candidate pool (per_page 15→30) and selects results with a spread — keeping the strongest matches but reaching deeper into the ranking where photos match ~75%+ (not all) of the search terms. More variation in results, with no extra API calls. Applies to live Pexels + Unsplash search (`selectWithVariety`).
 

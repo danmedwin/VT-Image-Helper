@@ -1662,7 +1662,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.19</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.20</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2339,23 +2339,16 @@ function _handleVtAction() {
   if (sessionStorage.getItem('vtAdminToken')) {
     setTimeout(_executeVtAction, 800);
   } else {
-    var rt = localStorage.getItem('vtAdminRefreshToken');
-    if (rt) {
-      fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_API_KEY, {
-        method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt)
-      }).then(function(r) { return r.json(); }).then(function(data) {
-        if (data.id_token && data.user_id === ADMIN_UID) {
-          sessionStorage.setItem('vtAdminToken', data.id_token);
-          localStorage.setItem('vtAdminRefreshToken', data.refresh_token);
+    if (localStorage.getItem('vtAdminRefreshToken')) {
+      refreshAdminToken().then(function(tok) {
+        if (tok) {
           document.body.classList.add('admin-mode');
           document.getElementById('adminToggle').textContent = 'Exit admin';
           setTimeout(_executeVtAction, 800);
         } else {
-          localStorage.removeItem('vtAdminRefreshToken');
           showAdminLoginModal();
         }
-      }).catch(function() { showAdminLoginModal(); });
+      });
     } else {
       showAdminLoginModal();
     }
@@ -2379,15 +2372,56 @@ function authParam() {
   return t ? '?auth=' + t : '';
 }
 
+// True if the browser has an admin session — either a live token or a refresh
+// token we can trade for one. Used to skip admin-only reads for regular visitors.
+function hasAdminSession() {
+  return !!(sessionStorage.getItem('vtAdminToken') || localStorage.getItem('vtAdminRefreshToken'));
+}
+
+// Exchange the stored refresh token for a fresh ID token. Returns the new token,
+// or null (and clears the stored tokens) if the refresh token is missing/invalid.
+async function refreshAdminToken() {
+  const rt = localStorage.getItem('vtAdminRefreshToken');
+  if (!rt) return null;
+  try {
+    const r = await fetch('https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_API_KEY, {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(rt)
+    });
+    const data = await r.json();
+    if (data.id_token && data.user_id === ADMIN_UID) {
+      sessionStorage.setItem('vtAdminToken', data.id_token);
+      localStorage.setItem('vtAdminRefreshToken', data.refresh_token);
+      return data.id_token;
+    }
+  } catch (e) {}
+  sessionStorage.removeItem('vtAdminToken');
+  localStorage.removeItem('vtAdminRefreshToken');
+  return null;
+}
+
+// Fetch a Firebase path with the admin token; on a 401 (expired token) silently
+// refresh once and retry. authParam() is re-read on the retry, so it picks up
+// the freshly-refreshed token automatically.
+async function fbAuthedFetch(path, options) {
+  let res = await fetch(`${FIREBASE_URL}/${path}${authParam()}`, options);
+  if (res.status === 401 && localStorage.getItem('vtAdminRefreshToken')) {
+    if (await refreshAdminToken()) {
+      res = await fetch(`${FIREBASE_URL}/${path}${authParam()}`, options);
+    }
+  }
+  return res;
+}
+
 async function fbPut(path, data) {
-  return fetch(`${FIREBASE_URL}/${path}${authParam()}`, {
+  return fbAuthedFetch(path, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
 }
 async function fbDel(path) {
-  return fetch(`${FIREBASE_URL}/${path}${authParam()}`, { method: 'DELETE' });
+  return fbAuthedFetch(path, { method: 'DELETE' });
 }
 
 let favoritesData    = {}; // { prayerId: { photoId: count } } — from Firebase
@@ -3747,8 +3781,9 @@ function clearReportBadge() {
 }
 
 async function loadReportCount() {
+  if (!hasAdminSession()) return;
   try {
-    const res = await fetch(`${FIREBASE_URL}/reports.json${authParam()}`);
+    const res = await fbAuthedFetch('reports.json');
     if (!res.ok) return;
     const data = await res.json() || {};
     const hasPending = Object.values(data).some(photos =>
@@ -3759,8 +3794,9 @@ async function loadReportCount() {
 }
 
 async function loadReports() {
+  if (!hasAdminSession()) { reportsData = {}; return; }
   try {
-    const res = await fetch(`${FIREBASE_URL}/reports.json${authParam()}`);
+    const res = await fbAuthedFetch('reports.json');
     reportsData = res.ok ? (await res.json() || {}) : {};
   } catch(e) { reportsData = {}; }
 }
@@ -3882,7 +3918,7 @@ async function dismissReport(prayerId, photoId) {
 async function approveSuggestion(fromPrayer, photoId, targetPrayer) {
   if (!targetPrayer) return;
   // Read saved suggestion to recover photo object
-  const sugRes = await fetch(`${FIREBASE_URL}/suggestions/${fromPrayer}/${photoId}.json`);
+  const sugRes = await fbAuthedFetch(`suggestions/${fromPrayer}/${photoId}.json`);
   const sug = (sugRes.ok ? await sugRes.json() : null) || {};
   // Set favorite count for target prayer
   await fbPut(`favorites/${targetPrayer}/${photoId}.json`, 1);
