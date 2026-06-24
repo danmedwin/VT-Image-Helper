@@ -1578,6 +1578,11 @@
         <button class="btn-clear-key" id="clearUnsplashKeyBtn" style="display:none;" onclick="clearUnsplashKey()">Remove</button>
       </div>
       <p id="unsplashKeyMsg" style="margin-top:6px;display:none;font-size:12px;"></p>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border-field);">
+        <button class="btn-save-key" id="unsplashTestBtn" onclick="testUnsplashDownload()" style="background:var(--teal);">Test Unsplash download</button>
+        <p style="font-size:11px;color:var(--text-muted);margin:6px 0 0;">Diagnostic: runs a live search, fires a real download ping, and shows each step. The Downloads counter on your Unsplash dashboard should go up by 1.</p>
+        <pre id="unsplashTestOut" style="display:none;white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.5;background:#1e2030;color:#e6e6f0;padding:10px 12px;border-radius:8px;margin-top:8px;font-family:ui-monospace,Menlo,monospace;"></pre>
+      </div>
     </div>
 
     <div class="admin-tab-panel" id="adminTab-reports">
@@ -1657,7 +1662,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.17</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.18</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4593,6 +4598,42 @@ function triggerUnsplashDownload(sel) {
   if (!key) return;
   var sep = sel.downloadLocation.indexOf('?') >= 0 ? '&' : '?';
   fetch(sel.downloadLocation + sep + 'client_id=' + encodeURIComponent(key)).catch(function(){});
+}
+
+// TEMP diagnostic: end-to-end test of the Unsplash download-trigger flow.
+async function testUnsplashDownload() {
+  var out = document.getElementById('unsplashTestOut');
+  var btn = document.getElementById('unsplashTestBtn');
+  out.style.display = 'block';
+  var lines = [];
+  function show(s){ lines.push(s); out.textContent = lines.join('\n'); }
+  btn.disabled = true; var orig = btn.textContent; btn.textContent = 'Testing…';
+  try {
+    var key = getUnsplashKey();
+    show('1) Unsplash key saved: ' + (key ? ('yes (' + key.slice(0,4) + '…)') : 'NO — paste & Save your key above first'));
+    if (!key) return;
+    show('2) Running a live Unsplash search…');
+    var sr = await fetch('https://api.unsplash.com/search/photos?query=morning%20light&per_page=1&orientation=landscape', { headers: { Authorization: 'Client-ID ' + key } });
+    show('   search HTTP ' + sr.status + (sr.status === 200 ? ' ✓' : ' ✗ — bad key or rate limit'));
+    if (sr.status !== 200) { show('   ' + (await sr.text()).slice(0, 300)); return; }
+    var data = await sr.json();
+    var p = (data.results || [])[0];
+    if (!p) { show('   No photos returned.'); return; }
+    var dl = p.links && p.links.download_location;
+    show('3) Got photo ' + p.id + ' by ' + (p.user && p.user.name));
+    show('   download_location present: ' + (dl ? 'yes ✓' : 'NO ✗'));
+    if (!dl) return;
+    var url = dl + (dl.indexOf('?') >= 0 ? '&' : '?') + 'client_id=' + encodeURIComponent(key);
+    show('4) Firing the download ping…');
+    var dr = await fetch(url);
+    show('   ping HTTP ' + dr.status + (dr.status === 200 ? ' ✓' : ' ✗'));
+    show('   response: ' + (await dr.text()).slice(0, 300));
+    if (dr.status === 200) show('\n✅ SUCCESS — the trigger works. Your Unsplash dashboard Downloads should now be +1.');
+  } catch (e) {
+    show('\n❌ Request failed before reaching Unsplash (likely CORS/network): ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
 }
 
 function copyAttribution(prayerId) {

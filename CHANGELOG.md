@@ -2,6 +2,9 @@
 
 ---
 
+## v3.18 — June 2026
+- **Temp diagnostic:** "Test Unsplash download" button in the admin API Keys panel — runs a live search, fires a real `download_location` ping, and prints each step's result on-screen (verifies the download counter increments). To be removed once production approval is confirmed.
+
 ## v3.17 — June 2026
 - **Unsplash attribution format:** photo credit now reads "Photo by [Name] on [Unsplash]" with BOTH the photographer name (→ their profile) and "Unsplash" (→ the photo page) as UTM-tagged links, on cards and in the lightbox — Unsplash's canonical, reviewer-verifiable attribution format (was "Photo: [Name]")
 
