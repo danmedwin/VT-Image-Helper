@@ -170,6 +170,7 @@ function toUnsplashPhotoObj(p) {
     sourceUrl:    'https://unsplash.com/photos/' + p.id + UTM,
     photographer: p.user.name,
     photographerUrl: p.user.links.html + UTM,
+    downloadLocation: (p.links && p.links.download_location) || '',
     source:       'unsplash',
   };
 }

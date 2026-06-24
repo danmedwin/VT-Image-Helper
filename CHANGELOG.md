@@ -2,6 +2,11 @@
 
 ---
 
+## v3.16 — June 2026
+- **Unsplash API compliance:** trigger the photo's `download_location` endpoint whenever a user downloads an image (individual download + ZIP), per Unsplash's required download-tracking guideline. Fires only for live-fetched Unsplash photos when an Unsplash key is present.
+- **Unsplash API compliance:** photographer names now link to the photographer's Unsplash profile (with UTM) on photo cards, in the lightbox, and in the `attribution.html` ZIP sheet — previously plain text.
+- Live search and the monthly refresh script now capture `links.download_location`; `curated.json` will carry it after the next refresh run.
+
 ## v3.15 — June 2026
 - Favorites button in each prayer section header now uses a ♥ heart icon instead of a ★ star, consistent with the heart used on individual photo cards
 

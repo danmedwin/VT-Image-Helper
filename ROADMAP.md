@@ -23,6 +23,24 @@ _(none pending)_
 
 ---
 
+## Unsplash API Compliance
+
+**Audited June 2026 against [Unsplash API Guidelines](https://help.unsplash.com/en/articles/2511245-unsplash-api-guidelines).**
+
+✅ **Fixed in v3.16:**
+- **Download tracking** — every user download (individual + ZIP) now pings the photo's `links.download_location` with the Unsplash key (`triggerUnsplashDownload`). Captured in live search and the refresh script; stored in `curated.json` going forward.
+- **Photographer profile links** — photographer names link to their Unsplash profile (with UTM) on cards, lightbox, and `attribution.html`.
+
+✅ **Already compliant:** hotlinking via `urls.regular`; UTM-tagged link back to Unsplash; no "Unsplash" in app name; not reselling; not replicating Unsplash's core experience.
+
+⚠️ **Accepted limitations / watch items:**
+- **Client-side key** — the Unsplash key lives in `localStorage`; Unsplash prefers a server-side proxy. Tolerable for a small tool where each user supplies their own demo key (also aligns with the planned user-facing-key feature).
+- **Download ping requires a key** — keyless users on the curated fallback can't be tracked (no key to authenticate the ping). Inherent to the cached-fallback design.
+- **Inline hardcoded fallback photos** (in `index.html`) predate these fields, so they degrade gracefully (plain-text photographer, no ping). `curated.json` gets the fields on the next monthly refresh.
+- **Monthly auto-refresh** — low-volume; disclose honestly if ever applying for Unsplash production (5,000 req/hr) access.
+
+---
+
 ## Feature Roadmap
 
 ### High Priority
@@ -153,4 +171,4 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 
 ## Current Version
 
-**v3.15** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`
+**v3.16** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`

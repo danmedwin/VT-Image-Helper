@@ -1657,7 +1657,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.15</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.16</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4122,7 +4122,7 @@ async function fetchPhotosFromSource(source, q, apiKey, blocked, searchTerms, ma
       if (source === 'pexels') {
         results.push({ id: p.id, caption: p.alt || p.photographer || '', src: p.src.large2x || p.src.large, sourceUrl: p.url, photographer: p.photographer, photographerUrl: p.photographer_url, source: 'pexels' });
       } else {
-        results.push({ id: p.id, caption: p.alt_description || p.user.name || '', src: p.urls.regular, sourceUrl: 'https://unsplash.com/photos/' + p.id + UTM, photographer: p.user.name, photographerUrl: p.user.links.html + UTM, source: 'unsplash' });
+        results.push({ id: p.id, caption: p.alt_description || p.user.name || '', src: p.urls.regular, sourceUrl: 'https://unsplash.com/photos/' + p.id + UTM, photographer: p.user.name, photographerUrl: p.user.links.html + UTM, downloadLocation: (p.links && p.links.download_location) || '', source: 'unsplash' });
       }
     }
     if (!hasMore) break;
@@ -4173,6 +4173,7 @@ function updateResultsFooter() {
 async function downloadAllSelected() {
   const entries = Object.entries(selections);
   if (!entries.length) return;
+  entries.forEach(([, sel]) => triggerUnsplashDownload(sel));
   const btn = document.getElementById('btn-dl-all');
   const origHTML = btn ? btn.innerHTML : '';
 
@@ -4251,6 +4252,9 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
   var _card = document.querySelector('.img-card[data-prayer="' + prayerId + '"][data-photo="' + photoId + '"]');
   selections[prayerId] = { photoId: photoId, caption: caption, srcUrl: srcUrl,
     photographer: _card ? (_card.dataset.photographer || '') : '',
+    photographerUrl: _card ? (_card.dataset.photographerUrl || '') : '',
+    downloadLocation: _card ? (_card.dataset.downloadLocation || '') : '',
+    source: _card ? (_card.dataset.source || '') : '',
     sourceUrl: _card ? (_card.dataset.sourceUrl || '') : '' };
 
   document.querySelectorAll(`.img-card[data-prayer="${prayerId}"]`).forEach(card => {
@@ -4344,19 +4348,26 @@ function photoCardHtml(prayerId, photo, isLive) {
     `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=520`;
   const sourceUrl = photo.sourceUrl || `https://www.pexels.com/photo/${photo.id}/`;
   const sourceLabel = photo.source === 'unsplash' ? 'Unsplash' : 'Pexels';
-  const captionText = photo.src
-    ? (photo.caption || '') + (photo.photographer
-        ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`
-        : '')
+  const photographerUrl = photo.photographerUrl || '';
+  const downloadLocation = photo.downloadLocation || '';
+  const photoSource = photo.source || (/^\d+$/.test(String(photo.id)) ? 'pexels' : 'unsplash');
+  const photogCredit = photo.photographer
+    ? (photographerUrl
+        ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: <a href="${photographerUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;text-decoration:underline;">${photo.photographer}</a></span>`
+        : `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`)
     : '';
+  const captionText = photo.src ? (photo.caption || '') + photogCredit : '';
   const photoSrc = photo.src || '';
   const srcAttr = photoSrc ? `data-src="${photoSrc}"` : '';
   const safeCaption = (photo.caption || '').replace(/"/g, '&quot;');
   const safePhotog = (photo.photographer || '').replace(/"/g, '&quot;');
+  const safePhotogUrl = photographerUrl.replace(/"/g, '&quot;');
+  const safeDownloadLoc = downloadLocation.replace(/"/g, '&quot;');
   const safeCapOnclick = (photo.caption || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
   return `
     <div class="img-card" data-prayer="${prayerId}" data-photo="${photo.id}" ${srcAttr}
          data-caption="${safeCaption}" data-photographer="${safePhotog}" data-source-url="${sourceUrl}"
+         data-photographer-url="${safePhotogUrl}" data-download-location="${safeDownloadLoc}" data-source="${photoSource}"
          tabindex="0" onkeydown="handleCardKeydown(event)"
          onclick="selectPhoto('${prayerId}', '${photo.id}', '${safeCapOnclick}', '${photoSrc}')">
       <input type="radio" name="${prayerId}" value="${photo.id}">
@@ -4533,13 +4544,16 @@ function buildAttributionHtml(entries) {
     var slug = (sel.caption || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
     var filename = prayerId + '-' + slug + '.jpg';
     var photographer = sel.photographer || 'Unknown';
+    var photographerCell = (sel.photographerUrl && sel.photographer)
+      ? '<a href="' + escHtml(sel.photographerUrl) + '">' + escHtml(photographer) + '</a>'
+      : escHtml(photographer);
     var sourceLink = sel.sourceUrl
       ? '<a href="' + escHtml(sel.sourceUrl) + '">' + source + ' ↗</a>'
       : source;
     return '<tr><td>' + escHtml(prayerTitle) + '</td>'
       + '<td style="color:#6b6e85;">' + escHtml(filename) + '</td>'
       + '<td>' + escHtml(sel.caption || '') + '</td>'
-      + '<td>' + escHtml(photographer) + '</td>'
+      + '<td>' + photographerCell + '</td>'
       + '<td>' + sourceLink + '</td></tr>';
   }).join('');
 
@@ -4567,8 +4581,20 @@ function buildAttributionHtml(entries) {
     + '</body></html>';
 }
 
+// Unsplash API guidelines require pinging a photo's download_location endpoint
+// whenever a user actually downloads / uses the image. Fire-and-forget; needs the
+// user's Unsplash key (Client-ID) and only applies to live-fetched Unsplash photos.
+function triggerUnsplashDownload(sel) {
+  if (!sel || sel.source !== 'unsplash' || !sel.downloadLocation) return;
+  var key = getUnsplashKey();
+  if (!key) return;
+  var sep = sel.downloadLocation.indexOf('?') >= 0 ? '&' : '?';
+  fetch(sel.downloadLocation + sep + 'client_id=' + encodeURIComponent(key)).catch(function(){});
+}
+
 function copyAttribution(prayerId) {
   var sel = selections[prayerId];
+  triggerUnsplashDownload(sel);
   var anchorEl = document.getElementById('dl-' + prayerId);
   var attribText = '';
   if (sel && sel.sourceUrl) {
@@ -4771,6 +4797,7 @@ function showLightbox(prayerId, photoId, event) {
     photoId:  c.dataset.photo,
     caption:  c.dataset.caption || '',
     photographer: c.dataset.photographer || '',
+    photographerUrl: c.dataset.photographerUrl || '',
     src: c.dataset.src || '',
   }));
   _lb.prayerId = prayerId;
@@ -4807,7 +4834,14 @@ function _lbRender() {
   document.getElementById('lb-img').src = largeSrc;
   document.getElementById('lb-img').alt = photo.caption;
   document.getElementById('lb-prayer').textContent = photo.caption || '—';
-  document.getElementById('lb-credit').textContent = photo.photographer ? 'Photo: ' + photo.photographer : '';
+  const lbCredit = document.getElementById('lb-credit');
+  if (!photo.photographer) {
+    lbCredit.textContent = '';
+  } else if (photo.photographerUrl) {
+    lbCredit.innerHTML = 'Photo: <a href="' + photo.photographerUrl.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + escHtml(photo.photographer) + '</a>';
+  } else {
+    lbCredit.textContent = 'Photo: ' + photo.photographer;
+  }
 
   document.getElementById('lb-prev').style.visibility = idx > 0 ? '' : 'hidden';
   document.getElementById('lb-next').style.visibility = idx < _lb.photos.length - 1 ? '' : 'hidden';
