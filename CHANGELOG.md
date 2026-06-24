@@ -2,6 +2,9 @@
 
 ---
 
+## v3.15 — June 2026
+- Favorites button in each prayer section header now uses a ♥ heart icon instead of a ★ star, consistent with the heart used on individual photo cards
+
 ## v3.14 — June 2026
 - Attribution toast now appears adjacent to the download button (above it by default; below if near top of viewport) instead of bottom-center of screen
 

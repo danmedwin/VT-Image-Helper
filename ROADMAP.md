@@ -19,7 +19,7 @@ _Last updated: June 2026_
 
 ## Pending UI Polish (next session)
 
-- **Favorites button: use heart icon** — The "★ Favorites (N)" button in each prayer section header should use a ♥ heart instead of a star, consistent with the heart icon already used on individual photo cards.
+_(none pending)_
 
 ---
 
@@ -33,7 +33,7 @@ _Last updated: June 2026_
 
 - ✅ **ZIP download** — *(Shipped v2.42, June 2026)* "Download ZIP" button builds a single ZIP file of all selected images using JSZip (CDN), with parallel fetching and a staggered-download fallback if JSZip fails to load.
 
-- **Slide text preview overlay** — A toggle on each image card that shows what the image looks like with a prayer title overlaid (semi-transparent bar + white text). Essential for VT work — some beautiful photos fall apart when text is added.
+- **Partial-match search (75% threshold)** — Rather than requiring images to match *every* search term, surface images that match 75% or more of the terms. This should yield more variation in the returned images instead of an over-narrowed result set.
 
 ### Medium Priority
 
@@ -153,4 +153,4 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 
 ## Current Version
 
-**v2.40** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`
+**v3.15** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`

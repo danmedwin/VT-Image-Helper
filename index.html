@@ -1657,7 +1657,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.14</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.15</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2561,7 +2561,7 @@ function updateFavViewButtons() {
     const prayerId = btn.id.slice('fav-view-'.length);
     const n = getFavCount(prayerId);
     btn.disabled = n === 0 && !btn.classList.contains('active');
-    btn.textContent = n > 0 ? `★ Favorites (${n})` : '★ Favorites';
+    btn.textContent = n > 0 ? `♥ Favorites (${n})` : '♥ Favorites';
   });
 }
 
@@ -4415,7 +4415,7 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
     <div class="prayer-section" id="section-${prayer.id}">
       <div class="prayer-header">
         <span class="prayer-title">${title}<span class="prayer-theme"> — ${prayer.theme}</span></span>
-        ${(()=>{ const n=getFavCount(prayer.id); return `<button class="btn-fav-view" id="fav-view-${prayer.id}" onclick="toggleFavoritesView('${prayer.id}')"${n===0?' disabled':''}>${n>0?`★ Favorites (${n})`:'★ Favorites'}</button>`; })()}
+        ${(()=>{ const n=getFavCount(prayer.id); return `<button class="btn-fav-view" id="fav-view-${prayer.id}" onclick="toggleFavoritesView('${prayer.id}')"${n===0?' disabled':''}>${n>0?`♥ Favorites (${n})`:'♥ Favorites'}</button>`; })()}
       </div>
       <div class="controls-bar">
         <div class="search-terms-bar" id="terms-chips-${prayer.id}">${chipsHtml}</div>
