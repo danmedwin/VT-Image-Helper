@@ -1662,7 +1662,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.18</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.19</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4108,17 +4108,17 @@ async function fetchPhotosFromSource(source, q, apiKey, blocked, searchTerms, ma
   while (results.length < maxResults && page <= 5) {
     let url, headers;
     if (source === 'pexels') {
-      url = `https://api.pexels.com/v1/search?query=${q}&per_page=15&page=${page}&orientation=landscape`;
+      url = `https://api.pexels.com/v1/search?query=${q}&per_page=30&page=${page}&orientation=landscape`;
       headers = { Authorization: apiKey };
     } else {
-      url = `https://api.unsplash.com/search/photos?query=${q}&per_page=15&page=${page}&orientation=landscape`;
+      url = `https://api.unsplash.com/search/photos?query=${q}&per_page=30&page=${page}&orientation=landscape`;
       headers = { Authorization: 'Client-ID ' + apiKey };
     }
     const res = await fetch(url, { headers });
     if (!res.ok) throw new Error(source + ' API error: ' + res.status);
     const data = await res.json();
     const batch = source === 'pexels' ? (data.photos || []) : (data.results || []);
-    const hasMore = source === 'pexels' ? batch.length >= 15 : (data.total_pages || 0) > page;
+    const hasMore = source === 'pexels' ? batch.length >= 30 : (data.total_pages || 0) > page;
     for (const p of batch) {
       if (results.length >= maxResults) break;
       if (isBlockedValue((blocked || {})[String(p.id)])) continue;
@@ -4136,6 +4136,25 @@ async function fetchPhotosFromSource(source, q, apiKey, blocked, searchTerms, ma
   return results;
 }
 
+// Partial-match variety: from a relevance-ranked candidate pool, keep the
+// strongest matches but spread the remaining picks deeper into the list, where
+// photos match ~75%+ (not all) of the search terms — yielding more variation
+// than always taking the strict top results. No extra API calls.
+function selectWithVariety(pool, want) {
+  if (!pool || pool.length <= want) return pool || [];
+  const keepTop = Math.min(2, want);
+  const picks = pool.slice(0, keepTop);
+  const rest = pool.slice(keepTop);
+  const remaining = want - keepTop;
+  if (remaining > 0 && rest.length) {
+    const stride = rest.length / remaining;
+    for (let i = 0; i < remaining; i++) picks.push(rest[Math.floor(i * stride)]);
+  }
+  return picks;
+}
+
+const SEARCH_POOL = 30; // candidates gathered per source before variety selection
+
 async function fetchLivePhotos(prayer, context) {
   const query   = buildSearchQuery(prayer, context);
   const q       = encodeURIComponent(query);
@@ -4144,19 +4163,21 @@ async function fetchLivePhotos(prayer, context) {
   const uKey    = getUnsplashKey();
   if (pKey && uKey) {
     const [p, u] = await Promise.all([
-      fetchPhotosFromSource('pexels',   q, pKey, blocked, query, 4).catch(() => []),
-      fetchPhotosFromSource('unsplash', q, uKey, blocked, query, 4).catch(() => []),
+      fetchPhotosFromSource('pexels',   q, pKey, blocked, query, SEARCH_POOL).catch(() => []),
+      fetchPhotosFromSource('unsplash', q, uKey, blocked, query, SEARCH_POOL).catch(() => []),
     ]);
+    const pv = selectWithVariety(p, 4);
+    const uv = selectWithVariety(u, 4);
     const results = [];
-    const len = Math.max(p.length, u.length);
+    const len = Math.max(pv.length, uv.length);
     for (let i = 0; i < len && results.length < 8; i++) {
-      if (i < p.length && results.length < 8) results.push(p[i]);
-      if (i < u.length && results.length < 8) results.push(u[i]);
+      if (i < pv.length && results.length < 8) results.push(pv[i]);
+      if (i < uv.length && results.length < 8) results.push(uv[i]);
     }
     return results;
   }
-  if (pKey) return fetchPhotosFromSource('pexels',   q, pKey, blocked, query, 8);
-  if (uKey) return fetchPhotosFromSource('unsplash', q, uKey, blocked, query, 8);
+  if (pKey) return selectWithVariety(await fetchPhotosFromSource('pexels',   q, pKey, blocked, query, SEARCH_POOL), 8);
+  if (uKey) return selectWithVariety(await fetchPhotosFromSource('unsplash', q, uKey, blocked, query, SEARCH_POOL), 8);
   return [];
 }
 

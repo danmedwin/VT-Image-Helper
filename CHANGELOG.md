@@ -2,6 +2,9 @@
 
 ---
 
+## v3.19 — June 2026
+- **Partial-match search variety:** live search now gathers a larger candidate pool (per_page 15→30) and selects results with a spread — keeping the strongest matches but reaching deeper into the ranking where photos match ~75%+ (not all) of the search terms. More variation in results, with no extra API calls. Applies to live Pexels + Unsplash search (`selectWithVariety`).
+
 ## v3.18 — June 2026
 - **Temp diagnostic:** "Test Unsplash download" button in the admin API Keys panel — runs a live search, fires a real `download_location` ping, and prints each step's result on-screen (verifies the download counter increments). To be removed once production approval is confirmed.
 

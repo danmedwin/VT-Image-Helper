@@ -53,7 +53,7 @@ _(none pending)_
 
 - ✅ **ZIP download** — *(Shipped v2.42, June 2026)* "Download ZIP" button builds a single ZIP file of all selected images using JSZip (CDN), with parallel fetching and a staggered-download fallback if JSZip fails to load.
 
-- **Partial-match search (75% threshold)** — Rather than requiring images to match *every* search term, surface images that match 75% or more of the terms. This should yield more variation in the returned images instead of an over-narrowed result set.
+- ✅ **Partial-match search (75% threshold)** — *(Shipped v3.19)* Live search gathers a 30-candidate pool per source and `selectWithVariety` keeps the top matches while spreading the rest deeper into the relevance ranking (where photos match ~75%+ of terms, not all). More variety, no extra API calls.
 
 ### Medium Priority
 
