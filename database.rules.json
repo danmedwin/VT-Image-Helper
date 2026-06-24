@@ -121,6 +121,33 @@
     "filters": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
+    },
+
+    "prayerThemes": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
+      "$id": {
+        ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+      }
+    },
+
+    "pinnedPhotos": {
+      ".read": true,
+      "$prayer": {
+        ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
+      }
+    },
+
+    "suggestions": {
+      ".read": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
+      "$prayer": {
+        "$photo": {
+          ".write": true,
+          "notes": {
+            ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 1000)"
+          }
+        }
+      }
     }
   }
 }

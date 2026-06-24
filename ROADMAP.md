@@ -111,7 +111,8 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 - ✅ All high-risk write paths (`blocked`, `blockedKeywords`, `searchTerms`, `prayerOrder`, `prayerTags`, `prayerDisplayNames`, `customPrayers`, `hiddenPrayers`, `siteDefaults`, `promotedPrayers`) locked to `auth.uid === adminUID` in `database.rules.json`.
 - ✅ `reports` reads locked to admin only.
 - ✅ `pendingPrayers` writes: admin has full access; public can only write new entries with `status: 'pending'`.
-- **Still needed:** Deploy `database.rules.json` to Firebase console (Realtime Database → Rules → Publish). Until deployed, the JS changes are live but the server-side enforcement is not.
+- **Bug fixed June 2026:** the deployed rules were missing three paths the app actually uses — `prayerThemes`, `pinnedPhotos`, and `suggestions` — so Firebase default-denied them, causing 401 errors in the browser console (prayer themes not loading, photo suggestions failing to submit/approve). Added to `database.rules.json` with patterns matching their siblings (themes: public read / admin write; pinnedPhotos: public read / admin write; suggestions: public write / admin read, like `reports`).
+- **⚠️ Still needed:** Deploy `database.rules.json` to Firebase console (Realtime Database → Rules → paste file contents → Publish). Until republished, the three new paths keep returning 401. This same manual step also activates all the earlier admin-write locks.
 
 ---
 
