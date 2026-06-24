@@ -4,6 +4,7 @@
 
 ## Curated library — June 2026
 - Bigger curated set for no-key users: photos kept per prayer raised **8 → 20** (`TARGET_PER_PRAYER`), and candidates fetched per source raised 20 → 40 (`CANDIDATES_PER_PRAYER`; Unsplash capped at its 30/page max). No change to `index.html`. Regenerate by running the **"Refresh Curated Photos"** GitHub Action (Actions tab → Run workflow) — no need to wait for the monthly cron.
+- Refresh script: Claude vision filter now evaluates candidates in **concurrent batches of 8** instead of one-at-a-time with a sleep — cuts the Action runtime from ~hours (at the higher target) to ~10–15 min.
 
 ## v3.20 — June 2026
 - **Silent admin token refresh:** when the admin's Firebase token expires mid-session, admin requests now silently exchange the stored refresh token for a fresh one and retry — no more getting logged out (or console 401s) after an hour. Applies to all admin writes (`fbPut`/`fbDel`), the `reports` reads, and the `suggestions` read via a shared `fbAuthedFetch` helper.

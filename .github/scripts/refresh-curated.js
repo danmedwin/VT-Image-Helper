@@ -399,12 +399,19 @@ async function main() {
     let freshPhotos = [];
     if (candidates.length && ANTHROPIC_KEY) {
       process.stdout.write(' → filtering…');
-      for (const photo of candidates) {
-        await sleep(120);
-        const passes = await evaluatePhoto(photo.srcMedium || photo.src, claudePrompt, warnings);
-        if (passes) {
-          freshPhotos.push(photo);
-          if (freshPhotos.length >= TARGET_PER_PRAYER) break;
+      // Evaluate candidates in concurrent batches (preserves ranked order; stops
+      // once TARGET_PER_PRAYER pass). Sequential was far too slow at higher targets.
+      const VISION_CONCURRENCY = 8;
+      for (let b = 0; b < candidates.length && freshPhotos.length < TARGET_PER_PRAYER; b += VISION_CONCURRENCY) {
+        const batch = candidates.slice(b, b + VISION_CONCURRENCY);
+        const verdicts = await Promise.all(
+          batch.map(p => evaluatePhoto(p.srcMedium || p.src, claudePrompt, warnings))
+        );
+        for (let k = 0; k < batch.length; k++) {
+          if (verdicts[k]) {
+            freshPhotos.push(batch[k]);
+            if (freshPhotos.length >= TARGET_PER_PRAYER) break;
+          }
         }
       }
       if (freshPhotos.length === 0 && candidates.length > 0) {
