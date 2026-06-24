@@ -2,6 +2,9 @@
 
 ---
 
+## v3.17 — June 2026
+- **Unsplash attribution format:** photo credit now reads "Photo by [Name] on [Unsplash]" with BOTH the photographer name (→ their profile) and "Unsplash" (→ the photo page) as UTM-tagged links, on cards and in the lightbox — Unsplash's canonical, reviewer-verifiable attribution format (was "Photo: [Name]")
+
 ## v3.16 — June 2026
 - **Unsplash API compliance:** trigger the photo's `download_location` endpoint whenever a user downloads an image (individual download + ZIP), per Unsplash's required download-tracking guideline. Fires only for live-fetched Unsplash photos when an Unsplash key is present.
 - **Unsplash API compliance:** photographer names now link to the photographer's Unsplash profile (with UTM) on photo cards, in the lightbox, and in the `attribution.html` ZIP sheet — previously plain text.

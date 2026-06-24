@@ -27,9 +27,11 @@ _(none pending)_
 
 **Audited June 2026 against [Unsplash API Guidelines](https://help.unsplash.com/en/articles/2511245-unsplash-api-guidelines).**
 
-✅ **Fixed in v3.16:**
-- **Download tracking** — every user download (individual + ZIP) now pings the photo's `links.download_location` with the Unsplash key (`triggerUnsplashDownload`). Captured in live search and the refresh script; stored in `curated.json` going forward.
-- **Photographer profile links** — photographer names link to their Unsplash profile (with UTM) on cards, lightbox, and `attribution.html`.
+✅ **Fixed in v3.16 / v3.17:**
+- **Download tracking** (v3.16) — every user download (individual + ZIP) now pings the photo's `links.download_location` with the Unsplash key (`triggerUnsplashDownload`). Captured in live search and the refresh script; stored in `curated.json` going forward.
+- **Canonical attribution** (v3.16 → v3.17) — credit reads "Photo by [Name] on [Unsplash]" with both the photographer name (→ profile) and "Unsplash" (→ photo page) as UTM-tagged links, on cards and in the lightbox; `attribution.html` links photographer + source too.
+
+**Production approval (in progress, June 2026):** Applied for Production rates. Unsplash (Victor) needs to verify, in the live app: (1) the "Photo by … on Unsplash" attribution with UTM profile link, and (2) the Downloads counter going > 0. To demonstrate the download trigger, enter the Unsplash key in the admin API panel, run a **live** search, select an Unsplash photo, and download it — the counter on the Unsplash app dashboard will increment. Upload screenshots/recording to the Application Form (not the email reply).
 
 ✅ **Already compliant:** hotlinking via `urls.regular`; UTM-tagged link back to Unsplash; no "Unsplash" in app name; not reselling; not replicating Unsplash's core experience.
 
@@ -171,4 +173,4 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 
 ## Current Version
 
-**v3.16** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`
+**v3.17** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`

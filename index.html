@@ -1657,7 +1657,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.16</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.17</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4351,11 +4351,14 @@ function photoCardHtml(prayerId, photo, isLive) {
   const photographerUrl = photo.photographerUrl || '';
   const downloadLocation = photo.downloadLocation || '';
   const photoSource = photo.source || (/^\d+$/.test(String(photo.id)) ? 'pexels' : 'unsplash');
+  const _creditLinkStyle = 'color:inherit;text-decoration:underline;';
+  const photogNameHtml = photographerUrl
+    ? `<a href="${photographerUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="${_creditLinkStyle}">${photo.photographer}</a>`
+    : photo.photographer;
+  const sourceNameHtml = `<a href="${sourceUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="${_creditLinkStyle}">${sourceLabel}</a>`;
   const photogCredit = photo.photographer
-    ? (photographerUrl
-        ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: <a href="${photographerUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:inherit;text-decoration:underline;">${photo.photographer}</a></span>`
-        : `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo: ${photo.photographer}</span>`)
-    : '';
+    ? `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo by ${photogNameHtml} on ${sourceNameHtml}</span>`
+    : `<span style="font-size:11px;color:var(--text-muted);opacity:0.7;display:block;">Photo on ${sourceNameHtml}</span>`;
   const captionText = photo.src ? (photo.caption || '') + photogCredit : '';
   const photoSrc = photo.src || '';
   const srcAttr = photoSrc ? `data-src="${photoSrc}"` : '';
@@ -4798,6 +4801,8 @@ function showLightbox(prayerId, photoId, event) {
     caption:  c.dataset.caption || '',
     photographer: c.dataset.photographer || '',
     photographerUrl: c.dataset.photographerUrl || '',
+    sourceUrl: c.dataset.sourceUrl || '',
+    source: c.dataset.source || '',
     src: c.dataset.src || '',
   }));
   _lb.prayerId = prayerId;
@@ -4835,12 +4840,18 @@ function _lbRender() {
   document.getElementById('lb-img').alt = photo.caption;
   document.getElementById('lb-prayer').textContent = photo.caption || '—';
   const lbCredit = document.getElementById('lb-credit');
-  if (!photo.photographer) {
-    lbCredit.textContent = '';
-  } else if (photo.photographerUrl) {
-    lbCredit.innerHTML = 'Photo: <a href="' + photo.photographerUrl.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + escHtml(photo.photographer) + '</a>';
+  if (!photo.photographer && !photo.sourceUrl) {
+    lbCredit.innerHTML = '';
   } else {
-    lbCredit.textContent = 'Photo: ' + photo.photographer;
+    const lbStyle = 'color:inherit;text-decoration:underline;';
+    const lbSourceLabel = photo.source === 'unsplash' ? 'Unsplash' : 'Pexels';
+    const lbName = photo.photographerUrl
+      ? '<a href="' + photo.photographerUrl.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" style="' + lbStyle + '">' + escHtml(photo.photographer) + '</a>'
+      : escHtml(photo.photographer);
+    const lbSource = photo.sourceUrl
+      ? '<a href="' + photo.sourceUrl.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" style="' + lbStyle + '">' + lbSourceLabel + '</a>'
+      : lbSourceLabel;
+    lbCredit.innerHTML = photo.photographer ? ('Photo by ' + lbName + ' on ' + lbSource) : ('Photo on ' + lbSource);
   }
 
   document.getElementById('lb-prev').style.visibility = idx > 0 ? '' : 'hidden';
