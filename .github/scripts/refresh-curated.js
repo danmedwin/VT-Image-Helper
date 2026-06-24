@@ -15,8 +15,8 @@ const UNSPLASH_KEY  = process.env.UNSPLASH_ACCESS_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const FIREBASE_URL  = 'https://vt-image-helper-default-rtdb.firebaseio.com';
 const CLAUDE_MODEL  = 'claude-haiku-4-5-20251001';
-const CANDIDATES_PER_PRAYER = 20;
-const TARGET_PER_PRAYER     = 8;
+const CANDIDATES_PER_PRAYER = 40;  // fetched per source (Unsplash caps at its 30/page max)
+const TARGET_PER_PRAYER     = 20;  // photos kept per prayer in curated.json
 const UTM = '?utm_source=vt_image_helper&utm_medium=referral';
 
 if (!PEXELS_KEY && !UNSPLASH_KEY) {
@@ -145,7 +145,7 @@ function toPexelsPhotoObj(p) {
 // ─── UNSPLASH ────────────────────────────────────────────────────────────────
 
 async function unsplashSearch(query, perPage = CANDIDATES_PER_PRAYER) {
-  const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${perPage}&orientation=landscape`;
+  const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${Math.min(perPage, 30)}&orientation=landscape`;
   const { status, body } = await httpGet(url, { Authorization: 'Client-ID ' + UNSPLASH_KEY });
   if (status === 429) throw new Error('Unsplash rate limit (429)');
   if (status !== 200) throw new Error(`Unsplash HTTP ${status}`);
