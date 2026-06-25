@@ -1313,9 +1313,15 @@
         <h2 style="margin:0 0 7px;font-size:20px;font-weight:700;color:#20233a;">Find images for your service</h2>
         <p class="setup-explainer">Choose the prayers in your service and search for images to accompany each one &mdash; drawn from <a href="https://www.pexels.com" target="_blank" rel="noopener">Pexels</a> and <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a> and filtered for beauty, thematic resonance, and room for text overlay.</p>
       </div>
-      <div style="background:#f3ece0;border:1px solid #e6d4ad;border-radius:13px;padding:12px 15px;max-width:230px;flex-shrink:0;">
-        <div style="font-size:10.5px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:#a9802f;margin-bottom:4px;">Beta</div>
-        <div style="font-size:12px;line-height:1.55;color:#7d6536;">In active development — ♥ favorite and 🚩 flag photos to help improve it.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:230px;flex-shrink:0;">
+        <div style="background:#f3ece0;border:1px solid #e6d4ad;border-radius:13px;padding:12px 15px;">
+          <div style="font-size:10.5px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:#a9802f;margin-bottom:4px;">Beta</div>
+          <div style="font-size:12px;line-height:1.55;color:#7d6536;">In active development — ♥ favorite and 🚩 flag photos to help improve it.</div>
+        </div>
+        <div style="background:var(--teal-light);border:1px solid var(--teal-border);border-radius:13px;padding:12px 15px;">
+          <div style="font-size:10.5px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:var(--teal);margin-bottom:4px;">Advanced</div>
+          <div style="font-size:12px;line-height:1.55;color:#2c5249;">Have a free Pexels or Unsplash key? <a onclick="openUserKeyModal()" style="color:var(--teal);font-weight:600;text-decoration:underline;cursor:pointer;">Add it</a> to pull live results right onto the page. <em>Optional.</em></div>
+        </div>
       </div>
     </div>
     <!-- Full-width input box -->
@@ -1725,7 +1731,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.25</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.26</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
