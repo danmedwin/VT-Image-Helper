@@ -1,6 +1,6 @@
 # VT Image Helper — Roadmap & Handoff Notes
 
-_Last updated: June 2026 (through v3.32)_
+_Last updated: June 2026 (through v3.33)_
 
 ---
 
@@ -21,7 +21,7 @@ _Last updated: June 2026 (through v3.32)_
 
 - **Remove the temporary "Test Unsplash download" diagnostic button** (in the admin API Keys panel, added v3.18) once Unsplash production approval is confirmed.
 
-## This session's work (v3.18–v3.32) — summary
+## This session's work (v3.18–v3.33) — summary
 
 Full detail in `CHANGELOG.md`. Highlights:
 - **Unsplash API compliance** (v3.16–v3.21): download-trigger ping + canonical "Photo by [Name] on Unsplash" attribution (both UTM-linked) on cards, lightbox, and attribution.html; temp diagnostic button (v3.18, to remove).
@@ -29,7 +29,7 @@ Full detail in `CHANGELOG.md`. Highlights:
 - **Search-results redesign** (v3.21, v3.23, v3.24, v3.28, v3.29): 3-column controls bar (explainer + Download | chips + keywords | live-search links + Advanced); "Search these terms on: Pexels · Unsplash" links; additional-keywords → removable chips (refresh for key users, flash live-search column for no-key); "Download selected" + filename subtext; removed "N prayers matched"; red Favorites heart.
 - **Bigger curated library** (curated refresh): per-prayer photos 8 → 20; vision filter parallelized 8-wide (run ~10–15 min, was ~hr).
 - **Partial-match search variety** (v3.19): 30-candidate pool + `selectWithVariety`.
-- **Setup-panel layout** (v3.28, v3.30, v3.31, v3.32): "Add prayers" moved into left column (col-width textarea, "Add to list ↓" below); Prayer library "Filters" label + reordered hint; "Your service list" gets a gold border + gold pulse when prayers are added; Keywords box collapsible.
+- **Setup-panel layout** (v3.28, v3.30–v3.33): "Add prayers" moved into left column (col-width textarea, "Add to list ↓" below); Prayer library "Filters" label + reordered hint; "Your service list" gets a gold border + gold pulse when prayers are added; Keywords box collapsible (collapsed default); "Add prayers" + "Prayer library" collapsible (open default) via `toggleCollapseBox`.
 - **Firebase**: silent admin token refresh (v3.20); added missing `prayerThemes`/`pinnedPhotos`/`suggestions` rules — **republished to the console** (401s resolved).
 - **Bug fixes**: lightbox favorite now updates the lightbox button (v3.28).
 
@@ -191,4 +191,4 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 
 ## Current Version
 
-**v3.32** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`
+**v3.33** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`
