@@ -2,6 +2,10 @@
 
 ---
 
+## v3.27 — June 2026
+- Header "Advanced" box is now collapsed by default (single "ADVANCED ▾" line) and expands on click — much smaller footprint.
+- Renamed the header "Beta" box to "Community built"; copy updated to "♥ favorite and 🚩 flag photos to improve for everyone."
+
 ## v3.26 — June 2026
 - Added a small "Advanced" box in the header (stacked just under the Beta box, teal accent) that opens the API-keys modal — a global, always-visible entry point so users can discover the optional live-search keys without scrolling into a results section.
 

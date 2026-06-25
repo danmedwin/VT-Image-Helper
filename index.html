@@ -1315,12 +1315,17 @@
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;max-width:230px;flex-shrink:0;">
         <div style="background:#f3ece0;border:1px solid #e6d4ad;border-radius:13px;padding:12px 15px;">
-          <div style="font-size:10.5px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:#a9802f;margin-bottom:4px;">Beta</div>
-          <div style="font-size:12px;line-height:1.55;color:#7d6536;">In active development — ♥ favorite and 🚩 flag photos to help improve it.</div>
+          <div style="font-size:10.5px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:#a9802f;margin-bottom:4px;">Community built</div>
+          <div style="font-size:12px;line-height:1.55;color:#7d6536;">♥ favorite and 🚩 flag photos to improve for everyone.</div>
         </div>
-        <div style="background:var(--teal-light);border:1px solid var(--teal-border);border-radius:13px;padding:12px 15px;">
-          <div style="font-size:10.5px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:var(--teal);margin-bottom:4px;">Advanced</div>
-          <div style="font-size:12px;line-height:1.55;color:#2c5249;">Have a free Pexels or Unsplash key? <a onclick="openUserKeyModal()" style="color:var(--teal);font-weight:600;text-decoration:underline;cursor:pointer;">Add it</a> to pull live results right onto the page. <em>Optional.</em></div>
+        <div style="background:var(--teal-light);border:1px solid var(--teal-border);border-radius:13px;padding:10px 14px;">
+          <div onclick="toggleAdvancedBox()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+            <span style="font-size:10.5px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:var(--teal);">Advanced</span>
+            <span id="advancedCaret" style="color:var(--teal);font-size:10px;transition:transform 0.15s;">&#9660;</span>
+          </div>
+          <div id="advancedBody" style="display:none;font-size:12px;line-height:1.55;color:#2c5249;margin-top:7px;">
+            Have a free Pexels or Unsplash key? <a onclick="openUserKeyModal()" style="color:var(--teal);font-weight:600;text-decoration:underline;cursor:pointer;">Add it</a> to pull live results right onto the page. <em>Optional.</em>
+          </div>
         </div>
       </div>
     </div>
@@ -1731,7 +1736,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.26</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.27</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2554,6 +2559,14 @@ function updateKeyUI() {
 }
 
 // ─── USER-FACING API KEYS (optional "Advanced") ──────────────────────────────
+function toggleAdvancedBox() {
+  const body = document.getElementById('advancedBody');
+  const caret = document.getElementById('advancedCaret');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (caret) caret.style.transform = open ? '' : 'rotate(180deg)';
+}
 function openUserKeyModal() {
   document.getElementById('userPexelsKey').value = getKey();
   document.getElementById('userUnsplashKey').value = getUnsplashKey();
