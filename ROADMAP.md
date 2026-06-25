@@ -1,6 +1,6 @@
 # VT Image Helper — Roadmap & Handoff Notes
 
-_Last updated: June 2026_
+_Last updated: June 2026 (through v3.32)_
 
 ---
 
@@ -10,16 +10,28 @@ _Last updated: June 2026_
 
 **Key facts:**
 - Single HTML file: `index.html` (source edited at `/Users/medwin/Documents/VT Image Builder/vt-image-finder.html`, copied to repo)
-- Images sourced from [Pexels](https://www.pexels.com) via API (live) or a monthly-refreshed curated library (no-API fallback)
+- Images sourced from [Pexels](https://www.pexels.com) and [Unsplash](https://unsplash.com) via API (live) or a monthly-refreshed curated library (no-API fallback). Non-admin users can optionally add their own free keys via the "Advanced" box to run live search.
 - Prayer/image data stored in Firebase Realtime Database
-- Monthly photo refresh runs via GitHub Actions (requires `PEXELS_API_KEY` and `ANTHROPIC_API_KEY` as GitHub Secrets — never hardcode)
-- Admin mode is passcode-protected (client-side only — see security notes below)
+- Monthly photo refresh runs via GitHub Actions (requires `PEXELS_API_KEY`, `UNSPLASH_ACCESS_KEY`, and `ANTHROPIC_API_KEY` as GitHub Secrets — never hardcode)
+- Admin login uses Firebase Email/Password Auth (token in `sessionStorage` as `vtAdminToken`, silently refreshed on expiry); admin write paths locked to the admin UID in `database.rules.json`
 
 ---
 
 ## Pending UI Polish (next session)
 
-_(none pending)_
+- **Remove the temporary "Test Unsplash download" diagnostic button** (in the admin API Keys panel, added v3.18) once Unsplash production approval is confirmed.
+
+## This session's work (v3.18–v3.32) — summary
+
+Full detail in `CHANGELOG.md`. Highlights:
+- **Unsplash API compliance** (v3.16–v3.21): download-trigger ping + canonical "Photo by [Name] on Unsplash" attribution (both UTM-linked) on cards, lightbox, and attribution.html; temp diagnostic button (v3.18, to remove).
+- **User-facing optional API keys** (v3.22, v3.25, v3.26, v3.27): per-section + collapsible header "Advanced" box → modal to paste own Pexels/Unsplash keys (shared storage with admin); framed optional per Unsplash guidelines; "Manage API keys" link when a key is set; bad-key errors link to the modal and fall back to curated photos.
+- **Search-results redesign** (v3.21, v3.23, v3.24, v3.28, v3.29): 3-column controls bar (explainer + Download | chips + keywords | live-search links + Advanced); "Search these terms on: Pexels · Unsplash" links; additional-keywords → removable chips (refresh for key users, flash live-search column for no-key); "Download selected" + filename subtext; removed "N prayers matched"; red Favorites heart.
+- **Bigger curated library** (curated refresh): per-prayer photos 8 → 20; vision filter parallelized 8-wide (run ~10–15 min, was ~hr).
+- **Partial-match search variety** (v3.19): 30-candidate pool + `selectWithVariety`.
+- **Setup-panel layout** (v3.28, v3.30, v3.31, v3.32): "Add prayers" moved into left column (col-width textarea, "Add to list ↓" below); Prayer library "Filters" label + reordered hint; "Your service list" gets a gold border + gold pulse when prayers are added; Keywords box collapsible.
+- **Firebase**: silent admin token refresh (v3.20); added missing `prayerThemes`/`pinnedPhotos`/`suggestions` rules — **republished to the console** (401s resolved).
+- **Bug fixes**: lightbox favorite now updates the lightbox button (v3.28).
 
 ---
 
@@ -31,7 +43,7 @@ _(none pending)_
 - **Download tracking** (v3.16) — every user download (individual + ZIP) now pings the photo's `links.download_location` with the Unsplash key (`triggerUnsplashDownload`). Captured in live search and the refresh script; stored in `curated.json` going forward.
 - **Canonical attribution** (v3.16 → v3.17) — credit reads "Photo by [Name] on [Unsplash]" with both the photographer name (→ profile) and "Unsplash" (→ photo page) as UTM-tagged links, on cards and in the lightbox; `attribution.html` links photographer + source too.
 
-**Production approval (in progress, June 2026):** Applied for Production rates. Unsplash (Victor) needs to verify, in the live app: (1) the "Photo by … on Unsplash" attribution with UTM profile link, and (2) the Downloads counter going > 0. To demonstrate the download trigger, enter the Unsplash key in the admin API panel, run a **live** search, select an Unsplash photo, and download it — the counter on the Unsplash app dashboard will increment. Upload screenshots/recording to the Application Form (not the email reply).
+**Production approval (resubmitted June 2026, awaiting Victor):** Applied for Production rates; reviewer (Victor) flagged attribution + download tracking — both since fixed (v3.16–v3.21). **Downloads are now confirmed registering on the Unsplash dev dashboard** (the trigger works; the dashboard counter just lags). Resubmitted with screenshots/recording uploaded to the Application Form. Next: await Victor's confirmation. Note: the download-tracking implementation matches Unsplash's guide exactly — right endpoint (`download_location`), authorized with `client_id`, `ixid` preserved, returns 200 + `{url}`.
 
 ✅ **Already compliant:** hotlinking via `urls.regular`; UTM-tagged link back to Unsplash; no "Unsplash" in app name; not reselling; not replicating Unsplash's core experience.
 
@@ -65,7 +77,7 @@ _(none pending)_
 
 ### Lower Priority / Nice to Have
 
-- **Additional image sources** — Integrate sources beyond Pexels (e.g. Unsplash, Pixabay). Would give access to a broader photo library and reduce dependency on a single provider. Requires separate API key handling per source and adapting the image card/download flow to each provider's attribution rules.
+- ✅ **Additional image sources** — *(Unsplash shipped v2.82; compliance v3.16–v3.21)* Unsplash integrated alongside Pexels: both keys managed in the API Keys panel + user-facing modal, results interleaved, source-aware cards/downloads/attribution. Pixabay or others could still be added later.
 
 - **Keyboard navigation** — Arrow keys to move between images in a prayer section; Enter to select; Space to open lightbox.
 - **Image & attribution export** — A way for users to get a list of their selected images with proper photographer attributions, e.g. exported as a PDF or printable page. Useful for copyright compliance.
@@ -112,7 +124,7 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 - ✅ `reports` reads locked to admin only.
 - ✅ `pendingPrayers` writes: admin has full access; public can only write new entries with `status: 'pending'`.
 - **Bug fixed June 2026:** the deployed rules were missing three paths the app actually uses — `prayerThemes`, `pinnedPhotos`, and `suggestions` — so Firebase default-denied them, causing 401 errors in the browser console (prayer themes not loading, photo suggestions failing to submit/approve). Added to `database.rules.json` with patterns matching their siblings (themes: public read / admin write; pinnedPhotos: public read / admin write; suggestions: public write / admin read, like `reports`).
-- **⚠️ Still needed:** Deploy `database.rules.json` to Firebase console (Realtime Database → Rules → paste file contents → Publish). Until republished, the three new paths keep returning 401. This same manual step also activates all the earlier admin-write locks.
+- **✅ Republished to Firebase console (June 2026):** `database.rules.json` was pasted into the console and published — the `prayerThemes`/`pinnedPhotos`/`suggestions` 401s are resolved and all admin-write locks are now active. **Reminder for future rule edits:** the repo file is NOT auto-deployed; any change to `database.rules.json` must be manually republished in the console (Realtime Database → Rules → paste → Publish).
 
 ---
 
@@ -123,10 +135,11 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 | File | Purpose |
 |---|---|
 | `/Users/medwin/Documents/VT Image Builder/vt-image-finder.html` | **Source file** — edit this |
-| `/tmp/vt-image-helper/index.html` | Git working copy — copy source here before committing |
-| `/tmp/vt-image-helper/header-bg.jpg` | Header background photo (Pexels, Marek Piwnicki) |
-| `/tmp/vt-image-helper/CLAUDE.md` | Claude Code instructions for this repo (auto-push authorized) |
+| `/private/tmp/vt-image-helper/index.html` | Git working copy — copy source here before committing |
+| `/private/tmp/vt-image-helper/CLAUDE.md` | Claude Code instructions for this repo (auto-push authorized) |
 | `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md` | Version history log (update with every change) |
+
+> ⚠️ `/private/tmp/` gets wiped periodically (it cleared twice during the June 2026 session). If the working copy is missing, just `gh repo clone danmedwin/VT-Image-Helper /private/tmp/vt-image-helper` — nothing is lost since everything is pushed, and the source of truth in `Documents/` is untouched.
 
 ### Git / deployment
 
@@ -157,21 +170,25 @@ Admin mode is enforced entirely client-side (sessionStorage + passcode). Firebas
 | `prayerTags/` | Service tag overrides per prayer (morning/evening/shabbat/weekday) |
 | `pendingPrayers/` | User-submitted prayer suggestions awaiting admin review |
 | `siteDefaults/` | Snapshot saved by "Save as default" (order + tags + terms) |
+| `prayerThemes/` | Per-prayer thematic text (public read / admin write) |
+| `pinnedPhotos/` | Admin-approved photo suggestions shown to all (public read / admin write) |
+| `suggestions/` | Visitor "this photo fits another prayer" submissions (public write / admin read) |
+| `filters/` | Saved filter state (public read / admin write) |
 
 ### Admin mode
 
-- Double-click the "Admin" button in the page footer; enter the passcode
-- Stored in `sessionStorage` as `vtAdmin` — persists until the tab is closed
-- **The passcode is in the client JS source** — visible to anyone who views source. Consider rotating it or moving to proper auth.
+- Admin login uses **Firebase Email/Password Auth** (Identity Toolkit REST API) — email + password modal (the old client-side passcode is gone).
+- ID token stored in `sessionStorage` as `vtAdminToken`; refresh token in `localStorage` as `vtAdminRefreshToken`. On a 401 mid-session the token is **silently refreshed and the request retried** (v3.20), so admins aren't logged out after the 1-hour expiry. Admin UID: `tizvHyzJ7PdsPvFpbEk4CdSPUk42`.
+- Admin-only reads (`reports`, `suggestions`) are skipped for non-admin visitors to avoid 401 console noise.
 
-### Pexels API key
+### API keys (Pexels + Unsplash)
 
-- Stored in the user's browser `localStorage` (key: `vtImageHelper_pexelsKey`)
-- Set via the API Key tab in the admin panel
-- Required for live photo search; without it the app falls back to the monthly-refreshed curated library
+- Stored in `localStorage`: `vtImageHelper_pexelsKey` and `vtImageHelper_unsplashKey`.
+- Settable via the admin API Keys panel **or** the user-facing "Advanced" modal (`openUserKeyModal`) — same storage, so both paths enable live search. Users can add just one source.
+- Required for live photo search; without a key the app shows the monthly-refreshed curated library (~20 photos/prayer).
 
 ---
 
 ## Current Version
 
-**v3.17** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`
+**v3.32** — see full version history in `~/.claude/projects/-Users-medwin/memory/feedback_vt_version.md`
