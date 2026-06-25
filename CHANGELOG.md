@@ -2,6 +2,12 @@
 
 ---
 
+## v3.24 — June 2026
+- Live-search column: "Pexels · Unsplash" now sit together on their own line below "Search these terms on:".
+- Download button now reads "Download selected" with the generated file name shown as subtext below ("File name: [prayer]-[description].jpg") instead of inside the button.
+- More space above the "✨ Advanced" link; "(optional)" is now italic.
+- **Additional keywords → chips:** typing a keyword and pressing Enter converts it into a removable chip (like the search-term chips). For key holders it re-runs the live search; for no-key users (whose curated photos don't change) it updates the "Search these terms on" links and **flashes the live-search column** so the action gives visible feedback and points to the live options.
+
 ## v3.23 — June 2026
 - **Search-results header redesign:** each prayer section's controls bar is now a 3-column layout — left: explainer text ("These search terms were used to find the curated photos below.", live variant when a key is set) + the Select/Download button; middle: search-term chips + "Additional keywords" input (+ Refresh for key holders); right: "For even more images → Search these terms on: Pexels · Unsplash" + the optional "✨ Advanced" keys link. Collapses to a single stacked column below 760px.
 

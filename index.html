@@ -594,7 +594,7 @@
   }
   .live-search-link:hover { color: var(--gold-dark); }
   .fav-heart-icon { color: var(--fav-heart); }
-  .advanced-keys-row { display: flex; justify-content: flex-end; }
+  .advanced-keys-row { display: flex; justify-content: flex-end; margin-top: 12px; }
   .advanced-keys-link {
     background: none; border: none; cursor: pointer; padding: 0;
     font-size: 11.5px; color: var(--text-soft);
@@ -612,6 +612,15 @@
   .ctrl-col-right { text-align: right; min-width: 0; }
   .ctrl-explainer { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0; }
   .live-search-label { font-size: 12px; color: var(--text); font-weight: 600; margin-bottom: 3px; }
+  .live-search-sub { font-size: 12px; color: var(--text-muted); }
+  .live-search-links { display: flex; justify-content: flex-end; gap: 6px; align-items: center; font-size: 12px; margin-top: 1px; }
+  .dl-filename { font-size: 11px; color: var(--text-soft); margin-top: 5px; line-height: 1.4; word-break: break-word; }
+  @keyframes flashAttn {
+    0%   { background: rgba(207,154,78,0); box-shadow: 0 0 0 0 rgba(207,154,78,0); }
+    25%  { background: var(--gold-light);  box-shadow: 0 0 0 2px var(--gold); }
+    100% { background: rgba(207,154,78,0); box-shadow: 0 0 0 0 rgba(207,154,78,0); }
+  }
+  .flash-attn { animation: flashAttn 1.5s ease-out; border-radius: 8px; }
   @media (max-width: 760px) {
     .controls-grid { grid-template-columns: 1fr; gap: 14px; }
     .ctrl-col-right { text-align: left; }
@@ -1716,7 +1725,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.23</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.24</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4374,8 +4383,9 @@ function clearAllSelections() {
     dl.removeAttribute('href');
     dl.removeAttribute('download');
     dl.onclick = null;
-    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Select a photo below&hellip;`;
+    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download selected`;
   });
+  document.querySelectorAll('.dl-filename').forEach(fn => { fn.textContent = ''; });
   updateResultsFooter();
 }
 
@@ -4384,7 +4394,9 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
     delete selections[prayerId];
     document.querySelectorAll(`.img-card[data-prayer="${prayerId}"]`).forEach(c => c.classList.remove('selected'));
     const dl = document.getElementById('dl-' + prayerId);
-    if (dl) { dl.removeAttribute('href'); dl.removeAttribute('download'); }
+    if (dl) { dl.removeAttribute('href'); dl.removeAttribute('download'); dl.classList.add('disabled'); dl.onclick = null; }
+    const fn = document.getElementById('dl-filename-' + prayerId);
+    if (fn) fn.textContent = '';
     updateResultsFooter();
     return;
   }
@@ -4412,10 +4424,14 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
       : `https://images.pexels.com/photos/${photoId}/pexels-photo-${photoId}.jpeg?cs=srgb&dl=${filename}&fm=jpg`;
     dl.href = dlHref;
     dl.download = filename;
-    dl.textContent = '';
-    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download ${filename}`;
+    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download selected`;
     dl.classList.remove('disabled');
     dl.onclick = function() { autoFavorite(prayerId, photoId); copyAttribution(prayerId); };
+  }
+  const fn = document.getElementById('dl-filename-' + prayerId);
+  if (fn) {
+    const slug = caption.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+    fn.textContent = 'File name: ' + prayerId + '-' + slug + '.jpg';
   }
 }
 
@@ -4579,29 +4595,32 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
         <div class="controls-grid">
           <div class="ctrl-col-left">
             <p class="ctrl-explainer">${explainer}</p>
-            <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Select a photo below&hellip;
-            </a>
+            <div>
+              <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download selected
+              </a>
+              <div class="dl-filename" id="dl-filename-${prayer.id}"></div>
+            </div>
           </div>
           <div class="ctrl-col-mid">
             <div class="search-terms-bar" id="terms-chips-${prayer.id}">${chipsHtml}</div>
             <div class="refine-row">
               <input type="text" id="${prayer.id}-refine-input" value="${extraTerms.replace(/"/g, '&quot;')}"
-                     placeholder="Additional keywords&hellip;"
-                     onkeydown="if(event.key==='Enter'&&'${apiKey}')refinePrayer('${prayer.id}','${prayer.id}-refine-input','${safeCtx}')">
+                     placeholder="Add a keyword, press Enter&hellip;"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();addTermChip('${prayer.id}','${prayer.id}-refine-input');}">
               ${refreshBtn}
             </div>
           </div>
           <div class="ctrl-col-right">
             <div class="live-search-label">For even more images</div>
-            <div class="live-search-row">
-              Search these terms on:
+            <div class="live-search-sub">Search these terms on:</div>
+            <div class="live-search-links">
               <a class="live-search-link" id="ls-pexels-${prayer.id}" href="${searchUrl}" target="_blank" rel="noopener">Pexels</a>
               <span style="color:var(--text-soft);">&middot;</span>
               <a class="live-search-link" id="ls-unsplash-${prayer.id}" href="${unsplashSearchUrl}" target="_blank" rel="noopener">Unsplash</a>
             </div>
-            ${(!getKey() && !getUnsplashKey()) ? `<div class="advanced-keys-row"><button type="button" class="advanced-keys-link" onclick="openUserKeyModal()">&#10024; Advanced: see live results here (optional)</button></div>` : ''}
+            ${(!getKey() && !getUnsplashKey()) ? `<div class="advanced-keys-row"><button type="button" class="advanced-keys-link" onclick="openUserKeyModal()">&#10024; Advanced: see live results here <em>(optional)</em></button></div>` : ''}
           </div>
         </div>
       </div>
@@ -4624,10 +4643,7 @@ async function refinePrayer(prayerId, inputId, context) {
     if (favBtn) favBtn.classList.remove('active');
   }
 
-  const lsPexels = document.getElementById('ls-pexels-' + prayerId);
-  if (lsPexels) lsPexels.href = 'https://www.pexels.com/search/' + encodeURIComponent(terms) + '/';
-  const lsUnsplash = document.getElementById('ls-unsplash-' + prayerId);
-  if (lsUnsplash) lsUnsplash.href = 'https://unsplash.com/s/photos/' + encodeURIComponent(terms) + '?utm_source=vt_image_helper&utm_medium=referral';
+  updateLiveSearchLinks(prayerId);
 
   const dl = document.getElementById('dl-' + prayerId);
   if (dl) {
@@ -4677,9 +4693,66 @@ function getActiveTerms(prayerId, inputId) {
 
 function removeTermChip(btn, prayerId) {
   btn.closest('.search-term-chip').remove();
+  updateLiveSearchLinks(prayerId);
   if (!getKey() && !getUnsplashKey()) return;
   clearTimeout(_refineTimers[prayerId]);
   _refineTimers[prayerId] = setTimeout(() => refinePrayer(prayerId, prayerId + '-refine-input'), 400);
+}
+
+// Point the "Search these terms on" links at the prayer's current chips + input
+function updateLiveSearchLinks(prayerId) {
+  const terms = getActiveTerms(prayerId, prayerId + '-refine-input');
+  const lp = document.getElementById('ls-pexels-' + prayerId);
+  if (lp) lp.href = 'https://www.pexels.com/search/' + encodeURIComponent(terms) + '/';
+  const lu = document.getElementById('ls-unsplash-' + prayerId);
+  if (lu) lu.href = 'https://unsplash.com/s/photos/' + encodeURIComponent(terms) + '?utm_source=vt_image_helper&utm_medium=referral';
+}
+
+// Convert the "additional keywords" input into removable chips. For key holders
+// this re-runs the live search; for no-key users (curated, unaffected) it flashes
+// the live-search column so the action gives visible feedback + shows the options.
+function addTermChip(prayerId, inputId) {
+  const input = document.getElementById(inputId || (prayerId + '-refine-input'));
+  if (!input) return;
+  const raw = input.value.trim();
+  const bar = document.getElementById('terms-chips-' + prayerId);
+  if (!raw || !bar) return;
+  const existing = new Set([...bar.querySelectorAll('.search-term-chip')].map(c => (c.dataset.term || '').toLowerCase()));
+  let added = 0;
+  raw.split(/[,\s]+/).filter(Boolean).forEach(term => {
+    if (existing.has(term.toLowerCase())) return;
+    existing.add(term.toLowerCase());
+    const span = document.createElement('span');
+    span.className = 'search-term-chip';
+    span.dataset.prayer = prayerId;
+    span.dataset.term = term;
+    span.textContent = term;
+    const x = document.createElement('button');
+    x.className = 'chip-remove'; x.title = 'Remove'; x.innerHTML = '&times;';
+    x.onclick = function() { removeTermChip(x, prayerId); };
+    span.appendChild(x);
+    bar.appendChild(span);
+    added++;
+  });
+  input.value = '';
+  if (!added) return;
+  updateLiveSearchLinks(prayerId);
+  if (getKey() || getUnsplashKey()) {
+    clearTimeout(_refineTimers[prayerId]);
+    _refineTimers[prayerId] = setTimeout(() => refinePrayer(prayerId, prayerId + '-refine-input'), 300);
+  } else {
+    flashLiveSearchColumn(prayerId);
+  }
+}
+
+function flashLiveSearchColumn(prayerId) {
+  const section = document.getElementById('section-' + prayerId);
+  const col = section && section.querySelector('.ctrl-col-right');
+  if (!col) return;
+  col.classList.remove('flash-attn');
+  void col.offsetWidth;
+  col.classList.add('flash-attn');
+  setTimeout(() => col.classList.remove('flash-attn'), 1600);
 }
 
 function escHtml(s) {
