@@ -2,6 +2,10 @@
 
 ---
 
+## v3.21 — June 2026
+- Replaced the per-section "Browse → Pexels" button with a clearer live-search sub-row under each prayer title: "Search these terms on: Pexels · Unsplash" (both links, Unsplash carries UTM). Adds Unsplash parity and spells out what it does.
+- Favorites button heart is now red (matches the photo-card hearts) so it stands out more in the section header.
+
 ## Curated library — June 2026
 - Bigger curated set for no-key users: photos kept per prayer raised **8 → 20** (`TARGET_PER_PRAYER`), and candidates fetched per source raised 20 → 40 (`CANDIDATES_PER_PRAYER`; Unsplash capped at its 30/page max). No change to `index.html`. Regenerate by running the **"Refresh Curated Photos"** GitHub Action (Actions tab → Run workflow) — no need to wait for the monthly cron.
 - Refresh script: Claude vision filter now evaluates candidates in **concurrent batches of 8** instead of one-at-a-time with a sleep — cuts the Action runtime from ~hours (at the higher target) to ~10–15 min.

@@ -576,25 +576,24 @@
   }
   .btn-refine:hover { background: var(--navy); }
   .btn-refine svg { width: 13px; height: 13px; fill: none; stroke: white; stroke-width: 2.2; }
-  .btn-refine-pexels {
-    display: inline-flex;
+  .live-search-row {
+    display: flex;
+    justify-content: flex-end;
     align-items: center;
     gap: 6px;
-    background: transparent;
-    color: var(--teal);
-    border: 1px solid var(--teal-border);
-    padding: 6px 12px;
-    border-radius: 9px;
     font-size: 12px;
-    font-weight: 600;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: background 0.15s;
-    flex-shrink: 0;
-    cursor: pointer;
+    color: var(--text-muted);
+    flex-wrap: wrap;
   }
-  .btn-refine-pexels:hover { background: var(--teal-light); }
-  .btn-refine-pexels svg { width: 12px; height: 12px; fill: none; stroke: var(--teal); stroke-width: 2; }
+  .live-search-row svg { width: 13px; height: 13px; fill: none; stroke: var(--text-soft); stroke-width: 2; }
+  .live-search-link {
+    color: var(--navy-mid);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+  }
+  .live-search-link:hover { color: var(--gold-dark); }
+  .fav-heart-icon { color: var(--fav-heart); }
 
   .btn-download {
     display: inline-flex;
@@ -1662,7 +1661,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.20</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.21</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2600,7 +2599,7 @@ function updateFavViewButtons() {
     const prayerId = btn.id.slice('fav-view-'.length);
     const n = getFavCount(prayerId);
     btn.disabled = n === 0 && !btn.classList.contains('active');
-    btn.textContent = n > 0 ? `♥ Favorites (${n})` : '♥ Favorites';
+    btn.innerHTML = '<span class="fav-heart-icon">♥</span> ' + (n > 0 ? `Favorites (${n})` : 'Favorites');
   });
 }
 
@@ -4467,6 +4466,7 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
   const extraTerms = [keywords, context ? context.trim().slice(0, 60) : ''].filter(Boolean).join(' ');
   const fullQuery = [prayer.searchTerms, extraTerms].filter(Boolean).join(' ');
   const searchUrl = 'https://www.pexels.com/search/' + encodeURIComponent(fullQuery) + '/';
+  const unsplashSearchUrl = 'https://unsplash.com/s/photos/' + encodeURIComponent(fullQuery) + '?utm_source=vt_image_helper&utm_medium=referral';
   const title = prayer.names[0].charAt(0).toUpperCase() + prayer.names[0].slice(1);
   const cards = photos && photos.length
     ? photos.map(ph => photoCardHtml(prayer.id, ph, isLive)).join('')
@@ -4491,19 +4491,22 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
     <div class="prayer-section" id="section-${prayer.id}">
       <div class="prayer-header">
         <span class="prayer-title">${title}<span class="prayer-theme"> — ${prayer.theme}</span></span>
-        ${(()=>{ const n=getFavCount(prayer.id); return `<button class="btn-fav-view" id="fav-view-${prayer.id}" onclick="toggleFavoritesView('${prayer.id}')"${n===0?' disabled':''}>${n>0?`♥ Favorites (${n})`:'♥ Favorites'}</button>`; })()}
+        ${(()=>{ const n=getFavCount(prayer.id); return `<button class="btn-fav-view" id="fav-view-${prayer.id}" onclick="toggleFavoritesView('${prayer.id}')"${n===0?' disabled':''}><span class="fav-heart-icon">♥</span> ${n>0?`Favorites (${n})`:'Favorites'}</button>`; })()}
       </div>
       <div class="controls-bar">
+        <div class="live-search-row">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search these terms on:
+          <a class="live-search-link" id="ls-pexels-${prayer.id}" href="${searchUrl}" target="_blank" rel="noopener">Pexels</a>
+          <span style="color:var(--text-soft);">&middot;</span>
+          <a class="live-search-link" id="ls-unsplash-${prayer.id}" href="${unsplashSearchUrl}" target="_blank" rel="noopener">Unsplash</a>
+        </div>
         <div class="search-terms-bar" id="terms-chips-${prayer.id}">${chipsHtml}</div>
         <div class="refine-row">
           <input type="text" id="${prayer.id}-refine-input" value="${extraTerms.replace(/"/g, '&quot;')}"
                  placeholder="Additional keywords&hellip;"
                  onkeydown="if(event.key==='Enter'&&'${apiKey}')refinePrayer('${prayer.id}','${prayer.id}-refine-input','${safeCtx}')">
           ${refreshBtn}
-          <a class="btn-refine-pexels" id="pexels-link-${prayer.id}" href="${searchUrl}" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Browse
-          </a>
           <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Select a photo below&hellip;
@@ -4529,10 +4532,10 @@ async function refinePrayer(prayerId, inputId, context) {
     if (favBtn) favBtn.classList.remove('active');
   }
 
-  const pexelsLink = document.getElementById('pexels-link-' + prayerId);
-  if (pexelsLink) {
-    pexelsLink.href = 'https://www.pexels.com/search/' + encodeURIComponent(terms) + '/';
-  }
+  const lsPexels = document.getElementById('ls-pexels-' + prayerId);
+  if (lsPexels) lsPexels.href = 'https://www.pexels.com/search/' + encodeURIComponent(terms) + '/';
+  const lsUnsplash = document.getElementById('ls-unsplash-' + prayerId);
+  if (lsUnsplash) lsUnsplash.href = 'https://unsplash.com/s/photos/' + encodeURIComponent(terms) + '?utm_source=vt_image_helper&utm_medium=referral';
 
   const dl = document.getElementById('dl-' + prayerId);
   if (dl) {
