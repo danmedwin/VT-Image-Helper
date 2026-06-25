@@ -594,6 +594,13 @@
   }
   .live-search-link:hover { color: var(--gold-dark); }
   .fav-heart-icon { color: var(--fav-heart); }
+  .advanced-keys-row { display: flex; justify-content: flex-end; }
+  .advanced-keys-link {
+    background: none; border: none; cursor: pointer; padding: 0;
+    font-size: 11.5px; color: var(--text-soft);
+    display: inline-flex; align-items: center; gap: 4px; font-family: inherit;
+  }
+  .advanced-keys-link:hover { color: var(--navy-mid); text-decoration: underline; }
 
   .btn-download {
     display: inline-flex;
@@ -1626,6 +1633,38 @@
 </div>
 
 <!-- Report modal -->
+<div class="block-modal-overlay" id="userKeyOverlay" onclick="closeUserKeyModal()">
+  <div class="block-modal" onclick="event.stopPropagation()" style="max-width:440px;">
+    <button class="modal-close-x" onclick="closeUserKeyModal()" title="Close">&times;</button>
+    <h3 style="color:var(--navy);font-size:15px;"><span style="color:var(--gold-dark);">&#10024;</span> Advanced: live results on this page</h3>
+    <p style="font-weight:400;color:var(--text-muted);font-size:12.5px;line-height:1.6;margin:0 0 14px;">
+      By default you&rsquo;re browsing our curated photo library &mdash; no setup needed, and that&rsquo;s all most people use.
+      Want live, combined results from Pexels and Unsplash shown right here instead? Add your own free API keys.
+      One time, about 5&ndash;10 minutes &mdash; and you can add just one service if you like.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <label style="font-size:12px;font-weight:600;color:var(--text);">
+        Pexels key
+        <a href="https://www.pexels.com/api/" target="_blank" rel="noopener" style="font-weight:400;color:var(--navy-mid);margin-left:6px;">Get a free key &#8599;</a>
+        <input type="text" id="userPexelsKey" placeholder="Paste your Pexels key&hellip;" autocomplete="off" spellcheck="false"
+               style="width:100%;margin-top:5px;padding:8px 10px;border:1px solid var(--border-field);border-radius:8px;font-size:12px;box-sizing:border-box;">
+      </label>
+      <label style="font-size:12px;font-weight:600;color:var(--text);">
+        Unsplash key
+        <a href="https://unsplash.com/developers" target="_blank" rel="noopener" style="font-weight:400;color:var(--navy-mid);margin-left:6px;">Get a free key &#8599;</a>
+        <input type="text" id="userUnsplashKey" placeholder="Paste your Unsplash key&hellip;" autocomplete="off" spellcheck="false"
+               style="width:100%;margin-top:5px;padding:8px 10px;border:1px solid var(--border-field);border-radius:8px;font-size:12px;box-sizing:border-box;">
+      </label>
+    </div>
+    <p id="userKeyMsg" style="display:none;font-size:12px;margin:10px 0 0;"></p>
+    <div class="block-modal-actions" style="margin-top:16px;">
+      <button class="btn-modal-cancel" onclick="closeUserKeyModal()">Cancel</button>
+      <button onclick="saveUserKeys()" style="background:var(--teal);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Save &amp; search live</button>
+    </div>
+    <p style="font-size:11px;color:var(--text-soft);text-align:center;margin:12px 0 0;">Completely optional &mdash; everything works without this.</p>
+  </div>
+</div>
+
 <div class="block-modal-overlay" id="reportModalOverlay" onclick="closeReportModal()">
   <div class="block-modal" onclick="event.stopPropagation()">
     <button class="modal-close-x" onclick="closeReportModal()" title="Close">&times;</button>
@@ -1661,7 +1700,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.21</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.22</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2481,6 +2520,29 @@ function updateKeyUI() {
     const lastDate = localStorage.getItem(CURATED_DATE_STORAGE) || (curatedJson && curatedJson.refreshed);
     if (lastDate) refreshStatus.textContent = `Last updated ${lastDate}`;
   }
+}
+
+// ─── USER-FACING API KEYS (optional "Advanced") ──────────────────────────────
+function openUserKeyModal() {
+  document.getElementById('userPexelsKey').value = getKey();
+  document.getElementById('userUnsplashKey').value = getUnsplashKey();
+  const msg = document.getElementById('userKeyMsg');
+  if (msg) msg.style.display = 'none';
+  document.getElementById('userKeyOverlay').classList.add('open');
+  setTimeout(() => { const el = document.getElementById('userPexelsKey'); if (el) el.focus(); }, 50);
+}
+function closeUserKeyModal() {
+  document.getElementById('userKeyOverlay').classList.remove('open');
+}
+function saveUserKeys() {
+  const pk = document.getElementById('userPexelsKey').value.trim();
+  const uk = document.getElementById('userUnsplashKey').value.trim();
+  if (pk) localStorage.setItem(KEY_STORAGE, pk);          else localStorage.removeItem(KEY_STORAGE);
+  if (uk) localStorage.setItem(UNSPLASH_KEY_STORAGE, uk); else localStorage.removeItem(UNSPLASH_KEY_STORAGE);
+  if (typeof updateKeyUI === 'function') updateKeyUI();
+  closeUserKeyModal();
+  // Re-run the search so live results replace the curated grid right away
+  if ((pk || uk) && typeof findImages === 'function') findImages();
 }
 
 function saveKey() {
@@ -4501,6 +4563,7 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
           <span style="color:var(--text-soft);">&middot;</span>
           <a class="live-search-link" id="ls-unsplash-${prayer.id}" href="${unsplashSearchUrl}" target="_blank" rel="noopener">Unsplash</a>
         </div>
+        ${(!getKey() && !getUnsplashKey()) ? `<div class="advanced-keys-row"><button type="button" class="advanced-keys-link" onclick="openUserKeyModal()">&#10024; Advanced: see live results here (optional)</button></div>` : ''}
         <div class="search-terms-bar" id="terms-chips-${prayer.id}">${chipsHtml}</div>
         <div class="refine-row">
           <input type="text" id="${prayer.id}-refine-input" value="${extraTerms.replace(/"/g, '&quot;')}"
@@ -4989,6 +5052,7 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (document.getElementById('blockModalOverlay').classList.contains('open'))  closeBlockModal();
   if (document.getElementById('reportModalOverlay').classList.contains('open')) closeReportModal();
+  if (document.getElementById('userKeyOverlay').classList.contains('open'))     closeUserKeyModal();
 });
 
 // ─── SERVICE BUILDER ───────────────────────────────────────────────────────────

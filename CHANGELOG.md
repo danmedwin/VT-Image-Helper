@@ -2,6 +2,9 @@
 
 ---
 
+## v3.22 — June 2026
+- **User-facing API keys (optional "Advanced"):** a small "✨ Advanced: see live results here (optional)" link in each prayer section (shown only when no key is set) opens a modal where users can paste their own free Pexels and/or Unsplash keys to pull live, combined results onto the page. Saving re-runs the search immediately. Framed as fully optional (curated library is the default) and lets users add just one source — keeping it clear users don't *need* a key, per Unsplash's guidelines. Reuses the existing `vtImageHelper_pexelsKey` / `vtImageHelper_unsplashKey` storage, so it shares the live-search path with the admin keys.
+
 ## v3.21 — June 2026
 - Replaced the per-section "Browse → Pexels" button with a clearer live-search sub-row under each prayer title: "Search these terms on: Pexels · Unsplash" (both links, Unsplash carries UTM). Adds Unsplash parity and spells out what it does.
 - Favorites button heart is now red (matches the photo-card hearts) so it stands out more in the section header.
