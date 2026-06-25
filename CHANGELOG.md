@@ -2,6 +2,15 @@
 
 ---
 
+## v3.28 — June 2026
+- Setup panel: "Add prayers" moved into the left column (above "Your service list"), top-aligned with "Prayer library"; the textarea is now column-width with the "Add to list ▾" button below it.
+- Prayer library: added a "Filters" label above the filter buttons and moved "Click a prayer to add it…" to below the filters (just above the chips).
+- Removed the "N prayers matched" badge from the results header.
+- Results-header explainer now links both Pexels and Unsplash.
+- Deselecting a photo now reverts the download button to its default "Select a photo below…" state (was leaving it on "Download selected").
+- Fix: favoriting from the full-screen lightbox now updates the lightbox heart button (shows "Favorited") — previously it registered silently with no feedback.
+- Pressing Enter in "additional keywords" adds the chip and triggers a refresh when an API key is set (confirmed working; no-key users get the live-search-column flash instead).
+
 ## v3.27 — June 2026
 - Header "Advanced" box is now collapsed by default (single "ADVANCED ▾" line) and expands on click — much smaller footprint.
 - Renamed the header "Beta" box to "Community built"; copy updated to "♥ favorite and 🚩 flag photos to improve for everyone."

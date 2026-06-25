@@ -1296,6 +1296,8 @@
   .lb-btn:hover { background: rgba(255,255,255,0.28); }
   .lb-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .lb-btn.lb-selected { background: rgba(80,140,255,0.45); border-color: rgba(120,170,255,0.7); }
+  .lb-btn.lb-favorited { background: rgba(224,86,106,0.5); border-color: rgba(224,86,106,0.8); }
+  .lb-btn.lb-favorited svg { fill: #fff; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -1329,20 +1331,16 @@
         </div>
       </div>
     </div>
-    <!-- Full-width input box -->
-    <div style="margin-bottom:22px;">
-      <p class="setup-section-label" style="margin-bottom:8px;">Add prayers: <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;">Type or paste in a prayer, multiple prayers, or a full service outline here.</span></p>
-      <div class="svc-input-row">
-        <textarea id="outline" class="svc-paste" rows="3"
-          placeholder="e.g. Lecha Dodi&#10;Barchu, Shema, V'ahavta&#10;Amidah, Kedushah&#10;Oseh Shalom, Aleinu, Kaddish"></textarea>
-        <button class="btn-add-to-list" onclick="parseOutlineToService()">Add to list</button>
-      </div>
-    </div>
-
     <div class="svc-builder-cols">
 
-      <!-- LEFT 40%: Your service -->
+      <!-- LEFT 40%: Add prayers + Your service -->
       <div class="svc-col-service">
+        <div class="svc-section-box" style="display:flex;flex-direction:column;">
+          <p class="setup-section-label" style="margin:0 0 8px;">Add prayers <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;">&mdash; type or paste prayers or a full outline</span></p>
+          <textarea id="outline" class="svc-paste" rows="3"
+            placeholder="e.g. Lecha Dodi&#10;Barchu, Shema, V'ahavta&#10;Amidah, Kedushah&#10;Oseh Shalom, Aleinu, Kaddish"></textarea>
+          <button class="btn-add-to-list" onclick="parseOutlineToService()" style="align-self:flex-start;margin-top:8px;">Add to list <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.5;"><polyline points="6 9 12 15 18 9"/></svg></button>
+        </div>
         <div class="svc-section-box">
           <div class="svc-section-header">
             <p class="setup-section-label">Your service list</p>
@@ -1368,7 +1366,7 @@
             <a onclick="loadServicePreset('weekday-morning')">Weekday morning</a> &middot;
             <a onclick="loadServicePreset('weekday-evening')">Weekday evening</a>
           </div>
-          <div class="hint" style="margin-bottom:6px;">Click a prayer to add it to your service list.</div>
+          <div style="margin-bottom:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-soft);">Filters</div>
           <div class="svc-filter-bar">
             <button class="svc-filter-btn chip-time-btn" data-svc-time="morning" onclick="toggleChipTime('morning')">Morning ☀</button>
             <button class="svc-filter-btn chip-time-btn" data-svc-time="evening" onclick="toggleChipTime('evening')">Evening ☽</button>
@@ -1379,6 +1377,7 @@
             <button class="svc-filter-btn" onclick="addAllVisibleToService()">Add all</button>
             <button class="svc-filter-btn" onclick="clearService()">Reset</button>
           </div>
+          <div class="hint" style="margin:8px 0 6px;">Click a prayer to add it to your service list.</div>
           <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
         </div>
 
@@ -1736,7 +1735,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.27</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.28</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4403,7 +4402,7 @@ function clearAllSelections() {
     dl.removeAttribute('href');
     dl.removeAttribute('download');
     dl.onclick = null;
-    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download selected`;
+    dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Select a photo below&hellip;`;
   });
   document.querySelectorAll('.dl-filename').forEach(fn => { fn.textContent = ''; });
   updateResultsFooter();
@@ -4414,7 +4413,10 @@ function selectPhoto(prayerId, photoId, caption, srcUrl) {
     delete selections[prayerId];
     document.querySelectorAll(`.img-card[data-prayer="${prayerId}"]`).forEach(c => c.classList.remove('selected'));
     const dl = document.getElementById('dl-' + prayerId);
-    if (dl) { dl.removeAttribute('href'); dl.removeAttribute('download'); dl.classList.add('disabled'); dl.onclick = null; }
+    if (dl) {
+      dl.removeAttribute('href'); dl.removeAttribute('download'); dl.classList.add('disabled'); dl.onclick = null;
+      dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Select a photo below&hellip;`;
+    }
     const fn = document.getElementById('dl-filename-' + prayerId);
     if (fn) fn.textContent = '';
     updateResultsFooter();
@@ -4618,7 +4620,7 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
             <div>
               <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
                 <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download selected
+                Select a photo below&hellip;
               </a>
               <div class="dl-filename" id="dl-filename-${prayer.id}"></div>
             </div>
@@ -4674,6 +4676,8 @@ async function refinePrayer(prayerId, inputId, context) {
     dl.removeAttribute('download');
     dl.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Select a photo below&hellip;`;
   }
+  const _dlFn = document.getElementById('dl-filename-' + prayerId);
+  if (_dlFn) _dlFn.textContent = '';
 
   grid.innerHTML = loadingGridHtml(prayerId);
 
@@ -5015,11 +5019,10 @@ async function findImages() {
   const html = `
     <div class="results-header">
       <h2>Image options for your service</h2>
-      <span class="found-count">${matched.length} prayer${matched.length !== 1 ? 's' : ''} matched</span>
     </div>
     <div style="font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.6;">
       Select an image in each section, then download it. The file will be named <strong>[prayer]-[image].jpg</strong>.
-      All photos are from <a href="https://www.pexels.com" target="_blank" style="color:var(--navy-mid);">Pexels</a> and free to use.
+      All photos are from <a href="https://www.pexels.com" target="_blank" style="color:var(--navy-mid);">Pexels</a> and <a href="https://unsplash.com" target="_blank" style="color:var(--navy-mid);">Unsplash</a> and free to use.
     </div>
     ${matched.map(p => {
       if (apiKey) {
@@ -5154,6 +5157,12 @@ function _lbRender() {
   const selBtn = document.getElementById('lb-btn-select');
   selBtn.classList.toggle('lb-selected', isSelected);
   document.getElementById('lb-select-label').textContent = isSelected ? 'Selected' : 'Select';
+
+  const isFav = myFavorites.has(photo.prayerId + ':' + photo.photoId);
+  const favBtn = document.getElementById('lb-btn-fav');
+  if (favBtn) favBtn.classList.toggle('lb-favorited', isFav);
+  const favLabel = document.getElementById('lb-fav-label');
+  if (favLabel) favLabel.textContent = isFav ? 'Favorited' : 'Favorite';
 }
 
 function lbSelect() {
@@ -5167,6 +5176,7 @@ function lbFavorite() {
   const photo = _lb.photos.find(p => p.photoId === _lb.photoId);
   if (!photo) return;
   toggleFavorite(photo.prayerId, photo.photoId, null);
+  _lbRender();
 }
 
 document.addEventListener('keydown', e => {
@@ -5457,7 +5467,7 @@ document.getElementById('outline').addEventListener('keydown', e => {
     </div>
     <button class="lb-btn" id="lb-btn-fav" onclick="lbFavorite()">
       <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      Favorite
+      <span id="lb-fav-label">Favorite</span>
     </button>
     <button class="lb-btn" id="lb-btn-select" onclick="lbSelect()">
       <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
