@@ -2,6 +2,9 @@
 
 ---
 
+## v3.32 — June 2026
+- Keywords box is now collapsed by default (single "KEYWORDS (optional) ▾" line) and expands on click, matching the Advanced box.
+
 ## v3.31 — June 2026
 - "Your service list" box now has a persistent thin gold border to set it apart as the key destination box.
 

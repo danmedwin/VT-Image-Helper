@@ -1389,7 +1389,11 @@
         </div>
 
         <div class="svc-section-box">
-          <p class="setup-section-label">Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></p>
+          <div onclick="toggleKeywordsBox()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+            <p class="setup-section-label" style="margin:0;">Keywords <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></p>
+            <span id="keywordsCaret" style="color:var(--text-soft);font-size:11px;transition:transform 0.15s;">&#9660;</span>
+          </div>
+          <div id="keywordsBody" style="display:none;margin-top:12px;">
           <div class="field" style="margin-bottom:10px;">
             <label for="ctx">Keywords for all images</label>
             <div class="hint">Added to every search &mdash; holiday, color, setting, etc.</div>
@@ -1419,6 +1423,7 @@
                 <label class="filter-chip"><input type="checkbox" value="ethereal"> Ethereal</label>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -1742,7 +1747,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.31</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.32</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2568,6 +2573,14 @@ function updateKeyUI() {
 function toggleAdvancedBox() {
   const body = document.getElementById('advancedBody');
   const caret = document.getElementById('advancedCaret');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (caret) caret.style.transform = open ? '' : 'rotate(180deg)';
+}
+function toggleKeywordsBox() {
+  const body = document.getElementById('keywordsBody');
+  const caret = document.getElementById('keywordsCaret');
   if (!body) return;
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
