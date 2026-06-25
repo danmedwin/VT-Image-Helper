@@ -601,6 +601,22 @@
     display: inline-flex; align-items: center; gap: 4px; font-family: inherit;
   }
   .advanced-keys-link:hover { color: var(--navy-mid); text-decoration: underline; }
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1.7fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .ctrl-col-left { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .ctrl-col-mid { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .ctrl-col-right { text-align: right; min-width: 0; }
+  .ctrl-explainer { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0; }
+  .live-search-label { font-size: 12px; color: var(--text); font-weight: 600; margin-bottom: 3px; }
+  @media (max-width: 760px) {
+    .controls-grid { grid-template-columns: 1fr; gap: 14px; }
+    .ctrl-col-right { text-align: left; }
+    .ctrl-col-right .live-search-row, .ctrl-col-right .advanced-keys-row { justify-content: flex-start; }
+  }
 
   .btn-download {
     display: inline-flex;
@@ -1700,7 +1716,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.22</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.23</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -4537,6 +4553,10 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
         : '<div class="img-loading" style="color:var(--text-muted);font-size:14px;">No curated photos available. Add a Pexels or Unsplash API key to search live.</div>';
   const apiKey = getKey();
   const safeCtx = (context || '').replace(/'/g, "\\'");
+  const hasAnyKey = apiKey || getUnsplashKey();
+  const explainer = hasAnyKey
+    ? 'These search terms found the photos below &mdash; edit and Refresh to update.'
+    : 'These search terms were used to find the curated photos below.';
 
   const chipsHtml = baseTerms.map(term =>
     `<span class="search-term-chip" data-prayer="${prayer.id}" data-term="${term.replace(/"/g, '&quot;')}">${term}<button class="chip-remove" onclick="removeTermChip(this,'${prayer.id}')" title="Remove">&#215;</button></span>`
@@ -4556,24 +4576,33 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
         ${(()=>{ const n=getFavCount(prayer.id); return `<button class="btn-fav-view" id="fav-view-${prayer.id}" onclick="toggleFavoritesView('${prayer.id}')"${n===0?' disabled':''}><span class="fav-heart-icon">♥</span> ${n>0?`Favorites (${n})`:'Favorites'}</button>`; })()}
       </div>
       <div class="controls-bar">
-        <div class="live-search-row">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Search these terms on:
-          <a class="live-search-link" id="ls-pexels-${prayer.id}" href="${searchUrl}" target="_blank" rel="noopener">Pexels</a>
-          <span style="color:var(--text-soft);">&middot;</span>
-          <a class="live-search-link" id="ls-unsplash-${prayer.id}" href="${unsplashSearchUrl}" target="_blank" rel="noopener">Unsplash</a>
-        </div>
-        ${(!getKey() && !getUnsplashKey()) ? `<div class="advanced-keys-row"><button type="button" class="advanced-keys-link" onclick="openUserKeyModal()">&#10024; Advanced: see live results here (optional)</button></div>` : ''}
-        <div class="search-terms-bar" id="terms-chips-${prayer.id}">${chipsHtml}</div>
-        <div class="refine-row">
-          <input type="text" id="${prayer.id}-refine-input" value="${extraTerms.replace(/"/g, '&quot;')}"
-                 placeholder="Additional keywords&hellip;"
-                 onkeydown="if(event.key==='Enter'&&'${apiKey}')refinePrayer('${prayer.id}','${prayer.id}-refine-input','${safeCtx}')">
-          ${refreshBtn}
-          <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Select a photo below&hellip;
-          </a>
+        <div class="controls-grid">
+          <div class="ctrl-col-left">
+            <p class="ctrl-explainer">${explainer}</p>
+            <a id="dl-${prayer.id}" class="btn-download disabled" href="#" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Select a photo below&hellip;
+            </a>
+          </div>
+          <div class="ctrl-col-mid">
+            <div class="search-terms-bar" id="terms-chips-${prayer.id}">${chipsHtml}</div>
+            <div class="refine-row">
+              <input type="text" id="${prayer.id}-refine-input" value="${extraTerms.replace(/"/g, '&quot;')}"
+                     placeholder="Additional keywords&hellip;"
+                     onkeydown="if(event.key==='Enter'&&'${apiKey}')refinePrayer('${prayer.id}','${prayer.id}-refine-input','${safeCtx}')">
+              ${refreshBtn}
+            </div>
+          </div>
+          <div class="ctrl-col-right">
+            <div class="live-search-label">For even more images</div>
+            <div class="live-search-row">
+              Search these terms on:
+              <a class="live-search-link" id="ls-pexels-${prayer.id}" href="${searchUrl}" target="_blank" rel="noopener">Pexels</a>
+              <span style="color:var(--text-soft);">&middot;</span>
+              <a class="live-search-link" id="ls-unsplash-${prayer.id}" href="${unsplashSearchUrl}" target="_blank" rel="noopener">Unsplash</a>
+            </div>
+            ${(!getKey() && !getUnsplashKey()) ? `<div class="advanced-keys-row"><button type="button" class="advanced-keys-link" onclick="openUserKeyModal()">&#10024; Advanced: see live results here (optional)</button></div>` : ''}
+          </div>
         </div>
       </div>
       <div class="img-grid" id="grid-${prayer.id}">${cards}</div>
