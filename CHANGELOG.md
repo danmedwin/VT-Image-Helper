@@ -2,6 +2,9 @@
 
 ---
 
+## v3.29 — June 2026
+- "Add to list" button icon changed from a dropdown-style chevron to a proper down-arrow (shaft + arrowhead).
+
 ## v3.28 — June 2026
 - Setup panel: "Add prayers" moved into the left column (above "Your service list"), top-aligned with "Prayer library"; the textarea is now column-width with the "Add to list ▾" button below it.
 - Prayer library: added a "Filters" label above the filter buttons and moved "Click a prayer to add it…" to below the filters (just above the chips).
