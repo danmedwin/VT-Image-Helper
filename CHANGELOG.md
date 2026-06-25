@@ -2,6 +2,9 @@
 
 ---
 
+## v3.31 — June 2026
+- "Your service list" box now has a persistent thin gold border to set it apart as the key destination box.
+
 ## v3.30 — June 2026
 - Added a brief gold pulse on the "Your service list" box whenever a prayer is added to it (clicking a library chip, "Add to list", a quick-start preset, or "Add all") — gives visible feedback showing where added prayers land, without permanent on-screen arrows. Does not fire on removal.
 
