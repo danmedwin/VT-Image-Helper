@@ -1342,11 +1342,16 @@
 
       <!-- LEFT 40%: Add prayers + Your service -->
       <div class="svc-col-service">
-        <div class="svc-section-box" style="display:flex;flex-direction:column;">
-          <p class="setup-section-label" style="margin:0 0 8px;">Add prayers <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;">&mdash; type or paste prayers or a full outline</span></p>
-          <textarea id="outline" class="svc-paste" rows="3"
-            placeholder="e.g. Lecha Dodi&#10;Barchu, Shema, V'ahavta&#10;Amidah, Kedushah&#10;Oseh Shalom, Aleinu, Kaddish"></textarea>
-          <button class="btn-add-to-list" onclick="parseOutlineToService()" style="align-self:flex-start;margin-top:8px;">Add to list <svg viewBox="0 0 24 24" style="width:13px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;"><line x1="12" y1="4" x2="12" y2="19"/><polyline points="6 13 12 19 18 13"/></svg></button>
+        <div class="svc-section-box">
+          <div onclick="toggleCollapseBox('addPrayersBody','addPrayersCaret')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+            <p class="setup-section-label" style="margin:0;">Add prayers <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px;">&mdash; type or paste prayers or a full outline</span></p>
+            <span id="addPrayersCaret" style="color:var(--text-soft);font-size:11px;transition:transform 0.15s;transform:rotate(180deg);">&#9660;</span>
+          </div>
+          <div id="addPrayersBody" style="margin-top:10px;">
+            <textarea id="outline" class="svc-paste" rows="3"
+              placeholder="e.g. Lecha Dodi&#10;Barchu, Shema, V'ahavta&#10;Amidah, Kedushah&#10;Oseh Shalom, Aleinu, Kaddish"></textarea>
+            <button class="btn-add-to-list" onclick="parseOutlineToService()" style="margin-top:8px;">Add to list <svg viewBox="0 0 24 24" style="width:13px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;"><line x1="12" y1="4" x2="12" y2="19"/><polyline points="6 13 12 19 18 13"/></svg></button>
+          </div>
         </div>
         <div class="svc-section-box" id="serviceListBox">
           <div class="svc-section-header">
@@ -1365,7 +1370,11 @@
       <!-- RIGHT 60%: Prayer library + Keywords -->
       <div class="svc-col-library">
         <div class="svc-section-box">
-          <p class="setup-section-label">Prayer library</p>
+          <div onclick="toggleCollapseBox('prayerLibraryBody','prayerLibraryCaret')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+            <p class="setup-section-label" style="margin:0;">Prayer library</p>
+            <span id="prayerLibraryCaret" style="color:var(--text-soft);font-size:11px;transition:transform 0.15s;transform:rotate(180deg);">&#9660;</span>
+          </div>
+          <div id="prayerLibraryBody" style="margin-top:12px;">
           <div class="svc-quickstart">
             Quick&nbsp;start:
             <a onclick="loadServicePreset('friday-evening')">Friday evening</a> &middot;
@@ -1386,6 +1395,7 @@
           </div>
           <div class="hint" style="margin:8px 0 6px;">Click a prayer to add it to your service list.</div>
           <div id="prayerChips" class="prayer-chips-row" style="margin-bottom:0;"></div>
+          </div>
         </div>
 
         <div class="svc-section-box">
@@ -1747,7 +1757,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.32</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.33</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2581,6 +2591,14 @@ function toggleAdvancedBox() {
 function toggleKeywordsBox() {
   const body = document.getElementById('keywordsBody');
   const caret = document.getElementById('keywordsCaret');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (caret) caret.style.transform = open ? '' : 'rotate(180deg)';
+}
+function toggleCollapseBox(bodyId, caretId) {
+  const body = document.getElementById(bodyId);
+  const caret = document.getElementById(caretId);
   if (!body) return;
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';

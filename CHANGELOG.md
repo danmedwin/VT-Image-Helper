@@ -2,6 +2,9 @@
 
 ---
 
+## v3.33 — June 2026
+- "Add prayers" and "Prayer library" boxes are now collapsible (click the header) but open by default, via a shared `toggleCollapseBox(bodyId, caretId)` helper.
+
 ## v3.32 — June 2026
 - Keywords box is now collapsed by default (single "KEYWORDS (optional) ▾" line) and expands on click, matching the Advanced box.
 
