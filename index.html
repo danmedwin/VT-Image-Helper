@@ -621,6 +621,12 @@
     100% { background: rgba(207,154,78,0); box-shadow: 0 0 0 0 rgba(207,154,78,0); }
   }
   .flash-attn { animation: flashAttn 1.5s ease-out; border-radius: 8px; }
+  @keyframes svcFlash {
+    0%   { box-shadow: 0 0 0 0 rgba(207,154,78,0); }
+    25%  { box-shadow: 0 0 0 3px rgba(207,154,78,0.55); }
+    100% { box-shadow: 0 0 0 0 rgba(207,154,78,0); }
+  }
+  .svc-flash { animation: svcFlash 1.1s ease-out; }
   @media (max-width: 760px) {
     .controls-grid { grid-template-columns: 1fr; gap: 14px; }
     .ctrl-col-right { text-align: left; }
@@ -1341,7 +1347,7 @@
             placeholder="e.g. Lecha Dodi&#10;Barchu, Shema, V'ahavta&#10;Amidah, Kedushah&#10;Oseh Shalom, Aleinu, Kaddish"></textarea>
           <button class="btn-add-to-list" onclick="parseOutlineToService()" style="align-self:flex-start;margin-top:8px;">Add to list <svg viewBox="0 0 24 24" style="width:13px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;"><line x1="12" y1="4" x2="12" y2="19"/><polyline points="6 13 12 19 18 13"/></svg></button>
         </div>
-        <div class="svc-section-box">
+        <div class="svc-section-box" id="serviceListBox">
           <div class="svc-section-header">
             <p class="setup-section-label">Your service list</p>
             <a class="svc-clear-link" onclick="clearService()">Clear all</a>
@@ -1735,7 +1741,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.29</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.30</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -3306,6 +3312,7 @@ function addAllVisibleToService() {
   });
   renderServiceList();
   renderPrayerChips();
+  flashServiceList();
 }
 
 function resetChips() { clearService(); }
@@ -5280,6 +5287,7 @@ function parseOutlineToService() {
   document.getElementById('outline').value = '';
   renderServiceList();
   renderPrayerChips();
+  flashServiceList();
 }
 
 const SERVICE_PRESETS = {
@@ -5299,6 +5307,7 @@ function loadServicePreset(key) {
   });
   renderServiceList();
   renderPrayerChips();
+  flashServiceList();
 }
 
 function clearService() {
@@ -5312,8 +5321,10 @@ function clearService() {
 
 function toggleServiceItem(id) {
   const idx = _serviceOrder.indexOf(id);
+  let added = false;
   if (idx === -1) {
     _serviceOrder.push(id);
+    added = true;
   } else {
     _serviceOrder.splice(idx, 1);
     if (_svcExpandedId === id) _svcExpandedId = null;
@@ -5321,6 +5332,17 @@ function toggleServiceItem(id) {
   }
   renderServiceList();
   renderPrayerChips();
+  if (added) flashServiceList();
+}
+
+// Briefly pulse the "Your service list" box so users see where added prayers land
+function flashServiceList() {
+  const box = document.getElementById('serviceListBox');
+  if (!box) return;
+  box.classList.remove('svc-flash');
+  void box.offsetWidth;
+  box.classList.add('svc-flash');
+  setTimeout(() => box.classList.remove('svc-flash'), 1200);
 }
 
 function toggleSvcExpand(id) {
