@@ -1725,7 +1725,7 @@
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8593;</button>
 
 <footer>
-  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.24</span>
+  <p>Created by Rabbi Dan Medwin with help from Claude. 2026 &middot; <span style="font-size:11px;">v3.25</span>
     <button class="admin-footer-btn" id="adminToggle" onclick="toggleAdmin()">Admin</button>
   </p>
   <p>This page is not affiliated with the <a href="https://www.ccarnet.org/" target="_blank" rel="noopener">Central Conference of American Rabbis</a>.
@@ -2566,8 +2566,9 @@ function saveUserKeys() {
   if (uk) localStorage.setItem(UNSPLASH_KEY_STORAGE, uk); else localStorage.removeItem(UNSPLASH_KEY_STORAGE);
   if (typeof updateKeyUI === 'function') updateKeyUI();
   closeUserKeyModal();
-  // Re-run the search so live results replace the curated grid right away
-  if ((pk || uk) && typeof findImages === 'function') findImages();
+  // Re-run the search so the grid updates right away — live results if keys were
+  // added, or back to curated photos if they were cleared.
+  if (typeof findImages === 'function') findImages();
 }
 
 function saveKey() {
@@ -4620,7 +4621,9 @@ function prayerSectionHtml(prayer, context, photos, isLive) {
               <span style="color:var(--text-soft);">&middot;</span>
               <a class="live-search-link" id="ls-unsplash-${prayer.id}" href="${unsplashSearchUrl}" target="_blank" rel="noopener">Unsplash</a>
             </div>
-            ${(!getKey() && !getUnsplashKey()) ? `<div class="advanced-keys-row"><button type="button" class="advanced-keys-link" onclick="openUserKeyModal()">&#10024; Advanced: see live results here <em>(optional)</em></button></div>` : ''}
+            ${(!getKey() && !getUnsplashKey())
+              ? `<div class="advanced-keys-row"><button type="button" class="advanced-keys-link" onclick="openUserKeyModal()">&#10024; Advanced: see live results here <em>(optional)</em></button></div>`
+              : `<div class="advanced-keys-row"><button type="button" class="advanced-keys-link" onclick="openUserKeyModal()">&#9881; Manage API keys</button></div>`}
           </div>
         </div>
       </div>
@@ -5043,9 +5046,13 @@ async function findImages() {
         // Fall back to curated on any error
         const isAuthErr = err.message.includes('401') || err.message.includes('403');
         const note = isAuthErr
-          ? '<div style="font-size:12px;color:#c0392b;padding:0 20px 10px;">API key error &mdash; check your key in the setup panel above. Showing curated photos.</div>'
+          ? '<div style="font-size:12px;color:#c0392b;padding:0 20px 10px;">API key error &mdash; <a onclick="openUserKeyModal()" style="color:#c0392b;text-decoration:underline;cursor:pointer;">check your API keys</a>. Showing curated photos instead.</div>'
           : '<div style="font-size:12px;color:var(--text-muted);padding:0 20px 10px;">Could not load live photos &mdash; showing curated set.</div>';
-        grid.innerHTML = (prayer.photos || []).map(ph => photoCardHtml(prayer.id, ph, false)).join('');
+        const pb = blockedData[prayer.id] || {};
+        const curatedFallback = (getCuratedPhotos(prayer.id) || []).filter(ph => !isBlockedValue(pb[String(ph.id)]));
+        grid.innerHTML = curatedFallback.length
+          ? curatedFallback.map(ph => photoCardHtml(prayer.id, ph, false)).join('')
+          : '<div class="img-loading" style="color:var(--text-muted);font-size:14px;">No curated photos available for this prayer.</div>';
         grid.insertAdjacentHTML('beforebegin', note);
         renderAllFavoriteCounts();
       }

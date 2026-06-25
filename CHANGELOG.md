@@ -2,6 +2,11 @@
 
 ---
 
+## v3.25 — June 2026
+- Fix bad-API-key handling for user-entered keys: the error message no longer references a "setup panel above" (which non-admins don't have) — it now links to the API-keys modal ("check your API keys"), and the fallback actually shows the curated photos (was falling back to an empty list, so the grid came up blank).
+- The Advanced/API-keys link is now always available per section: shows "✨ Advanced (optional)" when no key is set, and "⚙ Manage API keys" once a key exists — so a wrong key can be reopened, edited, or removed.
+- Saving the keys modal always re-runs the search, so clearing a key returns to curated photos immediately.
+
 ## v3.24 — June 2026
 - Live-search column: "Pexels · Unsplash" now sit together on their own line below "Search these terms on:".
 - Download button now reads "Download selected" with the generated file name shown as subtext below ("File name: [prayer]-[description].jpg") instead of inside the button.
