@@ -2,6 +2,9 @@
 
 ---
 
+## v3.34 — July 2026
+- Monthly refresh GitHub Action now loads the holiday filters from Firebase `/filters` (same lists the site's admin Filters tab edits) instead of only a hardcoded Jewish-holiday list. Non-Jewish holiday keywords (Christmas, Easter, Halloween, etc.) are now excluded server-side during the curated refresh, and admin edits to either list apply to the Action automatically. Falls back to built-in defaults if Firebase is unreachable.
+
 ## v3.33 — June 2026
 - "Add prayers" and "Prayer library" boxes are now collapsible (click the header) but open by default, via a shared `toggleCollapseBox(bodyId, caretId)` helper.
 

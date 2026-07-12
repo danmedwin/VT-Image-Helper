@@ -60,9 +60,13 @@ const PRAYERS = [
   { id: 'torahblessings', searchTerms: 'open book scroll learning light wisdom' },
 ];
 
-// ─── HOLIDAY FILTER ───────────────────────────────────────────────────────────
+// ─── HOLIDAY FILTERS ──────────────────────────────────────────────────────────
+// Defaults mirror the client (vt-image-finder.html); live lists are loaded from
+// Firebase /filters at the start of main(), so admin edits in the Filters tab
+// apply here too. Jewish groups exclude on mismatch (holiday in alt text but not
+// in search terms); non-Jewish keywords always exclude.
 
-const HOLIDAY_FILTER = [
+const HOLIDAY_FILTER_DEFAULT = [
   ['hanukkah', 'chanukah', 'hanukah', 'channukah', 'hannukah', 'chanukkah', 'hanuka', 'chanuka'],
   ['passover', 'pesach', 'seder'],
   ['sukkot', 'sukkos', 'succot', 'succos', 'sukkah', 'succah'],
@@ -73,10 +77,26 @@ const HOLIDAY_FILTER = [
   ['simchat torah', 'simchas torah'],
 ];
 
+const NON_JEWISH_FILTER_DEFAULT = [
+  'christmas', 'xmas', 'christmas tree', 'santa claus', 'santa', 'nativity', 'advent',
+  'easter', 'easter egg', 'easter bunny',
+  'ramadan', 'eid', 'eid al-fitr', 'eid al-adha', 'iftar',
+  'diwali', 'deepavali',
+  'halloween', 'jack-o-lantern', 'jack o lantern',
+  'kwanzaa',
+  'thanksgiving turkey',
+  'chinese new year', 'lunar new year',
+  'dussehra', 'holi',
+];
+
+let filterJewish    = HOLIDAY_FILTER_DEFAULT;
+let filterNonJewish = NON_JEWISH_FILTER_DEFAULT;
+
 function isHolidayMismatch(altText, searchTerms) {
   const alt = (altText || '').toLowerCase();
   const search = (searchTerms || '').toLowerCase();
-  return HOLIDAY_FILTER.some(spellings =>
+  if (filterNonJewish.some(s => alt.includes(s))) return true;
+  return filterJewish.some(spellings =>
     spellings.some(s => alt.includes(s)) && !spellings.some(s => search.includes(s))
   );
 }
@@ -303,13 +323,19 @@ async function main() {
   console.log(`Sources: ${sources.join(' + ')}`);
 
   console.log('Reading Firebase data…');
-  const [favorites, blocked, customTerms, blockedKeywordsRaw, customPrayers] = await Promise.all([
+  const [favorites, blocked, customTerms, blockedKeywordsRaw, customPrayers, filtersRaw] = await Promise.all([
     getFirebase('favorites'),
     getFirebase('blocked'),
     getFirebase('searchTerms'),
     getFirebase('blockedKeywords'),
     getFirebase('customPrayers'),
+    getFirebase('filters'),
   ]);
+
+  if (Array.isArray(filtersRaw.nonJewish)) filterNonJewish = filtersRaw.nonJewish.filter(Boolean);
+  if (Array.isArray(filtersRaw.jewish))    filterJewish    = filtersRaw.jewish.filter(Array.isArray);
+  console.log(`Holiday filters: ${filterJewish.length} Jewish groups, ${filterNonJewish.length} non-Jewish keywords` +
+    (Array.isArray(filtersRaw.nonJewish) || Array.isArray(filtersRaw.jewish) ? ' (from Firebase)' : ' (defaults)'));
 
   for (const prayer of PRAYERS) {
     if (customTerms[prayer.id]) prayer.searchTerms = customTerms[prayer.id];
