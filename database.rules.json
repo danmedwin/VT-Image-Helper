@@ -9,7 +9,6 @@
         }
       }
     },
-
     "blocked": {
       ".read": true,
       "$prayer": {
@@ -21,7 +20,6 @@
         }
       }
     },
-
     "blockedKeywords": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
@@ -29,7 +27,6 @@
         ".validate": "newData.isString() && newData.val().length <= 200"
       }
     },
-
     "searchTerms": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
@@ -37,7 +34,6 @@
         ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
       }
     },
-
     "reports": {
       ".read": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
       "$prayer": {
@@ -49,7 +45,6 @@
         }
       }
     },
-
     "customPrayers": {
       ".read": true,
       "$id": {
@@ -62,7 +57,6 @@
         }
       }
     },
-
     "hiddenPrayers": {
       ".read": true,
       "$id": {
@@ -70,7 +64,6 @@
         ".validate": "newData.isBoolean()"
       }
     },
-
     "prayerDisplayNames": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
@@ -78,12 +71,10 @@
         ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
       }
     },
-
     "prayerOrder": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
     },
-
     "prayerTags": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
@@ -91,7 +82,6 @@
         ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 50)"
       }
     },
-
     "pendingPrayers": {
       ".read": true,
       "$id": {
@@ -107,22 +97,18 @@
         }
       }
     },
-
     "siteDefaults": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
     },
-
     "promotedPrayers": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
     },
-
     "filters": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
     },
-
     "prayerThemes": {
       ".read": true,
       ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
@@ -130,14 +116,12 @@
         ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
       }
     },
-
     "pinnedPhotos": {
       ".read": true,
       "$prayer": {
         ".write": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'"
       }
     },
-
     "suggestions": {
       ".read": "auth != null && auth.uid === 'tizvHyzJ7PdsPvFpbEk4CdSPUk42'",
       "$prayer": {
@@ -148,6 +132,17 @@
           }
         }
       }
+    },
+    "binahVotes": {
+      ".read": false,
+      "$id": {
+        ".write": "!data.exists()",
+        ".validate": "newData.child('t').val() === root.child('binahConfig/token').val() && newData.child('link').isString() && newData.child('link').val().length <= 500 && newData.child('title').isString() && newData.child('title').val().length <= 300 && newData.child('source').isString() && newData.child('source').val().length <= 100 && (newData.child('vote').val() === 'up' || newData.child('vote').val() === 'down') && newData.child('ts').isNumber() && (!newData.child('reason').exists() || (newData.child('reason').isString() && newData.child('reason').val().length <= 500))"
+      }
+    },
+    "binahConfig": {
+      ".read": false,
+      ".write": false
     }
   }
 }
