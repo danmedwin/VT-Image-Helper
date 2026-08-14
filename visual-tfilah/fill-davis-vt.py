@@ -1,15 +1,18 @@
 """
 Fill the Davis VT frame with the Kabbalat Shabbat service content.
 
-Input : working.pptx  (13 slides already ordered, all content slides cloned
-                       from the template's authoring slide)
-Output: Davis-Kabbalat-Shabbat-VT-v1.pptx
+Input : working.pptx  (15 slides already ordered, all content slides cloned
+                       from the template's authoring slide -- see build.sh)
+Output: Davis-Kabbalat-Shabbat-VT-v1a.pptx, or argv[1]
 
-Slide 1 (title) and slide 13 (closing) are Davis template slides, left untouched.
+Slide 1 (title) and slide 15 (closing) are Davis template slides, left untouched.
 """
 import copy
+import sys
 from pptx import Presentation
-from pptx.util import Inches
+from pptx.dml.color import RGBColor
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.util import Inches, Pt
 
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 q = lambda t: f"{{{A}}}{t}"
@@ -137,8 +140,31 @@ def set_sidebar(slide, current):
 # --------------------------------------------------------------------------
 # Slide builders
 # --------------------------------------------------------------------------
+def add_dots(slide, index, total):
+    """
+    Progress dots for a prayer that runs across several slides. They sit in the
+    header bar, in the clear span between the English title (ends at 6.86") and
+    the Hebrew title (starts at 13.07"), so they never collide with either.
+    """
+    box = slide.shapes.add_textbox(Inches(8.0), Inches(0.07),
+                                   Inches(4.0), Inches(0.61))
+    tf = box.text_frame
+    tf.word_wrap = False
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    run = p.add_run()
+    run.text = " ".join("●" if i == index else "○"
+                        for i in range(1, total + 1))
+    run.font.size = Pt(22)
+    run.font.name = "Calibri (MS)"
+    run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+
+
 def build(slide, *, en_header, he_header, translit=None, hebrew=None,
-          translation=None, sidebar=None, notes=None, wide_text=None):
+          translation=None, sidebar=None, notes=None, wide_text=None,
+          dots=None):
     set_lines(by_name(slide, "TextBox 15"), [en_header])
     set_lines(by_name(slide, "TextBox 12"), [he_header])
 
@@ -166,6 +192,8 @@ def build(slide, *, en_header, he_header, translit=None, hebrew=None,
 
     drop(by_name(slide, "TextBox 14"))  # siddur page-number key, unused here
     set_sidebar(slide, sidebar)
+    if dots:
+        add_dots(slide, *dots)
     if notes:
         slide.notes_slide.notes_text_frame.text = notes
 
@@ -242,7 +270,7 @@ build(s[5],
       sidebar="Last Word",
       notes="Last Word sharing, round 2. Micah facilitates." + DRAFT)
 
-# --- 7. Kiddush (Dan Medwin) ----------------------------------------------
+# --- 7-9. Kiddush, full text over three slides (Dan Medwin) ---------------
 build(s[6],
       en_header="Kiddush",
       he_header="קִדּוּשׁ",
@@ -254,12 +282,65 @@ build(s[6],
                 "borei p'ri hagafen."],
       translation="Blessed are You, Adonai our God, Sovereign of all, "
                   "Creator of the fruit of the vine.",
-      sidebar="Kiddush",
-      notes="Kiddush, short form over wine. Leader: Dan Medwin. The Davis "
-            "template also carries the full Kiddush if a longer version is wanted.")
+      sidebar="Kiddush", dots=(1, 3),
+      notes="Kiddush 1 of 3, blessing over wine. Leader: Dan Medwin.")
 
-# --- 8. Last Word, round 3 ------------------------------------------------
 build(s[7],
+      en_header="Kiddush",
+      he_header="קִדּוּשׁ",
+      hebrew=["בָּרוּךְ אַתָּה יְיָ,",
+              "אֱלֹהֵינוּ מֶלֶךְ הָעוֹלָם,",
+              "אֲשֶׁר קִדְּשָׁנוּ בְּמִצְוֹתָיו",
+              "וְרָצָה בָנוּ, וְשַׁבַּת קָדְשׁוֹ",
+              "בְּאַהֲבָה וּבְרָצוֹן הִנְחִילָנוּ,",
+              "זִכָּרוֹן לְמַעֲשֵׂה בְרֵאשִׁית.",
+              "כִּי הוּא יוֹם תְּחִלָּה",
+              "לְמִקְרָאֵי קֹדֶשׁ,",
+              "זֵכֶר לִיצִיאַת מִצְרָיִם."],
+      translit=["Baruch atah Adonai,",
+                "Eloheinu Melech ha'olam,",
+                "asher kid'shanu b'mitzvotav",
+                "v'ratzah vanu, v'Shabbat kodsho",
+                "b'ahavah uv'ratzon hinchilanu,",
+                "zikaron l'maaseih v'reishit.",
+                "Ki hu yom t'chilah",
+                "l'mikra'ei kodesh,",
+                "zeicher litziat Mitzrayim."],
+      # The translation box holds three lines (~73 characters each). A fourth
+      # runs off the bottom of the slide, so this one is condensed to fit.
+      translation="Blessed are You, Adonai our God, Sovereign of all, who makes us "
+                  "holy with mitzvot and delights in us, giving us Your holy Shabbat "
+                  "in love, a reminder of creation and of the going out from Egypt.",
+      sidebar="Kiddush", dots=(2, 3),
+      notes="Kiddush 2 of 3. Leader: Dan Medwin.")
+
+build(s[8],
+      en_header="Kiddush",
+      he_header="קִדּוּשׁ",
+      hebrew=["כִּי בָנוּ בָחַרְתָּ",
+              "וְאוֹתָנוּ קִדַּשְׁתָּ",
+              "מִכָּל הָעַמִּים,",
+              "וְשַׁבַּת קָדְשְׁךָ בְּאַהֲבָה",
+              "וּבְרָצוֹן הִנְחַלְתָּנוּ.",
+              "",
+              "בָּרוּךְ אַתָּה יְיָ,",
+              "מְקַדֵּשׁ הַשַּׁבָּת."],
+      translit=["Ki vanu vacharta",
+                "v'otanu kidashta",
+                "mikol ha'amim,",
+                "v'Shabbat kodsh'cha b'ahavah",
+                "uv'ratzon hinchaltanu.",
+                "",
+                "Baruch atah Adonai,",
+                "m'kadeish haShabbat."],
+      translation="You have chosen us and made us holy among all peoples, and in "
+                  "love and favor have given us Your holy Shabbat as a heritage. "
+                  "Blessed are You, Adonai, who makes Shabbat holy.",
+      sidebar="Kiddush", dots=(3, 3),
+      notes="Kiddush 3 of 3, ending with the chatimah. Leader: Dan Medwin.")
+
+# --- 10. Last Word, round 3 ------------------------------------------------
+build(s[9],
       en_header="Last Word",
       he_header="הַמִּלָּה הָאַחֲרוֹנָה",
       wide_text=["A risk I would like to take this year is...",
@@ -268,8 +349,8 @@ build(s[7],
       sidebar="Last Word",
       notes="Last Word sharing, round 3. Micah facilitates." + DRAFT)
 
-# --- 9. Hamotzi (Micah) ---------------------------------------------------
-build(s[8],
+# --- 11. Hamotzi (Micah) ---------------------------------------------------
+build(s[10],
       en_header="Hamotzi",
       he_header="הַמּוֹצִיא",
       hebrew=["בָּרוּךְ אַתָּה יְיָ,",
@@ -283,8 +364,8 @@ build(s[8],
       sidebar="Hamotzi",
       notes="Hamotzi, blessing over bread. Leader: Micah.")
 
-# --- 10. Oseh Shalom (Micah) ----------------------------------------------
-build(s[9],
+# --- 12. Oseh Shalom (Micah) ----------------------------------------------
+build(s[11],
       en_header="Oseh Shalom",
       he_header="עֹשֶׂה שָׁלוֹם",
       hebrew=["עֹשֶׂה שָׁלוֹם בִּמְרוֹמָיו,",
@@ -302,8 +383,8 @@ build(s[9],
       sidebar="Oseh Shalom",
       notes="Oseh Shalom. Leader: Micah.")
 
-# --- 11. Priestly Blessing (Micah, Javier, Michelle, Emilie) ---------------
-build(s[10],
+# --- 13. Priestly Blessing (Micah, Javier, Michelle, Emilie) ---------------
+build(s[12],
       en_header="Priestly Blessing",
       he_header="בִּרְכַּת כֹּהֲנִים",
       hebrew=["יְבָרֶכְךָ יְיָ",
@@ -325,8 +406,8 @@ build(s[10],
       notes="Priestly Blessing, Numbers 6:24-26. Leaders: Micah, Javier, Michelle, "
             "and Emilie, one verse each with Micah leading.")
 
-# --- 12. Rocks (Micah) ----------------------------------------------------
-build(s[11],
+# --- 14. Rocks (Micah) ----------------------------------------------------
+build(s[13],
       en_header="Rocks",
       he_header="אֲבָנִים",
       wide_text=[""],
@@ -334,5 +415,6 @@ build(s[11],
       notes="Rocks slide. Leader: Micah. Content area left open - drop in the "
             "rocks image or text here.")
 
-pres.save("Davis-Kabbalat-Shabbat-VT-v1.pptx")
-print("saved Davis-Kabbalat-Shabbat-VT-v1.pptx")
+out = sys.argv[1] if len(sys.argv) > 1 else "Davis-Kabbalat-Shabbat-VT-v1a.pptx"
+pres.save(out)
+print("saved", out)
