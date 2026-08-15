@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v2f.pptx` — **30 slides, the current deck**, built for the
+`Davis-Kabbalat-Shabbat-VT-v2h.pptx` — **30 slides, the current deck**, built for the
 8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
 8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
 
@@ -13,7 +13,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v2g**. Check the highest
+that already exists on either side. The next build is **v2i**. Check the highest
 letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
@@ -79,6 +79,21 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v2h — Claude (icons)
+
+Built on Dan's v2g. Added the unambiguous thematic icons (`add_icons.py`), each
+placed in the open zone below the text where Candles/Hamotzi/Shofar put theirs:
+
+- **Oseh Shalom** → olive branch (peace)
+- **Birthday Blessings** → cupcake
+- **Turn the World Around** → globe
+
+Icons come from `~/Documents/Davis Files/Jewish Life Board/icons-renamed/`. Slides
+that already carry art (HaTikvah's flag, Candles, Kiddush cup, Hamotzi challah,
+Priestly hamsa, Shofar, Rocks jars) were left alone, as were the full-text slides
+(V'ahavta ×3, Living Our Values). Everything without a clear single choice was
+left for Dan to pick — see the session notes for the suggestion list.
 
 ### v2f — Claude
 
