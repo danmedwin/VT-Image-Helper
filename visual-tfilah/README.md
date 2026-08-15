@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v2i.pptx` — **30 slides, the current deck**, built for the
+`Davis-Kabbalat-Shabbat-VT-v2j.pptx` — **30 slides, the current deck**, built for the
 8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
 8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
 
@@ -13,7 +13,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v2j**. Check the highest
+that already exists on either side. The next build is **v2k**. Check the highest
 letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
@@ -79,6 +79,19 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v2j — Claude (song/theme icons)
+
+Built on v2i with icons from Dan's new LemonadePixel packs (Activity & Recreation,
+Travel), added to the library and placed (`build_v2j.py`). All interpretive:
+
+- **Modeh Ani** (morning) → sun
+- **Ozi V'zimrat Yah** ("my strength and song") → guitar
+- **Eternity Utters a Day** (song) → microphone (in the empty right half)
+- **Mi Chamochah** (crossing the sea) → sailboat on waves
+
+Hinei Mah Tov still wants a people/community icon — neither new pack has one.
+Priestly Blessing still wants a split-finger kohanim hand (photoshop route).
 
 ### v2i — Claude (more icons)
 
