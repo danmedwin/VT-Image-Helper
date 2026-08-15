@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v2b.pptx` — **29 slides, the current deck**, built for the
+`Davis-Kabbalat-Shabbat-VT-v2c.pptx` — **29 slides, the current deck**, built for the
 8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
 8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
 
@@ -13,7 +13,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v2c**. Check the highest
+that already exists on either side. The next build is **v2d**. Check the highest
 letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
@@ -60,6 +60,23 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v2c — Claude
+
+Three real defects in v2b, all caught by a full 29-slide review rather than spot
+checks:
+
+- **The logo was squished.** `Freeform 9`'s path is a square, but v1d renders it
+  at 2.29 x 1.36. v2b copied v1d's *dimensions* along with its position; it should
+  have taken only the position and kept the square. Now 2.43 x 2.43 in the corner.
+- **Two slides silently lost their nav.** Frame detection matched the shape names
+  `Group 2`/`Group 6`, which several unrelated slides also use, so V'ahavta 1 and
+  Amidah 2 (Dan Nichols' "Eternity Utters a Day") passed the check and had a nav
+  dropped over their full-bleed artwork. Detection now keys on the teal column's
+  actual fill (`008C95`), and both slides are rebuilt on the frame like the rest.
+- **One Oseh Shalom line rendered grey.** It carried a 50%-grey `schemeClr` from
+  v1d that the v2b whitening pass skipped because it only handled *missing* fills.
+  Now both grey-scheme and no-fill body runs are forced white.
 
 ### v2b — Claude
 
