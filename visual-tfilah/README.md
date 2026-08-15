@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v2h.pptx` — **30 slides, the current deck**, built for the
+`Davis-Kabbalat-Shabbat-VT-v2i.pptx` — **30 slides, the current deck**, built for the
 8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
 8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
 
@@ -13,7 +13,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v2i**. Check the highest
+that already exists on either side. The next build is **v2j**. Check the highest
 letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
@@ -79,6 +79,24 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v2i — Claude (more icons)
+
+Built on Dan's v2g/v2h with his next icon notes (`build_v2i.py`):
+
+- **Hamotzi** — covered challah swapped for the uncovered braided loaf.
+- **Adonai S'fatai** — speech bubbles ("open my lips").
+- **Amidah** — the Star-of-David book.
+- **Mi Shebeirach** (both slides) — the second hamsa (`hamsa-2`) for healing; the
+  first hamsa is already the Priestly Blessing's hand.
+- **Sh'ma** — the arched Sh'ma artwork from the school's old template slide,
+  recoloured solid white so it reads on the dark-blue background (the original is
+  blue-on-yellow). Note the artwork spells the Name יהוה, not יְיָ — it is
+  decorative art Dan asked to reuse, not live liturgy.
+
+Still open: **Priestly Blessing** wants a split-finger kohanim hand — no such icon
+in our packs; Dan to source or photoshop one. Etsy/LemonadePixel suggestions for
+the remaining songs are in the session notes.
 
 ### v2h — Claude (icons)
 
