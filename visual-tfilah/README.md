@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v2c.pptx` — **29 slides, the current deck**, built for the
+`Davis-Kabbalat-Shabbat-VT-v2d.pptx` — **29 slides, the current deck**, built for the
 8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
 8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
 
@@ -13,7 +13,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v2d**. Check the highest
+that already exists on either side. The next build is **v2e**. Check the highest
 letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
@@ -60,6 +60,30 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v2d — Claude
+
+Dan's notes on v2c, and two latent v1d defects surfaced while fixing them:
+
+- **Living Our Values**: centre logo removed, its title lifted into the header bar,
+  and the corner logo now the shared crowd mark like every other slide. (The
+  chrome-graft was showing the academy text logo because the grafted `Freeform 9`'s
+  embed id collided with LOV's own `rId2` — the crowd logo is now added with its
+  own rel.)
+- **Hebrew headers right-aligned** on every built slide (they were left-aligned).
+- **Bar'chu**: `l'olam va-ed` kept on its own line in both columns.
+- **Mi Shebeirach** (Friedman) laid out across its two slides — one Hebrew couplet
+  each, with a dim placeholder where the copyrighted English refrain goes.
+- **Kiddush cup** persists on all three Kiddush slides, in the empty gutter between
+  the columns, clearing the text on each.
+- **Kiddush 3's missing transliteration line**: v1d's body boxes carry `spAutoFit`,
+  so their stored height was the exact content height under LibreOffice's narrower
+  substitute fonts — in real PowerPoint the 7th line fell past the box. Body boxes
+  now get a generous fixed height with autofit off.
+- **Priestly Blessing space** (`Ya'eir Adonai`, `Yisa Adonai`): the space lived at
+  a run boundary with no `xml:space="preserve"`, so every renderer dropped it.
+  Leading-space stripping now only touches a paragraph's first run, and any run
+  with an edge space gets `xml:space="preserve"`.
 
 ### v2c — Claude
 
