@@ -1,8 +1,13 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v1a.pptx` — 15 slides, built on the Davis VT template
+`Davis-Kabbalat-Shabbat-VT-v1b.pptx` — 15 slides, built on the Davis VT template
 (`New VT Template (in progress w Claude).pptx`), following the printed service outline.
 Superseded versions live in `Old versions/`.
+
+**Versioning.** Dan and Claude both edit this deck, so the version number is
+shared and always goes up. Never reuse a letter, and never overwrite a version
+that already exists on either side. The next build is **v1c**; `build.sh` already
+defaults to that name. Check the highest letter present before naming a new file.
 
 ## Service order
 
@@ -24,7 +29,10 @@ Superseded versions live in `Old versions/`.
 
 ## Changelog
 
-### v1a
+### v1b — Claude
+Same build that was first delivered as v1a. Renamed to v1b because Dan had
+already used v1a for his own version; the deck contents did not change.
+
 - **Full Kiddush** replaces the short blessing over wine, running across three
   slides with `● ○ ○` progress dots: wine blessing, then *asher kid'shanu…
   zeicher litziat Mitzrayim*, then *Ki vanu vacharta…* closing with the chatimah
@@ -34,6 +42,20 @@ Superseded versions live in `Old versions/`.
   (which starts at 13.07"), so they cannot collide with either.
 - Kiddush 2 of 3 translation condensed to three lines. See the box limits below.
 - Build is now scripted end to end: `./build.sh TEMPLATE.pptx [OUT.pptx]`.
+
+### v1a — Dan
+Dan's own version, made from v1. **Not in this repo** — it lives in
+iCloud (Documents → Davis VT), which the build environment cannot reach.
+
+**It contains Dan's Rocks slide, which is the one to keep.** The Rocks slide in
+v1b is only an empty framed placeholder. Dan's version is the real thing and
+should be carried into v1c and every version after it, so v1c has to be built by
+importing that slide rather than regenerating Rocks from `fill-davis-vt.py`.
+`build.sh` cannot pull it in on its own; the slide has to be supplied first.
+
+Once it is available, capture what it is made of here (background, imagery, text,
+whether the Hebrew is live text or outlines) so it can be rebuilt if the file is
+ever lost.
 
 ### v1
 - First build from the outline.
@@ -70,15 +92,17 @@ bottom of the slide, so keep translations to three.
 
 ## Still to do
 
+- **Rocks (slide 14): use Dan's slide from v1a.** The one in v1b is an empty
+  placeholder. See the v1a changelog entry above. This is the open item that
+  blocks v1c.
 - **Last Word prompts (slides 4, 6, 10) are drafts.** The prompts on the back of
   the printed outline were not legible in the photo. Replace with the real ones.
-- **Video (slide 3)** and **Rocks (slide 14)** have open content areas by design.
-  Drop the video and the rocks content in.
+- **Video (slide 3)** has an open content area by design. Drop the video in.
 
 ## Rebuilding
 
 ```
-./build.sh "New VT Template (in progress w Claude).pptx" Davis-Kabbalat-Shabbat-VT-v1b.pptx
+./build.sh "New VT Template (in progress w Claude).pptx" Davis-Kabbalat-Shabbat-VT-v1c.pptx
 ```
 
 `build.sh` does the structural work: duplicate the template's authoring slide

@@ -9,7 +9,7 @@
 set -euo pipefail
 
 TEMPLATE="${1:?usage: build.sh TEMPLATE.pptx [OUT.pptx]}"
-OUT="${2:-Davis-Kabbalat-Shabbat-VT-v1a.pptx}"
+OUT="${2:-Davis-Kabbalat-Shabbat-VT-v1c.pptx}"
 SKILL=/root/.claude/skills/synced/pptx/scripts
 
 # 13 content slides between the Davis title slide and the Davis closing slide.

@@ -3,7 +3,7 @@ Fill the Davis VT frame with the Kabbalat Shabbat service content.
 
 Input : working.pptx  (15 slides already ordered, all content slides cloned
                        from the template's authoring slide -- see build.sh)
-Output: Davis-Kabbalat-Shabbat-VT-v1a.pptx, or argv[1]
+Output: Davis-Kabbalat-Shabbat-VT-v1c.pptx, or argv[1]
 
 Slide 1 (title) and slide 15 (closing) are Davis template slides, left untouched.
 """
@@ -415,6 +415,6 @@ build(s[13],
       notes="Rocks slide. Leader: Micah. Content area left open - drop in the "
             "rocks image or text here.")
 
-out = sys.argv[1] if len(sys.argv) > 1 else "Davis-Kabbalat-Shabbat-VT-v1a.pptx"
+out = sys.argv[1] if len(sys.argv) > 1 else "Davis-Kabbalat-Shabbat-VT-v1c.pptx"
 pres.save(out)
 print("saved", out)
