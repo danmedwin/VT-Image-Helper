@@ -37,13 +37,13 @@ Invoke the **visual-tfilah** skill (rules for VT decks) and the **pptx** skill
 
 | What | Where |
 |---|---|
-| Davis VT template | `~/Documents/Davis VT/New VT Template (in progress w Claude).pptx` |
-| Dan's v1a (has the Rocks slide + embedded video) | `~/Documents/Davis VT/` |
+| Davis VT template | `~/Documents/Davis Files/Davis VT/New VT Template (in progress w Claude).pptx` |
+| Dan's v1a (has the Rocks slide + embedded video) | `~/Documents/Davis Files/Davis VT/` |
 | Current Claude build, v1b | `visual-tfilah/Davis-Kabbalat-Shabbat-VT-v1b.pptx` in this repo |
 | Superseded versions | `visual-tfilah/Old versions/` |
 
 If `~/Documents` is not the iCloud folder on this machine, try
-`~/Library/Mobile Documents/com~apple~CloudDocs/Documents/Davis VT/`.
+`~/Library/Mobile Documents/com~apple~CloudDocs/Documents/Davis Files/Davis VT/`.
 
 ## Versioning — read before naming any file
 
@@ -51,7 +51,7 @@ Dan and Claude both edit this deck, so the version number is shared and always
 goes up. Never reuse a letter. Never overwrite a version that exists on either
 side. v1 and v1b are Claude's, v1a is Dan's. **The next build is v1c**, and
 `build.sh` already defaults to that name. Check the highest letter present in
-both the repo and `~/Documents/Davis VT/` before naming a new file.
+both the repo and `~/Documents/Davis Files/Davis VT/` before naming a new file.
 
 ## The job: build v1c
 
@@ -89,7 +89,7 @@ so do not drag the video along unless Rocks itself contains it.
 ## How the build works
 
 ```bash
-./build.sh "~/Documents/Davis VT/New VT Template (in progress w Claude).pptx" \
+./build.sh "~/Documents/Davis Files/Davis VT/New VT Template (in progress w Claude).pptx" \
            Davis-Kabbalat-Shabbat-VT-v1c.pptx
 ```
 

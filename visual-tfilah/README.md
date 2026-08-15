@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v2.pptx` — **29 slides, the current deck**, built for the
+`Davis-Kabbalat-Shabbat-VT-v2b.pptx` — **29 slides, the current deck**, built for the
 8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
 8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
 
@@ -13,8 +13,8 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v2a**. Check the highest
-letter present in both this folder and `~/Documents/Davis VT/` before naming a
+that already exists on either side. The next build is **v2c**. Check the highest
+letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
 ## Service order
@@ -60,6 +60,42 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v2b — Claude
+
+Built by `build_v2b.py`, from Dan's notes on v2. The big change is that **every
+content slide now carries the frame and the nav** — v2 skipped nine of them.
+
+- **Eight of the school's older full-bleed prayer slides were rebuilt** on the
+  authoring frame at the standard sizes: HaTikvah, Modeh Ani, Ozi V'zimrat Yah,
+  Sh'ma, V'ahavta 2 and 3, Amidah 1, Birthday Blessings. They had been drawn at
+  whatever size suited each slide — Ozi V'zimrat Yah was 88pt Hebrew against
+  60pt transliteration — and ran content to the slide edge with no room for a nav.
+- **Living Our Values keeps its design.** It is a composed layout, not a
+  two-column prayer, so it is scaled to 87% to clear the nav column and the Davis
+  chrome is grafted on, rather than being rebuilt.
+- **Opening and closing slides now come from v1d** — blue `001F70`, the Davis
+  mark, and the motion-path animation. The closing is a duplicate of the opening.
+- **Logo moved to v1d's position** (16.96", 9.66", 2.29 x 1.36) instead of the
+  template's higher, larger placement.
+- **`Group 6` untangled.** The teal column was a group of the bar (`Freeform 7`)
+  and `TextBox 8`, an empty text box of exactly the same size that did nothing but
+  travel with it. The empty box is gone.
+- **All Hebrew is David Libre** in all four font slots. Setting only `<a:latin>`
+  leaves PowerPoint picking a fallback for Hebrew glyphs — the older slides had
+  Hebrew in Pinata Marks, Times New Roman and even Helvetica Italics.
+- **Leading spaces stripped** from Hebrew lines (Modeh Ani before מלך, Sh'ma
+  before יי, and others) — they push the line off the right margin once RTL.
+- **Translations bottom-anchored** so the last line sits at the same height
+  regardless of how many lines it runs to.
+- **Apostrophes** swept to the typographic `’` across the whole package.
+- **Shofar icon** from the Jewish Life board library on the Shofar Blessing.
+
+Line breaks re-broken at phrase boundaries on four slides where Hebrew and
+transliteration did not correspond — **check these against the melodies**:
+Modeh Ani (3 lines against 4), Ozi V'zimrat Yah (3 against 1), V'ahavta 2
+(11 against 9), Birthday Blessings (transliteration was only the closing clause).
+Sh'ma also gained a translation it never had, and its יְהֹוָה became יְיָ.
 
 ### v2 — Claude
 
@@ -137,7 +173,7 @@ Built from Dan's v1a with `./derive-v1c.sh`, which reproduces this file exactly.
 
 ### v1a — Dan
 
-Dan's own version, in iCloud at `~/Documents/Davis VT/`. Not in this repo —
+Dan's own version, in iCloud at `~/Documents/Davis Files/Davis VT/`. Not in this repo —
 the embedded video makes it 155 MB. See [Lineage](#lineage) for what it changed.
 
 **The Rocks slide**, recorded here so it can be rebuilt if the file is ever lost.
@@ -172,7 +208,7 @@ The build Dan started from. Superseded; kept for reference.
 ## Building
 
 ```bash
-./derive-v1c.sh "~/Documents/Davis VT/DavisKabbalatShabbatVTv1a.pptx" OUT.pptx
+./derive-v1c.sh "~/Documents/Davis Files/Davis VT/DavisKabbalatShabbatVTv1a.pptx" OUT.pptx
 ```
 
 This is the path that preserves Dan's work. It unpacks v1a, drops the video
@@ -264,7 +300,7 @@ bottom of the slide, so keep translations to three.
 ## Verifying before delivery
 
 ```bash
-python3 "$PPTX_SKILL/scripts/office/validate.py" OUT.pptx --original "~/Documents/Davis VT/DavisKabbalatShabbatVTv1a.pptx"
+python3 "$PPTX_SKILL/scripts/office/validate.py" OUT.pptx --original "~/Documents/Davis Files/Davis VT/DavisKabbalatShabbatVTv1a.pptx"
 ```
 
 Then render and look at every slide — on a Mac, opening the deck in PowerPoint is

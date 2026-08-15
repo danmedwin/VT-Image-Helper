@@ -5,7 +5,7 @@
 # content slide from scratch and would discard Dan's Rocks slide, his title
 # slide, and his Kiddush text — see README. This is the path that keeps them.
 #
-#   ./derive-v1c.sh "~/Documents/Davis VT/DavisKabbalatShabbatVTv1a.pptx" [OUT.pptx]
+#   ./derive-v1c.sh "~/Documents/Davis Files/Davis VT/DavisKabbalatShabbatVTv1a.pptx" [OUT.pptx]
 set -euo pipefail
 
 SRC="${1:?usage: derive-v1c.sh V1A.pptx [OUT.pptx]}"
