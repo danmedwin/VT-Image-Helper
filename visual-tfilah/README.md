@@ -19,8 +19,8 @@ new file.
 
 ## Service order (v2, 8/21/2026)
 
-The running order **is** the `PLAN` list at the top of `build_v2d.py` — edit that to
-change the order or the nav. 29 slides, grouped into six nav sections:
+The running order **is** the `PLAN` list at the top of `finalize_v2f.py`. 30 slides,
+grouped into six nav sections:
 
 | # | Slide | Section |
 |---|-------|---------|
@@ -34,19 +34,21 @@ change the order or the nav. 29 slides, grouped into six nav sections:
 | 8 | Sh'ma | Sh'ma and Its Blessings |
 | 9–11 | V'ahavta (three slides) | Sh'ma and Its Blessings |
 | 12 | Mi Chamochah | Sh'ma and Its Blessings |
-| 13–14 | Amidah (two slides) | Amidah |
-| 15–16 | Mi Shebeirach (two slides) | Amidah |
-| 17 | Oseh Shalom | Amidah |
-| 18 | Class Song *(placeholder)* | The Blessings of Our Lives |
-| 19 | Birthday Blessings | The Blessings of Our Lives |
-| 20 | Rock Counting | The Blessings of Our Lives |
-| 21 | Candles | Prayers of Welcome |
-| 22–24 | Kiddush (three slides) | Prayers of Welcome |
-| 25 | Motzi | Prayers of Welcome |
-| 26 | Priestly Blessing | Conclusion |
-| 27 | Shofar Blessing | Conclusion |
-| 28 | Turn the World Around *(placeholder)* | Conclusion |
-| 29 | Shabbat Shalom! (closing) | — |
+| 13 | Amidah (please rise / page numbers) | Amidah |
+| 14 | Adonai S'fatai | Amidah |
+| 15 | Eternity Utters a Day (Dan Nichols) | Amidah |
+| 16–17 | Mi Shebeirach (two slides) | Amidah |
+| 18 | Oseh Shalom | Amidah |
+| 19 | Class Song *(placeholder)* | The Blessings of Our Lives |
+| 20 | Birthday Blessings | The Blessings of Our Lives |
+| 21 | Rock Counting | The Blessings of Our Lives |
+| 22 | Candles | Prayers of Welcome |
+| 23–25 | Kiddush (three slides) | Prayers of Welcome |
+| 26 | Motzi | Prayers of Welcome |
+| 27 | Priestly Blessing | Conclusion |
+| 28 | Shofar Blessing | Conclusion |
+| 29 | Turn the World Around *(placeholder)* | Conclusion |
+| 30 | Shabbat Shalom! (closing) | — |
 
 Three placeholder slides need the school's own content: **Class Song** (changes
 weekly), the English refrain on both **Mi Shebeirach** slides, and **Turn the
