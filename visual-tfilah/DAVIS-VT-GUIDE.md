@@ -73,6 +73,19 @@ Slides - Sci-Tech.pptx`), but on the **right** to match the Davis frame:
   correctly. Source the pointed text from Sefaria (Torah with te'amim), then
   substitute יְיָ for the Tetragrammaton.
 
+## Icons
+
+- Library: `~/Documents/Davis Files/Jewish Life Board/icons-renamed/` — 188
+  LemonadePixel PNGs renamed to what they depict, flat at the top level.
+- **Placement**: in the open zone below the body text and above the bottom
+  translation, centred near x≈7.5", ~2–3.5" tall — where Candles / Hamotzi /
+  Shofar / Kiddush-cup already sit. On slides where one column is empty (e.g. the
+  Amidah page-directions), the icon can go in that empty column instead.
+- **Recolour art for the dark background.** Graphics built for a light ground
+  (e.g. the blue arched Sh'ma from the old template) wash out on the dark-blue
+  slide — threshold the alpha and fill the glyphs solid white so they read.
+- More packs are on the LemonadePixel Etsy shop; buy → drop PNGs into the library.
+
 ## Sources
 
 - Service outlines come from **Michelle Gimpelevich** (Lower School teacher),
