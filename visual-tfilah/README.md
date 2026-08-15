@@ -17,26 +17,43 @@ that already exists on either side. The next build is **v2e**. Check the highest
 letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
-## Service order
+## Service order (v2, 8/21/2026)
 
-| # | Slide | Leader |
-|---|-------|--------|
-| 1 | Shabbat Shalom! (title, with Spotify QR) | |
-| 2 | Bim Bam | Micah |
-| 3 | Video | Cristy |
-| 4 | Last Word | Micah facilitates |
-| 5 | Candle Blessing | Amy lights |
-| 6 | Last Word | Micah facilitates |
-| 7–9 | Kiddush (full text, three slides) | Dan Medwin |
-| 10 | Last Word | Micah facilitates |
-| 11 | Hamotzi | Micah |
-| 12 | Oseh Shalom | Micah |
-| 13 | Priestly Blessing | Micah, Javier, Michelle, Emilie |
-| 14 | Rocks | Micah |
+The running order **is** the `PLAN` list at the top of `build_v2d.py` — edit that to
+change the order or the nav. 29 slides, grouped into six nav sections:
 
-The deck ends on Rocks. There is no closing slide — the title slide already
-carries the "learn our Shabbat prayers and songs" QR code that the old closing
-slide duplicated.
+| # | Slide | Section |
+|---|-------|---------|
+| 1 | Shabbat Shalom! (title) | — |
+| 2 | Pledge / HaTikvah | Opening |
+| 3 | Hinei Mah Tov | Opening |
+| 4 | Living Our Values | Opening |
+| 5 | Modeh Ani | Opening |
+| 6 | Ozi V'zimrat Yah | Opening |
+| 7 | Bar'chu | Sh'ma and Its Blessings |
+| 8 | Sh'ma | Sh'ma and Its Blessings |
+| 9–11 | V'ahavta (three slides) | Sh'ma and Its Blessings |
+| 12 | Mi Chamochah | Sh'ma and Its Blessings |
+| 13–14 | Amidah (two slides) | Amidah |
+| 15–16 | Mi Shebeirach (two slides) | Amidah |
+| 17 | Oseh Shalom | Amidah |
+| 18 | Class Song *(placeholder)* | The Blessings of Our Lives |
+| 19 | Birthday Blessings | The Blessings of Our Lives |
+| 20 | Rock Counting | The Blessings of Our Lives |
+| 21 | Candles | Prayers of Welcome |
+| 22–24 | Kiddush (three slides) | Prayers of Welcome |
+| 25 | Motzi | Prayers of Welcome |
+| 26 | Priestly Blessing | Conclusion |
+| 27 | Shofar Blessing | Conclusion |
+| 28 | Turn the World Around *(placeholder)* | Conclusion |
+| 29 | Shabbat Shalom! (closing) | — |
+
+Three placeholder slides need the school's own content: **Class Song** (changes
+weekly), the English refrain on both **Mi Shebeirach** slides, and **Turn the
+World Around** (Belafonte) — the last two are copyrighted lyrics.
+
+The 14-slide v1d service (Bim Bam, Video, Last Word ×3, Candles, Kiddush ×3,
+Hamotzi, Oseh Shalom, Priestly Blessing, Rocks) is the previous deck.
 
 ## Lineage
 
