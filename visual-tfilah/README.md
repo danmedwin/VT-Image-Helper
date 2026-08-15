@@ -1,19 +1,23 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v1b.pptx` — 15 slides, built on the Davis VT template
-(`New VT Template (in progress w Claude).pptx`), following the printed service outline.
+`Davis-Kabbalat-Shabbat-VT-v1c.pptx` — 14 slides, the current deck.
 Superseded versions live in `Old versions/`.
+
+**v1c descends from Dan's v1a, not from the template.** That is the important
+structural fact about this deck. See [Lineage](#lineage) before running any build
+script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v1c**; `build.sh` already
-defaults to that name. Check the highest letter present before naming a new file.
+that already exists on either side. The next build is **v1d**. Check the highest
+letter present in both this folder and `~/Documents/Davis VT/` before naming a
+new file.
 
 ## Service order
 
 | # | Slide | Leader |
 |---|-------|--------|
-| 1 | Title (Davis template slide) | |
+| 1 | Shabbat Shalom! (title, with Spotify QR) | |
 | 2 | Bim Bam | Micah |
 | 3 | Video | Cristy |
 | 4 | Last Word | Micah facilitates |
@@ -25,40 +29,111 @@ defaults to that name. Check the highest letter present before naming a new file
 | 12 | Oseh Shalom | Micah |
 | 13 | Priestly Blessing | Micah, Javier, Michelle, Emilie |
 | 14 | Rocks | Micah |
-| 15 | Shabbat Shalom (Davis template slide) | |
+
+The deck ends on Rocks. There is no closing slide — the title slide already
+carries the "learn our Shabbat prayers and songs" QR code that the old closing
+slide duplicated.
+
+## Lineage
+
+v1 → (Claude's build, delivered as v1a) → **Dan's v1a** → **v1c**
+
+Dan edited the build Claude delivered, so **v1a is ahead of v1b on every slide**,
+not just on Rocks. `Old versions/Davis-Kabbalat-Shabbat-VT-v1b.pptx` is the same
+build Dan started from; it is kept only as a reference for the progress dots and
+the box measurements below.
+
+What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
+
+- **Title slide** swapped to the template's "Shabbat Shalom!" slide, which
+  carries the Spotify QR code.
+- **Closing slide removed** — the deck ends on Rocks.
+- **Last Word slides (4, 6, 10) stripped of prompts.** They are intentionally
+  bare: header bar only, no projected text. Micah facilitates from the printed
+  outline. Claude's draft prompts are gone for good; do not restore them.
+- **Rocks built out** (see below).
+- A 152 MB video embedded as its own slide. That one was **not** kept — see
+  the v1c changelog.
 
 ## Changelog
 
-### v1b — Claude
-Same build that was first delivered as v1a. Renamed to v1b because Dan had
-already used v1a for his own version; the deck contents did not change.
+### v1c — Claude
 
-- **Full Kiddush** replaces the short blessing over wine, running across three
-  slides with `● ○ ○` progress dots: wine blessing, then *asher kid'shanu…
-  zeicher litziat Mitzrayim*, then *Ki vanu vacharta…* closing with the chatimah
-  *m'kadeish haShabbat*.
-- **Progress dots** added for prayers spanning several slides. They sit in the
-  header bar between the English title (which ends at 6.86") and the Hebrew title
-  (which starts at 13.07"), so they cannot collide with either.
-- Kiddush 2 of 3 translation condensed to three lines. See the box limits below.
-- Build is now scripted end to end: `./build.sh TEMPLATE.pptx [OUT.pptx]`.
+Built from Dan's v1a with `./derive-v1c.sh`, which reproduces this file exactly.
+
+- **Video slide removed.** Cristy's `2026-2027 WE ARE READY` mp4 was 152 MB of
+  the 155 MB file and was a one-time item, so it is out of the archival deck.
+  Slide 3 keeps its reusable "Video" placeholder frame — drop a new video in
+  there next time. The deck went 155 MB → 3.2 MB.
+- **Kiddush 3's Hebrew was truncated, and is repaired.** Dan built Kiddush 2 and
+  3 by duplicating a Last Word slide and pasting content in; the Hebrew came
+  along as pasted bitmaps rather than text, and the Kiddush 3 bitmap had lost
+  `קִדַּשְׁתָּ מִכָּל הָעַמִּים` and its entire final line — 5 Hebrew lines against 7 of
+  transliteration. All the Kiddush Hebrew is now live David Libre text, matched
+  line for line to Dan's transliteration, with the missing words restored.
+- **Sidebar highlight fixed** on Kiddush 2 and 3, which still pointed at
+  "Last Word".
+- **Progress dots restored** on the three Kiddush slides: `● ○ ○`, `○ ● ○`,
+  `○ ○ ●`.
 
 ### v1a — Dan
-Dan's own version, made from v1. **Not in this repo** — it lives in
-iCloud (Documents → Davis VT), which the build environment cannot reach.
 
-**It contains Dan's Rocks slide, which is the one to keep.** The Rocks slide in
-v1b is only an empty framed placeholder. Dan's version is the real thing and
-should be carried into v1c and every version after it, so v1c has to be built by
-importing that slide rather than regenerating Rocks from `fill-davis-vt.py`.
-`build.sh` cannot pull it in on its own; the slide has to be supplied first.
+Dan's own version, in iCloud at `~/Documents/Davis VT/`. Not in this repo —
+the embedded video makes it 155 MB. See [Lineage](#lineage) for what it changed.
 
-Once it is available, capture what it is made of here (background, imagery, text,
-whether the Hebrew is live text or outlines) so it can be rebuilt if the file is
-ever lost.
+**The Rocks slide**, recorded here so it can be rebuilt if the file is ever lost.
+`rocks.pptx` in this folder is a one-slide copy of it, kept as the source of
+truth:
+
+- Standard frame: teal header bar, "Rocks" at left, `אֲבָנִים` at right, service
+  sidebar with Rocks highlighted, Davis logo bottom right.
+- Psalm 90:12 in English, centered near the top in three lines —
+  *"Teach us to count our days, / so that we may acquire a wise and loving
+  heart." / - Psalm 90:12* — at 1.88", 0.91", 12.44" × 3.21".
+- A photograph of **two mason jars, one nearly empty and one full of stones**,
+  under a heavy neon/posterize art filter. Centered at 4.23", 3.58",
+  7.28" × 5.78". The source is 677 × 538 px, which lands at about 93 DPI on a
+  20"-wide slide — adequate but not sharp, so replace it with something larger
+  if a higher-resolution original turns up.
+- The Hebrew of Psalm 90:12 along the bottom —
+  `לִמְנוֹת יָמֵינוּ, כֵּן הוֹדַע וְנָבִא, לְבַב חָכְמָה` — at 2.09", 9.76", 11.56" × 1.14".
+  **Live editable text, not outlines.**
+
+### v1b — Claude
+
+The build Dan started from. Superseded; kept for reference.
+
+- **Full Kiddush** across three slides with progress dots.
+- Build scripted end to end via `build.sh`.
 
 ### v1
+
 - First build from the outline.
+
+## Building
+
+```bash
+./derive-v1c.sh "~/Documents/Davis VT/DavisKabbalatShabbatVTv1a.pptx" OUT.pptx
+```
+
+This is the path that preserves Dan's work. It unpacks v1a, drops the video
+slide, repairs the Kiddush slides, prunes the media those repairs orphaned,
+repacks, and validates. Re-running it reproduces `v1c` byte for byte.
+
+Supporting scripts, each usable on its own:
+
+| Script | What it does |
+|---|---|
+| `fix_kiddush.py UNPACKED/` | The Kiddush repairs, and the record of what they were |
+| `prune_rels.py UNPACKED/` | Drops media relationships no shape references, so `clean.py` can collect the files |
+| `pack.py UNPACKED/ OUT.pptx [ORIGINAL.pptx]` | Repacks without directory entries — `zip -r` makes PowerPoint offer to repair the deck |
+
+> **`build.sh` and `fill-davis-vt.py` regenerate every content slide from the
+> template.** They predate v1a and would discard Dan's title slide, his Kiddush
+> text, his bare Last Word slides, and Rocks. Do not run them to make the next
+> version. They are kept only for building a *new* deck from the template, and
+> if you ever do, splice `rocks.pptx` back in with the pptx skill's
+> `add_slide.py` rather than recreating that slide.
 
 ## Changes to the template frame — worth folding back into the template
 
@@ -92,32 +167,38 @@ bottom of the slide, so keep translations to three.
 
 ## Still to do
 
-- **Rocks (slide 14): use Dan's slide from v1a.** The one in v1b is an empty
-  placeholder. See the v1a changelog entry above. This is the open item that
-  blocks v1c.
-- **Last Word prompts (slides 4, 6, 10) are drafts.** The prompts on the back of
-  the printed outline were not legible in the photo. Replace with the real ones.
-- **Video (slide 3)** has an open content area by design. Drop the video in.
-
-## Rebuilding
-
-```
-./build.sh "New VT Template (in progress w Claude).pptx" Davis-Kabbalat-Shabbat-VT-v1c.pptx
-```
-
-`build.sh` does the structural work: duplicate the template's authoring slide
-(slide 5 of the template, the two-column one with the service sidebar) once per
-content slide, set the running order, drop everything else, and repack. Then
-`fill-davis-vt.py` pours in the liturgy, transliteration, translations, sidebar
-highlighting, progress dots, and speaker notes.
-
-Edit the text in `fill-davis-vt.py` and re-run rather than hand-editing the deck,
-so the Hebrew and transliteration line breaks stay in sync.
+- **Kiddush transliteration is inconsistent between slide 7 and slides 8–9.**
+  Dan's slides 8–9 came from another source and use `Eloheinu, Melech haolam`,
+  `zecher`, `vachar'ta`, `kodshecha` and curly apostrophes, where slide 7 uses
+  `Eloheinu Melech ha'olam`, `zeicher`, `vacharta`, `kodsh'cha` and straight ones.
+  Both readings are defensible; they just should not sit in one prayer. Dan's
+  call which convention wins.
+- **Slide 8's translation reads "Sovereign of the universe who finding favor
+  with us, sanctified us with mitzvot."** A comma after "who" fixes it. Left
+  alone because it is the school's wording, not Claude's.
+- **Video (slide 3)** has an open content area by design. Drop the next video in.
 
 ## Notes
 
-- Hebrew is real editable text in David Libre, not outlines. Some older template
-  slides have their Hebrew converted to vector paths; none of those were used here.
-- Transliteration follows Mishkan T'filah / CCAR conventions.
-- The title and closing slides use `TT Berlinerins`. That font has to be installed
-  locally or those two slides will reflow.
+- All Hebrew in the deck is real editable text in David Libre. Some older
+  template slides have their Hebrew converted to vector paths; none of those
+  were used here, and the two pasted Hebrew bitmaps Dan's v1a carried were
+  converted back to text in v1c.
+- Transliteration follows Mishkan T'filah / CCAR conventions, except on the
+  two Kiddush slides noted above.
+- The title slide uses `TT Berlinerins`. That font has to be installed locally
+  or it will reflow.
+- The template is **20" × 11.25"**, not 13.333" × 7.5". All geometry in the
+  scripts is in those coordinates.
+
+## Verifying before delivery
+
+```bash
+python3 "$PPTX_SKILL/scripts/office/validate.py" OUT.pptx --original "~/Documents/Davis VT/DavisKabbalatShabbatVTv1a.pptx"
+```
+
+Then render and look at every slide — on a Mac, opening the deck in PowerPoint is
+better still, since the real fonts are installed. Check line-for-line
+correspondence between the columns, that no translation runs to a fourth line,
+that the sidebar highlights the current item, and that the Kiddush progress dots
+read `● ○ ○`, `○ ● ○`, `○ ○ ●`.

@@ -1,5 +1,12 @@
 # Handoff — Davis Kabbalat Shabbat VT
 
+> **CLOSED — this handoff is complete, and parts of it are wrong.** v1c is built.
+> Read `README.md` instead. Two things below turned out not to hold: the Rocks
+> slide is **slide 15** of v1a, not 14; and Rocks was **not** the only thing
+> that had diverged — v1a is ahead of v1b on the title slide, the closing slide,
+> the Last Word slides, and the Kiddush, so v1c was derived from v1a rather than
+> regenerated from the template. Kept for the record.
+
 For a **local** Claude Code session on Dan's Mac. The work so far was done in a
 cloud session, which cannot reach iCloud. Everything below is current as of
 commit `1b1d212` on branch `claude/visual-tfilah-davis-leaqqy`.
