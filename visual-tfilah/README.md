@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v1c.pptx` — 14 slides, the current deck.
+`Davis-Kabbalat-Shabbat-VT-v1d.pptx` — 14 slides, the current deck.
 Superseded versions live in `Old versions/`.
 
 **v1c descends from Dan's v1a, not from the template.** That is the important
@@ -9,7 +9,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v1d**. Check the highest
+that already exists on either side. The next build is **v1e**. Check the highest
 letter present in both this folder and `~/Documents/Davis VT/` before naming a
 new file.
 
@@ -56,6 +56,37 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v1d — Claude
+
+Transliteration brought into line with the **CCAR Press Style Guide**
+([PDF](https://ravblog.ccarnet.org/wp-content/uploads/2023/08/CCAR-Press-Style-Guide.pdf)),
+via `ccar_normalize.py`. 25 paragraphs rewritten. The rules that bit:
+
+- *"Apostrophe for sh'va nah … No apostrophe for sh'va nach"* — `vachar'ta` →
+  `vacharta`, `kidash'ta` → `kidashta`, and `kodshecha` → `kodsh'cha`.
+- *"'ei' for tzeirei"* — `zecher` → `zeicher`, `Ya'er` → `Ya'eir`.
+- *"Hyphen for two vowels together where necessary … but maariv, Shavuot"* — the
+  apostrophe is not the two-vowel separator, so `ha'olam` → `haolam`,
+  `ha'aretz` → `haaretz`, `ya'aseh` → `yaaseh`. The guide's word list spells it
+  `haolam` outright.
+- The word list gives the blessing formula verbatim — **"Baruch atah, Adonai,
+  Eloheinu Melech haolam, asher kid'shanu b'mitzvotav v'tzivanu"** — so all four
+  openers (Candles, Kiddush 1, Kiddush 2, Motzi) now match it exactly. The line
+  break stays between Adonai and Eloheinu.
+- Prefixes are lowercase inside the text of a prayer (*"V'zot haTorah asher…"*),
+  so the chatimah reads `m'kadeish haShabbat`.
+
+Also:
+
+- **Apostrophes unified on the typographic `’`** (U+2019), which is what the guide
+  itself sets and what the deck's English possessives already used. The deck had
+  been 21 straight / 19 curly; it is now 34 curly, 0 straight.
+- **Comma added** to the Kiddush 2 translation: "Sovereign of the universe **who,**
+  finding favor with us, sanctified us with mitzvot."
+- Transliteration paragraphs that PowerPoint's spellchecker had shattered into
+  one run per word (`err="1"` on every unrecognised word) are collapsed back to a
+  single run each. No visual change; it just makes the text editable again.
 
 ### v1c — Claude
 
@@ -127,6 +158,7 @@ Supporting scripts, each usable on its own:
 | `fix_kiddush.py UNPACKED/` | The Kiddush repairs, and the record of what they were |
 | `prune_rels.py UNPACKED/` | Drops media relationships no shape references, so `clean.py` can collect the files |
 | `pack.py UNPACKED/ OUT.pptx [ORIGINAL.pptx]` | Repacks without directory entries — `zip -r` makes PowerPoint offer to repair the deck |
+| `ccar_normalize.py UNPACKED/` | The v1d transliteration rewrites, as an auditable old→new table |
 
 > **`build.sh` and `fill-davis-vt.py` regenerate every content slide from the
 > template.** They predate v1a and would discard Dan's title slide, his Kiddush
@@ -167,16 +199,11 @@ bottom of the slide, so keep translations to three.
 
 ## Still to do
 
-- **Kiddush transliteration is inconsistent between slide 7 and slides 8–9.**
-  Dan's slides 8–9 came from another source and use `Eloheinu, Melech haolam`,
-  `zecher`, `vachar'ta`, `kodshecha` and curly apostrophes, where slide 7 uses
-  `Eloheinu Melech ha'olam`, `zeicher`, `vacharta`, `kodsh'cha` and straight ones.
-  Both readings are defensible; they just should not sit in one prayer. Dan's
-  call which convention wins.
-- **Slide 8's translation reads "Sovereign of the universe who finding favor
-  with us, sanctified us with mitzvot."** A comma after "who" fixes it. Left
-  alone because it is the school's wording, not Claude's.
 - **Video (slide 3)** has an open content area by design. Drop the next video in.
+- **The sidebar lists "Last Word" once though the slide recurs three times.**
+  Dan's rule going forward: every instance of a repeating slide gets its own line
+  in the side nav. Not worth fixing here — the Last Word structure was a one-time
+  thing — but it applies to any repeating slide in future decks.
 
 ## Notes
 
@@ -184,8 +211,9 @@ bottom of the slide, so keep translations to three.
   template slides have their Hebrew converted to vector paths; none of those
   were used here, and the two pasted Hebrew bitmaps Dan's v1a carried were
   converted back to text in v1c.
-- Transliteration follows Mishkan T'filah / CCAR conventions, except on the
-  two Kiddush slides noted above.
+- Transliteration follows the CCAR Press Style Guide throughout as of v1d; see
+  that changelog entry for the specific rules and `ccar_normalize.py` for the
+  mapping actually applied.
 - The title slide uses `TT Berlinerins`. That font has to be installed locally
   or it will reflow.
 - The template is **20" × 11.25"**, not 13.333" × 7.5". All geometry in the
