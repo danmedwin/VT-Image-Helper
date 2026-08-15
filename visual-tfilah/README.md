@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v2d.pptx` — **29 slides, the current deck**, built for the
+`Davis-Kabbalat-Shabbat-VT-v2f.pptx` — **30 slides, the current deck**, built for the
 8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
 8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
 
@@ -13,7 +13,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v2e**. Check the highest
+that already exists on either side. The next build is **v2g**. Check the highest
 letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
@@ -77,6 +77,36 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v2f — Claude
+
+**Built from Dan's hand-edited v2e, not regenerated** (`finalize_v2f.py`) — Dan
+keeps refining the deck by hand, so from here each version is targeted edits on
+the latest file, never a fresh generation that would discard his work. New
+[`DAVIS-VT-GUIDE.md`](DAVIS-VT-GUIDE.md) collects the accumulated Davis house
+rules.
+
+From Dan's v2e notes:
+
+- **Body boxes sized to their content** (were a fixed 9.5" — so tall they
+  overlapped the translation and read as stray grouped shapes when clicked),
+  autofit still off so PowerPoint can't clip.
+- **Service nav moved down** to top-align with the transliteration box, off the
+  Hebrew header.
+- **Slide 14 split** into *Adonai S'fatai* (the Amidah opening prayer) and
+  *Eternity Utters a Day* (the Dan Nichols song); both are their own nav items.
+- **V'ahavta cantillation restored** — te'amim from Sefaria (Deut 6:5-9, Num
+  15:40-41), Tetragrammaton as יְיָ, matched to the existing rows. David Libre
+  renders them cleanly.
+- **Mi Shebeirach placeholders** are now real lorem-ipsum text in the
+  translation's font/size/color, showing where Friedman's English refrain lands.
+- **Crowd logo un-stretched** on the imported slides (20-26): v1d's blip carried
+  negative top/bottom `fillRect` insets that stretched it tall once the box was
+  square — reset to a flush fill.
+
+Preserved from Dan's v2e: the Living Our Values layout, the sentence-boundary
+translation breaks on Modeh Ani / Sh'ma / Mi Chamochah, and the widened slide-10
+box that keeps the English rows matched to the Hebrew.
 
 ### v2d — Claude
 
