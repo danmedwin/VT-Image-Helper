@@ -1,7 +1,11 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v1d.pptx` — 14 slides, the current deck.
-Superseded versions live in `Old versions/`.
+`Davis-Kabbalat-Shabbat-VT-v2.pptx` — **29 slides, the current deck**, built for the
+8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
+8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
+
+`Davis-Kabbalat-Shabbat-VT-v1d.pptx` — the previous, 14-slide service. Kept because
+v2 reuses eight of its slides. Superseded versions live in `Old versions/`.
 
 **v1c descends from Dan's v1a, not from the template.** That is the important
 structural fact about this deck. See [Lineage](#lineage) before running any build
@@ -9,7 +13,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v1e**. Check the highest
+that already exists on either side. The next build is **v2a**. Check the highest
 letter present in both this folder and `~/Documents/Davis VT/` before naming a
 new file.
 
@@ -56,6 +60,30 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v2 — Claude
+
+The 8/21/2026 service, 29 slides, built by `build_v2.py` from three sources:
+
+- **The template package is the base** — it is already 20" × 11.25" and carries the
+  school's own HaTikvah, L.O.V.E., Modeh Ani, Ozi V'zimrat Yah, Sh'ma, V'ahavta,
+  Amidah and Shehecheyanu slides.
+- **Eight slides imported from v1d** — Candles, Kiddush ×3, Motzi, Oseh Shalom,
+  Priestly Blessing, Rock Counting. The template's own copies of these have their
+  Hebrew flattened to outlines; v1d's are live text. The packages share a theme and
+  an identical `slideLayout7` (bar a stale date placeholder), so they move cleanly.
+- **Five prayers built fresh**, since neither deck had them — Hinei Mah Tov,
+  Bar'chu, Mi Chamochah, Mi Shebeirach (Hebrew) and the Shofar Blessing. Hebrew
+  from the standard liturgy, transliteration per the CCAR guide, matched line for
+  line.
+
+**New grouped service nav**, modelled on the CCAR Visual T'filah pattern in
+`7.28.17 Kabbalat Shabbat Slides - Sci-Tech.pptx` but moved to the right to match
+the Davis frame: `‣` a closed section, `▾` the open one, `•` its items, the current
+item in bold white against `B8E3E6`, and the multi-slide progress dots nested
+underneath the current item. The old header-bar dot strip is gone — the nav
+carries them now. Six sections, using the school's own names where they exist
+(Sh'ma and Its Blessings, Prayers of Welcome, The Blessings of Our Lives).
 
 ### v1d — Claude
 
@@ -159,6 +187,7 @@ Supporting scripts, each usable on its own:
 | `prune_rels.py UNPACKED/` | Drops media relationships no shape references, so `clean.py` can collect the files |
 | `pack.py UNPACKED/ OUT.pptx [ORIGINAL.pptx]` | Repacks without directory entries — `zip -r` makes PowerPoint offer to repair the deck |
 | `ccar_normalize.py UNPACKED/` | The v1d transliteration rewrites, as an auditable old→new table |
+| `build_v2.py TEMPLATE.pptx V1D.pptx OUT.pptx` | Builds v2. The `PLAN` list at the top **is** the service order — edit it to change the running order or the nav |
 
 > **`build.sh` and `fill-davis-vt.py` regenerate every content slide from the
 > template.** They predate v1a and would discard Dan's title slide, his Kiddush
@@ -199,7 +228,20 @@ bottom of the slide, so keep translations to three.
 
 ## Still to do
 
-- **Video (slide 3)** has an open content area by design. Drop the next video in.
+- **Nine slides still use the school's other, full-bleed design** and have no
+  right-hand column, so they carry no nav: Pledge/HaTikvah, Living Our Values,
+  Modeh Ani, Ozi V'zimrat Yah, Sh'ma, V'ahavta 2 and 3, Amidah 1, and Birthday
+  Blessings. `build_v2.py` skips them rather than laying white text over their
+  Hebrew, and lists them on every run. Converting them to the Davis frame is the
+  main outstanding job.
+- **Three placeholder slides** need the school's own content: the Class Song
+  (changes weekly), the English refrain of Mi Shebeirach, and Turn the World
+  Around. The last two are copyrighted lyrics rather than liturgy.
+- **The Shofar Blessing may not belong.** That b'rachah is Rosh HaShanah's; during
+  Elul the shofar is customarily sounded without one.
+- **Melody line breaks are guesses** on the five freshly built prayers. Michelle
+  named the settings (Arian, Seigel, Friedman, Jagoda, Lapidus); the breaks should
+  be checked against how each is actually sung.
 - **The sidebar lists "Last Word" once though the slide recurs three times.**
   Dan's rule going forward: every instance of a repeating slide gets its own line
   in the side nav. Not worth fixing here — the Last Word structure was a one-time
