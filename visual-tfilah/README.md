@@ -1,6 +1,6 @@
 # Davis Kabbalat Shabbat — Visual T'filah
 
-`Davis-Kabbalat-Shabbat-VT-v2j.pptx` — **30 slides, the current deck**, built for the
+`DavisKabbalatShabbatVTv3.pptx` (in the Davis VT folder) — **30 slides, the current deck**, built for the
 8/21/2026 service from Michelle Gimpelevich's outline (`Kabbalat Shabbat outline
 8-21-2026.pdf`). This is the deck the school uses and modifies going forward.
 
@@ -13,7 +13,7 @@ script.
 
 **Versioning.** Dan and Claude both edit this deck, so the version number is
 shared and always goes up. Never reuse a letter, and never overwrite a version
-that already exists on either side. The next build is **v2k**. Check the highest
+that already exists on either side. The current deck is **v3**; the next build is **v3a**. Check the highest
 letter present in both this folder and `~/Documents/Davis Files/Davis VT/` before naming a
 new file.
 
@@ -79,6 +79,15 @@ What Dan changed in v1a, all of it deliberate and all of it kept in v1c:
   the v1c changelog.
 
 ## Changelog
+
+### v3 — Dan
+
+Dan's own version (jumped the number to v3). Hand-drawn icons throughout, and a
+new **centered layout** for short prayers — Hebrew centred on top, transliteration
+centred below, icon centred, translation centred at the bottom, instead of two
+columns. Used on Hinei Mah Tov, Bar'chu, Sh'ma, and Adonai S'fatai. Captured as
+`centered-format-template.pptx` and documented in
+[`DAVIS-VT-GUIDE.md`](DAVIS-VT-GUIDE.md) → *Two layouts*.
 
 ### v2j — Claude (song/theme icons)
 

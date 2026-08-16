@@ -36,6 +36,31 @@ Keep this current: when Dan rules on something, record it here.
   substitute fonts, and real PowerPoint then clips the last line (this ate
   Kiddush 3's 7th line once).
 
+## Two layouts
+
+**Standard (two-column)** — the default. Transliteration/English left
+(`TextBox 10`), Hebrew right (`TextBox 11`), translation along the bottom
+(`TextBox 18`), icon in the open zone below. Use for anything more than ~2 lines.
+
+**Centered (short prayers)** — for prayers of about two lines, a centered
+vertical stack instead of two columns. `centered-format-template.pptx` (in the
+repo and the Davis VT folder) is the worked example (Bar'chu); duplicate it and
+replace the text. In v3, Hinei Mah Tov, Bar'chu, Sh'ma and Adonai S'fatai use it.
+
+The stack, all centered on the content-area midline (x ≈ 8.8", left of the nav):
+
+| Element | Box | Position (x, y, w, h ") | Align | Size |
+|---|---|---|---|---|
+| Hebrew (top) | `TextBox 11` | 5.18, 1.78, 7.23, 2.15 | centre, RTL | David Libre 45 |
+| Transliteration | `TextBox 10` | 4.49, 3.94, 8.58, 1.98 | centre | Calibri 36 |
+| Icon | — | centred ≈ 7.7, 6.8, ~2.2 sq | — | — |
+| Translation (bottom) | `TextBox 18` | 0.64, 10.21, 15.24, 0.8 | centre, bottom-anchored | Calibri 28 |
+
+Header boxes (`TextBox 12` Hebrew right, `TextBox 15` English left) and the nav
+are unchanged from the standard frame. Same 57.6pt line spacing; Hebrew still
+sits **above** its transliteration. On the Sh'ma the arched Sh'ma artwork takes
+the top slot in place of a separate icon.
+
 ## The service nav
 
 Modeled on the CCAR Visual T'filah pattern (see `7.28.17 Kabbalat Shabbat
